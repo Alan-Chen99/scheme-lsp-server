@@ -142,6 +142,7 @@
   (define thread
     (parameterize
         ((json-rpc-log-level debug-level)
+         (log-level debug-level)
          (json-string->scheme $json-string->scheme)
          (scheme->json-string $scheme->json-string))
       (make-thread
