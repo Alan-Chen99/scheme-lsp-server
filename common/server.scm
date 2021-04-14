@@ -1,15 +1,13 @@
-(define server-port 4242)
+(define (run)
+  (json-rpc-loop (current-input-port) (current-output-port)))
 
-;; (define (run)
-;;   (json-rpc-loop (current-input-port) (current-output-port)))
-
-(define (run-tcp)
+(define (run-tcp tcp-port)
   (cond-expand
     (chicken (tcp-read-timeout #f))
     (else))
   (write-log 'info
-             (format #f "Server listening on port ~a" server-port))
-  (define listener ($tcp-listen server-port))
+             (format #f "Server listening on port ~a" tcp-port))
+  (define listener ($tcp-listen tcp-port))
   (define-values (in-port out-port)
     ($tcp-accept listener))
   (write-log 'info "client connected")
@@ -135,7 +133,7 @@
     (load file-path))
   #f)
 
-(define (start-lsp-server . args)
+(define (start-lsp-server tcp-port . args)
   (define debug-level (if (null? args)
                           0
                           (car args)))
@@ -174,7 +172,7 @@
 
 ;;; custom commands
                  ("custom/loadFile" . ,custom/load-file))))
-           (run-tcp))))))
+           (run-tcp tcp-port))))))
   (thread-start! thread)
   thread)
 
