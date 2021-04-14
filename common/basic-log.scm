@@ -1,0 +1,21 @@
+(define log-level (make-parameter 3))
+
+(define (get-log-level symb)
+  (cond ((eqv? symb 'error) 0)
+        ((eqv? symb 'warning) 1)
+        ((eqv? symb 'info) 2)
+        ((eqv? symb 'debug) 3)
+        (else (error "invalid log level" symb))))
+
+(define (write-log type msg . args)
+  (define level (get-log-level type))
+  (when (<= level (log-level))
+    (format #t "[~a] ~a"
+            (string-upcase (symbol->string type))
+            msg)
+    (when (not (null? args))
+      (map (lambda (s)
+             (format #t "~a    " s))
+           args))
+    (newline)
+    (flush-output-port)))
