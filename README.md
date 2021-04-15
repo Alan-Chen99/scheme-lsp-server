@@ -19,7 +19,7 @@ More details on the supported features soon.
 
 
 ```
-[function] (start-lsp-server tcp-port [debug-level])
+[function] (start-lsp-server tcp-port [debug-level 0])
 ```
 
 Start an LSP server listening on `tcp-port`. An optional number `debug-level` ranging between 0 (silent) and 3 (verbose) may be provided to
