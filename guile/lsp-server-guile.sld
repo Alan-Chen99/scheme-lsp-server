@@ -6,12 +6,12 @@
 #:use-module (srfi srfi-1)
 #:use-module (srfi srfi-9)
 #:use-module (srfi srfi-18)
+#:use-module (srfi srfi-28)
 #:use-module (srfi srfi-69)
 #:use-module (srfi srfi-145)
 #:use-module (srfi srfi-180)
 
-#:use-module (json-rpc)
-#:use-module (ice-9 format)
+#:use-module (json-rpc lolevel)
 #:use-module (ice-9 session)
 
 #:declarative? #f)

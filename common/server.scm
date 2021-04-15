@@ -63,11 +63,6 @@
   (write-log 'info "file saved.")
   #f)
 
-;; (define (text-document/completion params)
-;;   (define file-path (get-uri-path params))
-;;   (define lines (read-file! file-path))
-;;   (define line-number (alist-ref* '(position line) params))
-;;   (define char-number (alist-ref* '())))
 (define (text-document/completion params)
   (define word (get-word-under-cursor params))
   (write-log 'debug "getting completion suggestions for word " word)

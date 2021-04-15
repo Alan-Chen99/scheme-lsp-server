@@ -13,19 +13,19 @@
         (chicken tcp)
         apropos
         medea
+        r7rs
         scheme
         srfi-1
         srfi-13 ;; string-upcase
         srfi-18
         srfi-69
 
-        (json-rpc))
-
-(cond-expand
-  (chicken (include "../chicken/chicken.scm"))
-  (else))
+        (json-rpc lolevel))
 
 (include "basic-log.scm")
 (include "util.scm")
+(cond-expand
+  (chicken (include "../chicken/chicken.scm"))
+  (else))
 (include "file.scm")
 (include "server.scm"))

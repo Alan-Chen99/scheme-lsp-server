@@ -13,7 +13,7 @@ GUILE_SOURCES = lsp-server-guile.sld
 
 SOURCES = $(COMMON_SOURCES) $(GUILE_SOURCES)
 
-JSON_RPC_GOBJECT := $(OUTPUT_DIR)/json-rpc/json-rpc.go
+JSON_RPC_GOBJECT := $(OUTPUT_DIR)/json-rpc/lolevel.go
 SRFI_145_GOBJECT := $(OUTPUT_DIR)/srfi/srfi-145.go
 SRFI_180_GOBJECT := $(OUTPUT_DIR)/srfi/srfi-180.go
 GUILE_GOBJECT = $(OUTPUT_DIR)/lsp-server.go
@@ -42,27 +42,29 @@ $(SRFI_180_GOBJECT): $(srfi_dir)/srfi-180.scm $(SRFI_145_GOBJECT)
 	cd $(makefile_dir)
 
 $(OUTPUT_DIR)/common/%.go: $(common_dir)/%.scm $(JSON_RPC_GOBJECT)
-	GUILE_LOAD_COMPILED_PATH=$(OUTPUT_DIR)/json-rpc/:${GUILE_LOAD_COMPILED_PATH} \
+	GUILE_LOAD_COMPILED_PATH=$(OUTPUT_DIR):${GUILE_LOAD_COMPILED_PATH} \
 	$(GUILD) compile $(GUILE_WARNINGS) --r7rs -o "$@" "$<"
 
 $(OUTPUT_DIR)/%.go: $(GUILE_SOURCES) $(JSON_RPC_GOBJECT) $(COMMON_SOURCES) $(SRFI_180_GOBJECT)
-	GUILE_LOAD_COMPILED_PATH=$(OUTPUT_DIR)/json-rpc/:$(OUTPUT_DIR)/:${GUILE_LOAD_COMPILED_PATH} \
+	GUILE_LOAD_COMPILED_PATH=$(OUTPUT_DIR):$(OUTPUT_DIR)/:${GUILE_LOAD_COMPILED_PATH} \
 	$(GUILD) compile $(GUILE_WARNINGS) --r7rs -o "$@" "$<"
 
 install: directories
 	mkdir -p $(GUILE_TARGET_SCM)/lsp-server-guile/common
+	mkdir -p $(GUILE_TARGET_SCM)/json-rpc
 	mkdir -p $(GUILE_TARGET_SCM)/srfi
 
 	mkdir -p $(GUILE_TARGET_GO)/lsp-server-guile/common
+	mkdir -p $(GUILE_TARGET_GO)/json-rpc
 	mkdir -p $(GUILE_TARGET_GO)/srfi
 
 	cp $(COMMON_SOURCES) $(GUILE_TARGET_SCM)/lsp-server-guile/common
-	cp $(json_rpc_dir)/json-rpc-guile.sld $(GUILE_TARGET_SCM)/json-rpc.scm
+	cp $(json_rpc_dir)/json-rpc-lolevel.scm $(GUILE_TARGET_SCM)/json-rpc/json-rpc.scm
+	cp $(json_rpc_dir)/json-rpc-guile.sld $(GUILE_TARGET_SCM)/json-rpc/lolevel.scm
 	cp lsp-server-guile.sld $(GUILE_TARGET_SCM)/lsp-server.scm
 	cp -R $(srfi_dir)/srfi-180.scm $(srfi_dir)/check.scm $(srfi_dir)/180 $(GUILE_TARGET_SCM)/srfi/
 
-	cp -r $(JSON_RPC_GOBJECT) \
-	      $(GUILE_TARGET_GO)/
+	cp $(JSON_RPC_GOBJECT) $(GUILE_TARGET_GO)/json-rpc/
 	cp $(OUTPUT_DIR)/lsp-server.go $(GUILE_TARGET_GO)/
 	cp $(OUTPUT_DIR)/srfi/*.go $(GUILE_TARGET_GO)/srfi/
 

@@ -21,9 +21,7 @@
 
 (define $tcp-accept tcp-accept)
 
-(define JSON #f)
 (define ($json-string->scheme j)
-  (set! JSON j)
   (call-with-input-string j
     read-json))
 
