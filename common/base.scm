@@ -6,12 +6,25 @@
   (type apropos-info-type)
   (object apropos-info-object))
 
+(cond-expand
+ (guile
+  (define (intersperse lst delim)
+    (let loop ((remaining lst)
+               (result '()))
+      (cond ((null? remaining)
+             (reverse result))
+            ((null? (cdr remaining))
+             (reverse (cons (car remaining) result)))
+            (else
+             (loop (cdr remaining)
+                   (cons delim
+                         (cons (car remaining)
+                               result))))))))
+ (else))
+
 (define (join-module-name mod)
-  (define $intersperse
-    (cond-expand (chicken intersperse)
-                 (guile string-join)))
   (apply string-append (append '("(")
-                               ($intersperse (map symbol->string mod)
+                               (intersperse (map symbol->string mod)
                                              " ")
                                '(")"))))
 

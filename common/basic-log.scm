@@ -10,12 +10,12 @@
 (define (write-log type msg . args)
   (define level (get-log-level type))
   (when (<= level (log-level))
-    (format #t "[~a] ~a"
-            (string-upcase (symbol->string type))
-            msg)
+    (display (format "[~a] ~a"
+                     (string-upcase (symbol->string type))
+                     msg))
     (when (not (null? args))
       (map (lambda (s)
-             (format #t "~a    " s))
+             (display (format "~a    " s)))
            args))
     (newline)
     (flush-output-port)))

@@ -41,11 +41,3 @@
       (if (eof-object? line)
           (reverse res)
           (loop (cons line res))))))
-
-(define ($json-string->scheme str)
-  (call-with-input-string str
-    (lambda (p)
-      (json-read p))))
-(define ($scheme->json-string scm)
-  (call-with-output-string (lambda (p) (json-write scm p))))
-

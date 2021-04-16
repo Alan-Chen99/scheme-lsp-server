@@ -21,13 +21,6 @@
 
 (define $tcp-accept tcp-accept)
 
-(define ($json-string->scheme j)
-  (call-with-input-string j
-    read-json))
-
-(define ($scheme->json-string s)
-  (json->string s))
-
 (define ($apropos-list identifier)
   (define suggestions
     (apropos-information-list identifier #:macros? #t #:imported? #t))

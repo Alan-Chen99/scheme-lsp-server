@@ -1,24 +1,10 @@
-(define (run)
-  (json-rpc-loop (current-input-port) (current-output-port)))
+(define lsp-server-log-level (make-parameter 2))
 
-(define (run-tcp tcp-port)
-  (cond-expand
-    (chicken (tcp-read-timeout #f))
-    (else))
-  (write-log 'info
-             (format #f "Server listening on port ~a" tcp-port))
-  (define listener ($tcp-listen tcp-port))
-  (define-values (in-port out-port)
-    ($tcp-accept listener))
-  (write-log 'info "client connected")
-
-  (json-rpc-loop in-port out-port)
-
-  (close-input-port in-port)
-  (close-output-port out-port))
+;; (define (run)
+;;   (json-rpc-loop (current-input-port) (current-output-port)))
 
 (define (ignore-request params)
-  (write-log 'debug (format #f "ignoring request. Params: ~a" params))
+  (write-log 'debug (format "ignoring request. Params: ~a" params))
   #f)
 
 (define (text-document/did-change params)
@@ -39,10 +25,10 @@
   (if file-path
       (begin (update-file! file-path changes)
              (write-log 'debug
-                        (format #f "file contents updated: ~a"
+                        (format "file contents updated: ~a"
                                 file-path)))
       (write-log 'debug
-                 (format #f "file-path not found: ~a"
+                 (format "file-path not found: ~a"
                          file-path)))
   #f)
 
@@ -51,10 +37,10 @@
   (if file-path
       (begin (read-file! file-path)
              (write-log 'debug
-                        (format #f "file contents read: ~a"
+                        (format "file contents read: ~a"
                                 file-path)))
       (write-log 'debug
-                        (format #f "file-path not found: ~a"
+                        (format "file-path not found: ~a"
                                 file-path)))
   #f)
 
@@ -81,10 +67,10 @@
                                   (symbol->string
                                    (apropos-info-name ainfo)))
                                  (label (if module-name
-                                            (format #f "~a ~a"
+                                            (format "~a ~a"
                                                     module-name
                                                     id-name)
-                                            (format #f "~a" id-name))))
+                                            (format "~a" id-name))))
                             `((label . ,label)
                               (insertText . ,id-name)
                               (data . ((identifier . ,id-name)
@@ -112,7 +98,7 @@
   (if (null? matches)
       (begin
         (write-log 'info
-                   (format #f "no signature found for: ~a" cur-word))
+                   (format "no signature found for: ~a" cur-word))
         #f)
       (let* ((ainfo (car matches))
              (signature
@@ -128,47 +114,41 @@
     (load file-path))
   #f)
 
-(define (start-lsp-server tcp-port . args)
-  (define debug-level (if (null? args)
-                          0
-                          (car args)))
-  (unless (number? debug-level)
-    (error "Not a valid debug-level: " (car args)))
-  (define thread
-    (parameterize
-        ((json-rpc-log-level debug-level)
-         (log-level debug-level)
-         (json-string->scheme $json-string->scheme)
-         (scheme->json-string $scheme->json-string))
-      (make-thread
-       (lambda ()
-         (parameterize
-             ((json-rpc-handler-table
-               `(("initialize" .
-                  ,(lambda (params)
-                     `((capabilities . ,$server-capabilities)
-                       (serverInfo . ((name . ,$server-name)
-                                      (version . "0.0.1"))))))
-                 ("shutdown" . ,(lambda (params)
-                                  (write-log 'info
-                                             "shutting down")
-                                  #f))
-                 ("initialized" . ,(lambda (params)
-                                     (write-log 'info
-                                                "initialized")
-                                     #f))
-                 ("textDocument/didChange" . ,text-document/did-change)
-                 ("textDocument/didOpen" . ,text-document/did-open)
-                 ("textDocument/didSave" . ,text-document/did-save)
-                 ("textDocument/completion" . ,text-document/completion)
-                 ("completionItem/resolve" . ,completion-item/resolve)
-                 ("textDocument/signatureHelp" . ,text-document/signature-help)
-                 ("$/cancelRequest" . ,ignore-request)
-                 ("exit" . ,ignore-request)
+(define (start-lsp-server tcp-port)
+  (parameterize
+      ((json-rpc-log-level (lsp-server-log-level))
+       (log-level (lsp-server-log-level))
+       (json-rpc-handler-table
+        `(("initialize" .
+           ,(lambda (params)
+              `((capabilities . ,$server-capabilities)
+                (serverInfo . ((name . ,$server-name)
+                               (version . "0.0.1"))))))
+          ("shutdown" . ,(lambda (params)
+                           (write-log 'info
+                                      "shutting down")
+                           (json-rpc-exit)))
+          ("initialized" . ,(lambda (params)
+                              (write-log 'info
+                                         "initialized")
+                              #f))
+          ("textDocument/didChange" . ,text-document/did-change)
+          ("textDocument/didOpen" . ,text-document/did-open)
+          ("textDocument/didSave" . ,text-document/did-save)
+          ("textDocument/completion" . ,text-document/completion)
+          ("completionItem/resolve" . ,completion-item/resolve)
+          ("textDocument/signatureHelp" . ,text-document/signature-help)
+          ("$/cancelRequest" . ,ignore-request)
+          ("exit" . ,(lambda (params)
+                       (json-rpc-exit)))
 
 ;;; custom commands
-                 ("custom/loadFile" . ,custom/load-file))))
-           (run-tcp tcp-port))))))
+          ("custom/loadFile" . ,custom/load-file))))
+    (json-rpc-start-server/tcp tcp-port)))
+
+(define (start-lsp-server/background tcp-port)
+  (define thread
+    (make-thread (lambda () (start-lsp-server tcp-port))))
   (thread-start! thread)
   thread)
 

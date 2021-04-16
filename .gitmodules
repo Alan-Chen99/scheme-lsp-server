@@ -1,3 +1,0 @@
-[submodule "common/json-rpc"]
-	path = common/json-rpc
-	url = https://gitlab.com/rgherdt/scheme-json-rpc

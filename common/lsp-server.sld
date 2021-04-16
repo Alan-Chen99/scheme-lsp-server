@@ -1,10 +1,11 @@
 (define-library (lsp-server)
 
-(export start-lsp-server)
+(export lsp-server-log-level
+        start-lsp-server
+        start-lsp-server/background)
 
 (import (chicken base)
         (chicken condition)
-        (chicken format)
         (except (chicken io) read-string)
         (chicken port)
         (chicken process)
@@ -18,9 +19,10 @@
         srfi-1
         srfi-13 ;; string-upcase
         srfi-18
+        srfi-28
         srfi-69
 
-        (json-rpc lolevel))
+        (json-rpc))
 
 (include "basic-log.scm")
 (include "util.scm")
