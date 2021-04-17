@@ -1,4 +1,4 @@
-# scheme-language-server
+# scheme-lsp-server
 
 ## Introduction
 
