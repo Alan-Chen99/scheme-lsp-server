@@ -17,10 +17,14 @@ More details on the supported features soon.
 
 ## API
 
+```
+[parameter] (lsp-server-log-level)
+```
+An integer to control the server's verbosity, ranging from 0 (show only `error` messages) to 3 (verbose).
 
 ```
-[function] (start-lsp-server tcp-port [debug-level 0])
+[function] (start-lsp-server tcp-port)
+[function] (start-lsp-server/background tcp-port)
 ```
 
-Start an LSP server listening on `tcp-port`. An optional number `debug-level` ranging between 0 (silent) and 3 (verbose) may be provided to
-control verbosity of the LSP server.
+Start an LSP server listening on `tcp-port`. `start-lsp-server/background` starts the server on a new thread and returns it.
