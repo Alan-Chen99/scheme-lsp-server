@@ -22,7 +22,8 @@
         srfi-28
         srfi-69
 
-        (json-rpc))
+        (json-rpc)
+        (json-rpc lolevel))
 
 (include "basic-log.scm")
 (include "util.scm")

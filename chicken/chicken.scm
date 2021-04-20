@@ -1,16 +1,23 @@
 (import (apropos)
         (chicken base)
         (chicken io)
+        (chicken irregex)
         (chicken port)
         (chicken process)
         (chicken tcp)
+        chicken-doc
         medea
         r7rs
         scheme)
 (include "../common/base.scm")
 
+(define module-egg-mapping #f)
+
 (define $server-name
   "chicken lsp server")
+
+(define ($initialize-lsp-server)
+  (set! module-egg-mapping (build-module-egg-mapping)))
 
 (define $server-capabilities
   `((completionProvider . ((resolveProvider . #t)))
@@ -37,26 +44,59 @@
        suggestions))
 
 (define ($fetch-documentation module identifier)
-  (define local-module-name
-    (map symbol->string module) " ")
+  (define egg (or (module-egg module)
+                  (car module)))
   (define doc-path
-    (append local-module-name
-            (list (symbol->string identifier))))
-  (define-values (in-port out-port pid)
-    (process "chicken-doc" (cons "-i" doc-path)))
-  (define lines (read-lines in-port))
-  (apply string-append (intersperse lines "\n")))
+    (list egg identifier))
+  (with-output-to-string
+    (lambda ()
+      (describe (lookup-node doc-path)))))
 
 (define ($fetch-signature module identifier)
-  (if (not module)
+  (define egg (or (module-egg module)
+                  (car module)))
+  (if (not egg)
       #f
-      (let-values
-          (((in-port out-port pid)
-            (process "chicken-doc"
-                     (append '("-s")
-                             (map symbol->string module)
-                             (list (symbol->string identifier))))))
-        (let ((lines (read-lines in-port)))
-          (if (null? lines)
-              #f
-              (car lines))))))
+      (node-signature
+       (lookup-node (list egg identifier)))))
+
+(define (build-module-egg-mapping)
+  (define-values (in out pid)
+    (process "chicken-status" '("-c")))
+  (define (egg-line? str)
+    (irregex-match
+     '(: (submatch (+ any)) (+ space) (+ #\.) (* any))
+     str))
+  (define (extension-line? str)
+    (irregex-match
+     '(: (+ space) "extension" (+ space)
+         (submatch (+ (~ space))) (* space))
+     str))
+  (let loop ((line (read-line in))
+             (table '())
+             (cur-egg #f))
+    (cond ((eof-object? line)
+           (alist->hash-table table))
+          ((egg-line? line) =>
+           (lambda (m)
+             (loop (read-line in)
+                   table
+                   (string->symbol (irregex-match-substring m 1)))))
+          ((extension-line? line) =>
+           (lambda (m)
+             (loop (read-line in)
+                   (let ((mod (map string->symbol
+                                   (string-split (irregex-match-substring m 1)
+                                                 "."))))
+
+                     (cons (cons mod cur-egg)
+                           table))
+                   cur-egg)))
+          (else (loop (read-line in)
+                      table
+                      cur-egg)))))
+
+(define (module-egg mod)
+  (hash-table-ref/default module-egg-mapping
+                          mod
+                          #f))

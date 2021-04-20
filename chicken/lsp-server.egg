@@ -1,6 +1,7 @@
 ((author "Ricardo G. Herdt")
  (synopsis "A LSP Server for CHICKEN.")
  (dependencies apropos
+               chicken-doc
                json-rpc
                r7rs
                srfi-1

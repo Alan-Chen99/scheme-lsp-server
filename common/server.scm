@@ -10,18 +10,11 @@
 (define (text-document/did-change params)
   (define file-path (get-uri-path params))
   (define changes
-    (cond-expand
-     (chicken
-      (string-split
-       (alist-ref 'text
-                  (vector-ref (alist-ref 'contentChanges params) 0))
-       "\r\n"
-       #t))
-     (guile
-      (string-split
-       (alist-ref 'text
-                  (vector-ref (alist-ref 'contentChanges params) 0))
-       #\newline))))
+    (string-split
+     (alist-ref 'text
+                (vector-ref (alist-ref 'contentChanges params) 0))
+     "\r\n"
+     #t))
   (if file-path
       (begin (update-file! file-path changes)
              (write-log 'debug
@@ -56,7 +49,8 @@
           (< (string-length word) 3))
       #f
       (let ((suggestions ($apropos-list word)))
-        (write-log 'debug "suggestions found: ~a~%" suggestions)
+        (write-log 'debug (format "suggestions found: ~a~%"
+                                  suggestions))
         `((items .
                  ,(list->vector
                    (map (lambda (ainfo)
@@ -84,9 +78,21 @@
                 (if m
                     (split-module-name m)
                     '())))
-  (define doc ($fetch-documentation mod id))
-  (cons `(documentation . ,doc)
-        params))
+  (guard (condition
+          (#t (begin
+                (write-log 'warning
+                           "error resolving "
+                           mod
+                           id)
+                (if (> (lsp-server-log-level) 2)
+                    (raise (make-json-rpc-internal-error
+                            (format "Error resolving ~a ~a"
+                                    mod
+                                    id)))
+                    #f))))
+    (let ((doc ($fetch-documentation mod id)))
+      (cons `(documentation . ,doc)
+            params))))
 
 (define (text-document/signature-help params)
   (define cur-word (get-word-under-cursor params))
@@ -100,11 +106,18 @@
         (write-log 'info
                    (format "no signature found for: ~a" cur-word))
         #f)
-      (let* ((ainfo (car matches))
-             (signature
-              ($fetch-signature (apropos-info-module ainfo)
-                                (apropos-info-name ainfo))))
-        `((signatures . ,(vector `((label . ,signature))))))))
+      (guard
+          (condition
+           (#t (if (> (lsp-server-log-level) 2)
+                   (raise (make-json-rpc-internal-error
+                           (format "Error fetching signature of `~a`"
+                                   cur-word)))
+                   #f)))
+        (let* ((ainfo (car matches))
+               (signature
+                ($fetch-signature (apropos-info-module ainfo)
+                                  (apropos-info-name ainfo))))
+          `((signatures . ,(vector `((label . ,signature)))))))))
 
 (define (custom/load-file params)
   (define file-path (get-uri-path params))
@@ -121,9 +134,10 @@
        (json-rpc-handler-table
         `(("initialize" .
            ,(lambda (params)
+              ($initialize-lsp-server)
               `((capabilities . ,$server-capabilities)
                 (serverInfo . ((name . ,$server-name)
-                               (version . "0.0.1"))))))
+                               (version . "0.1.0"))))))
           ("shutdown" . ,(lambda (params)
                            (write-log 'info
                                       "shutting down")
@@ -142,7 +156,7 @@
           ("exit" . ,(lambda (params)
                        (json-rpc-exit)))
 
-;;; custom commands
+          ;; custom commands
           ("custom/loadFile" . ,custom/load-file))))
     (json-rpc-start-server/tcp tcp-port)))
 
