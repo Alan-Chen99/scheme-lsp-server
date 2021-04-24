@@ -1,13 +1,49 @@
 (define lsp-server-log-level (make-parameter 2))
+(define lsp-server-state 'off)
 
 ;; (define (run)
 ;;   (json-rpc-loop (current-input-port) (current-output-port)))
 
-(define (ignore-request params)
+(define (shutting-down?)
+  (eqv? lsp-server-state 'shutdown))
+
+(define-syntax define-handler
+  (syntax-rules ()
+    ((define-handler (handler params #:exit? exit?) body ...)
+     (define (handler params)
+       (when (and (shutting-down?) (not exit?))
+         (raise (make-json-rpc-invalid-request-error
+                 "Only exit request allowed after shutdown.")))
+       body ...))
+    ((define-handler (handler params) body ...)
+     (define-handler (handler params #:exit? #f) body ...))))
+
+(define-handler (initialize-handler params)
+  ($initialize-lsp-server)
+  (set! lsp-server-state 'on)
+  `((capabilities . ,$server-capabilities)
+    (serverInfo . ((name . ,$server-name)
+                   (version . "0.1.0")))))
+
+(define-handler (initialized-handler params)
+  (write-log 'info
+             "initialized")
+  #f)
+
+(define-handler (shutdown-handler params)
+  (write-log 'info
+             "shutting down")
+  (json-rpc-exit))
+
+(define-handler (lsp-exit-handler params #:exit? #t)
+  (write-log 'info "exiting")
+  (json-rpc-exit))
+
+(define-handler (ignore-request params)
   (write-log 'debug (format "ignoring request. Params: ~a" params))
   #f)
 
-(define (text-document/did-change params)
+(define-handler (text-document/did-change params)
   (define file-path (get-uri-path params))
   (define changes
     (string-split
@@ -25,7 +61,13 @@
                          file-path)))
   #f)
 
-(define (text-document/did-open params)
+(define-handler (text-document/did-close params)
+  (define file-path (get-uri-path params))
+  (when (free-file! file-path)
+    (write-log 'info "file closed" file-path))
+  #f)
+
+(define-handler (text-document/did-open params)
   (define file-path (get-uri-path params))
   (if file-path
       (begin (read-file! file-path)
@@ -37,12 +79,12 @@
                                 file-path)))
   #f)
 
-(define (text-document/did-save params)
+(define-handler (text-document/did-save params)
   (define file-path (get-uri-path params))
   (write-log 'info "file saved.")
   #f)
 
-(define (text-document/completion params)
+(define-handler (text-document/completion params)
   (define word (get-word-under-cursor params))
   (write-log 'debug "getting completion suggestions for word " word)
   (if (or (not word)
@@ -71,7 +113,7 @@
                                        (module . ,module-name))))))
                         suggestions)))))))
 
-(define (completion-item/resolve params)
+(define-handler (completion-item/resolve params)
   (define id (string->symbol
               (alist-ref* '(data identifier) params)))
   (define mod (let ((m (alist-ref* '(data module) params)))
@@ -94,7 +136,7 @@
       (cons `(documentation . ,doc)
             params))))
 
-(define (text-document/signature-help params)
+(define-handler (text-document/signature-help params)
   (define cur-word (get-word-under-cursor params))
   (define matches
     (filter (lambda (ap)
@@ -119,7 +161,7 @@
                                   (apropos-info-name ainfo))))
           `((signatures . ,(vector `((label . ,signature)))))))))
 
-(define (custom/load-file params)
+(define-handler (custom/load-file params)
   (define file-path (get-uri-path params))
   (write-log 'debug "loading file: " file-path)
   (guard (condition
@@ -132,30 +174,19 @@
       ((json-rpc-log-level (lsp-server-log-level))
        (log-level (lsp-server-log-level))
        (json-rpc-handler-table
-        `(("initialize" .
-           ,(lambda (params)
-              ($initialize-lsp-server)
-              `((capabilities . ,$server-capabilities)
-                (serverInfo . ((name . ,$server-name)
-                               (version . "0.1.0"))))))
-          ("shutdown" . ,(lambda (params)
-                           (write-log 'info
-                                      "shutting down")
-                           (json-rpc-exit)))
-          ("initialized" . ,(lambda (params)
-                              (write-log 'info
-                                         "initialized")
-                              #f))
+        `(("initialize" . ,initialize-handler)
+          ("initialized" . ,initialized-handler)
+          ("shutdown" . ,shutdown-handler)
           ("textDocument/didChange" . ,text-document/did-change)
+          ("textDocument/didClose" . ,text-document/did-close)
           ("textDocument/didOpen" . ,text-document/did-open)
           ("textDocument/didSave" . ,text-document/did-save)
           ("textDocument/completion" . ,text-document/completion)
           ("completionItem/resolve" . ,completion-item/resolve)
           ("textDocument/signatureHelp" . ,text-document/signature-help)
           ("$/cancelRequest" . ,ignore-request)
-          ("exit" . ,(lambda (params)
-                       (json-rpc-exit)))
-
+          ("exit" . ,lsp-exit-handler)
+          ("shutdown" . ,shutdown-handler)
           ;; custom commands
           ("custom/loadFile" . ,custom/load-file))))
     (json-rpc-start-server/tcp tcp-port)))

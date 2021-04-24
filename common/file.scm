@@ -24,9 +24,13 @@
 
 (define (free-file! path)
   (define file (hash-table-ref/default (file-table) path #f))
-  (if file
-      (write-log 'warning "trying to freeing a non-existing file")
-      (hash-table-delete! (file-table) path)))
+  (if (not file)
+      (begin (write-log 'warning
+                        "trying to freeing a non-existing file"
+                        path)
+             #f)
+      (begin (hash-table-delete! (file-table) path)
+             #t)))
 
 (define (get-word-under-cursor params)
   (define file-path (get-uri-path params))

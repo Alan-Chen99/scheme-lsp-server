@@ -14,6 +14,7 @@
                      (string-upcase (symbol->string type))
                      msg))
     (when (not (null? args))
+      (display ": ")
       (map (lambda (s)
              (display (format "~a    " s)))
            args))
