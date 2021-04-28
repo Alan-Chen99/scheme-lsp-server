@@ -19,6 +19,8 @@
 #:use-module (ice-9 documentation)
 #:use-module (ice-9 session)
 
+#:use-module (system vm program)
+
 #:declarative? #f)
 
 (include "common/basic-log.scm")

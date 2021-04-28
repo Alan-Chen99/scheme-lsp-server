@@ -43,6 +43,10 @@
   (write-log 'debug (format "ignoring request. Params: ~a" params))
   #f)
 
+(define-handler (text-document/definition params)
+  (define word (get-word-under-cursor params))
+  ($get-definition-location (string->symbol word)))
+
 (define-handler (text-document/did-change params)
   (define file-path (get-uri-path params))
   (define changes
@@ -173,10 +177,12 @@
   (parameterize
       ((json-rpc-log-level (lsp-server-log-level))
        (log-level (lsp-server-log-level))
+       (custom-error-codes '((definition-not-found-error . -32000)))
        (json-rpc-handler-table
         `(("initialize" . ,initialize-handler)
           ("initialized" . ,initialized-handler)
           ("shutdown" . ,shutdown-handler)
+          ("textDocument/definition" . ,text-document/definition)
           ("textDocument/didChange" . ,text-document/did-change)
           ("textDocument/didClose" . ,text-document/did-close)
           ("textDocument/didOpen" . ,text-document/did-open)

@@ -60,6 +60,9 @@
       (node-signature
        (lookup-node (list egg identifier)))))
 
+(define ($get-definition-location identifier)
+  (error "not implemented"))
+
 (define (build-module-egg-mapping)
   (define-values (in out pid)
     (process "chicken-status" '("-c")))

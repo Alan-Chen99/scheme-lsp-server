@@ -6,6 +6,7 @@
 
 (define $server-capabilities
   `((completionProvider . ((resolveProvider . #t)))
+    (definitionProvider . ())
     (signatureHelpProvider . ())
     (textDocumentSync . 1)))
 
@@ -54,6 +55,26 @@
               (build-procedure-signature module-name identifier obj))
       #f))
 
+(define ($get-definition-location identifier)
+  (define obj (symbol->object identifier))
+  (define program (program-source obj 0))
+  (if program
+      (let* ((file-path (source:file program))
+             (file-abs-path (if (absolute-file-name? file-path)
+                                file-path
+                                (find-absolute-path file-path))))
+        `((uri . ,(string-append "file://" file-abs-path))
+         (range . ((start . ((line . ,(source:line program))
+                             (character . ,(source:column program))))
+                   (end . ((line . ,(source:line program))
+                           (character . ,(+ (source:column program)
+                                            (string-length
+                                             (symbol->string identifier))))))))))
+      (raise (make-json-rpc-custom-error
+              'definition-not-found-error
+              (format "Definition not found: ~a" identifier)))))
+
+
 (define (build-procedure-signature module name proc-obj)
   (define args (procedure-arguments proc-obj))
   (define required (alist-ref 'required args))
@@ -82,3 +103,18 @@
                        #\newline
                        (string-ref delim-str 0))))
         ((@ (guile) string-split) str delim))))
+
+(define (symbol->object sym)
+  (and (symbol? sym)
+       (module-defined? (current-module) sym)
+       (module-ref (current-module) sym)))
+
+(define (find-absolute-path path)
+  (define base-path
+    (find (lambda (load-path)
+            (file-exists? (string-append load-path "/" path)))
+          %load-path))
+  (if base-path
+      (canonicalize-path (string-append base-path "/" path))
+      #f))
+
