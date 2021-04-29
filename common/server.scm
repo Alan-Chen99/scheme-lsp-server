@@ -28,16 +28,17 @@
 (define-handler (initialized-handler params)
   (write-log 'info
              "initialized")
-  #f)
+  'null)
 
 (define-handler (shutdown-handler params)
   (write-log 'info
              "shutting down")
-  (json-rpc-exit))
+  'null)
 
 (define-handler (lsp-exit-handler params #:exit? #t)
   (write-log 'info "exiting")
-  (json-rpc-exit))
+  (json-rpc-exit)
+  #f)
 
 (define-handler (ignore-request params)
   (write-log 'debug (format "ignoring request. Params: ~a" params))
@@ -93,28 +94,32 @@
   (write-log 'debug "getting completion suggestions for word " word)
   (if (or (not word)
           (< (string-length word) 3))
-      #f
+      'null
       (let ((suggestions ($apropos-list word)))
         (write-log 'debug (format "suggestions found: ~a~%"
                                   suggestions))
         `((items .
                  ,(list->vector
                    (map (lambda (ainfo)
-                          (let* ((module-name 
-                                  (join-module-name
-                                   (apropos-info-module ainfo)))
+                          (let* ((ainfo-module (apropos-info-module ainfo))
+                                 (module-name
+                                  (if ainfo-module
+                                      (join-module-name ainfo-module)
+                                      ""))
                                  (id-name
                                   (symbol->string
                                    (apropos-info-name ainfo)))
-                                 (label (if module-name
+                                 (label (if ainfo-module
                                             (format "~a ~a"
                                                     module-name
                                                     id-name)
                                             (format "~a" id-name))))
                             `((label . ,label)
                               (insertText . ,id-name)
-                              (data . ((identifier . ,id-name)
-                                       (module . ,module-name))))))
+                              (data . ,(if ainfo-module
+                                           `((identifier . ,id-name)
+                                             (module . ,module-name))
+                                           `((identifier . ,id-name)))))))
                         suggestions)))))))
 
 (define-handler (completion-item/resolve params)
@@ -151,7 +156,7 @@
       (begin
         (write-log 'info
                    (format "no signature found for: ~a" cur-word))
-        #f)
+        'null)
       (guard
           (condition
            (#t (if (> (lsp-server-log-level) 2)
@@ -181,7 +186,6 @@
        (json-rpc-handler-table
         `(("initialize" . ,initialize-handler)
           ("initialized" . ,initialized-handler)
-          ("shutdown" . ,shutdown-handler)
           ("textDocument/definition" . ,text-document/definition)
           ("textDocument/didChange" . ,text-document/did-change)
           ("textDocument/didClose" . ,text-document/did-close)
@@ -202,9 +206,3 @@
     (make-thread (lambda () (start-lsp-server tcp-port))))
   (thread-start! thread)
   thread)
-
-;; (cond-expand ((or chicken-script compiling)
-;;               (let ((thread (start-lsp-server)))
-;;                (thread-join! thread)))
-;;              (else))
-

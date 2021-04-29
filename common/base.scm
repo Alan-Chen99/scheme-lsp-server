@@ -23,10 +23,12 @@
  (else))
 
 (define (join-module-name mod)
-  (apply string-append (append '("(")
-                               (intersperse (map symbol->string mod)
-                                             " ")
-                               '(")"))))
+  (if mod
+      (apply string-append (append '("(")
+                                   (intersperse (map symbol->string mod)
+                                                " ")
+                                   '(")")))
+      #f))
 
 (define (split-module-name mod)
   (map string->symbol

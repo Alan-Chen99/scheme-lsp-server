@@ -9,14 +9,17 @@
 
 (define (write-log type msg . args)
   (define level (get-log-level type))
-  (when (<= level (log-level))
+  (define error-port (current-error-port))
+  (when (<= level (json-rpc-log-level))
     (display (format "[~a] ~a"
                      (string-upcase (symbol->string type))
-                     msg))
+                     msg)
+              error-port)
     (when (not (null? args))
-      (display ": ")
+      (display ": " error-port)
       (map (lambda (s)
-             (display (format "~a    " s)))
+             (display (format "~a    " s) error-port))
            args))
-    (newline)
-    (flush-output-port)))
+    (newline error-port)
+    (flush-output-port error-port)))
+

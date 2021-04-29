@@ -30,7 +30,7 @@
 
 (define ($apropos-list identifier)
   (define suggestions
-    (apropos-information-list identifier #:macros? #t #:imported? #t))
+    (apropos-information-list identifier #:macros? #t))
   (map (lambda (s)
          (let* ((mod-id-pair (car s))
                 (mod (let ((fst (car mod-id-pair)))
