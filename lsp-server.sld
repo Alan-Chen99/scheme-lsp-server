@@ -23,12 +23,12 @@
 
 #:declarative? #f)
 
-(include "common/basic-log.scm")
-(include "common/base.scm")
-(include "common/util.scm")
-(include "guile/guile.scm")
-(include "common/file.scm")
-(include "common/server.scm")
+(include "lsp-server/common/basic-log.scm")
+(include "lsp-server/common/base.scm")
+(include "lsp-server/common/util.scm")
+(include "lsp-server/guile/guile.scm")
+(include "lsp-server/common/file.scm")
+(include "lsp-server/common/server.scm")
 
 
 
