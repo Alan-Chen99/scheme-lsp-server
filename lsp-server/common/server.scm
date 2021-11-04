@@ -14,6 +14,10 @@
        (when (and (shutting-down?) (not exit?))
          (raise (make-json-rpc-invalid-request-error
                  "Only exit request allowed after shutdown.")))
+       (write-log 'debug
+                  (format #f "Handler ~a called with params ~a"
+                          'handler
+                          params))
        body ...))
     ((define-handler (handler params) body ...)
      (define-handler (handler params #:exit? #f) body ...))))

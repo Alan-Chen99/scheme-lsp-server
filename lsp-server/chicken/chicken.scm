@@ -11,6 +11,8 @@
         scheme)
 (include "../common/base.scm")
 
+;;; A hash table mapping modules (extensions) to eggs. This is needed
+;;; to fetch the correct documentation with chicken-doc
 (define module-egg-mapping #f)
 
 (define $server-name
@@ -45,12 +47,18 @@
 
 (define ($fetch-documentation module identifier)
   (define egg (or (module-egg module)
-                  (car module)))
+                  module))
   (define doc-path
-    (list egg identifier))
-  (with-output-to-string
-    (lambda ()
-      (describe (lookup-node doc-path)))))
+    (append (if (list? egg)
+                egg
+                (list egg))
+            (list identifier)))
+  (begin
+    (write-log 'debug
+               (format #f "looking up doc-path: ~a" doc-path))
+    (with-output-to-string
+      (lambda ()
+        (describe (lookup-node doc-path))))))
 
 (define ($fetch-signature module identifier)
   (define egg (or (module-egg module)
