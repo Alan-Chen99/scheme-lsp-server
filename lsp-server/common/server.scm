@@ -204,6 +204,29 @@
     (load file-path))
   #f)
 
+(define (start-lsp-loop)
+  (parameterize
+      ((json-rpc-log-level (lsp-server-log-level))
+       (log-level (lsp-server-log-level))
+       (custom-error-codes '((definition-not-found-error . -32000)))
+       (json-rpc-handler-table
+        `(("initialize" . ,initialize-handler)
+          ("initialized" . ,initialized-handler)
+          ("textDocument/definition" . ,text-document/definition)
+          ("textDocument/didChange" . ,text-document/did-change)
+          ("textDocument/didClose" . ,text-document/did-close)
+          ("textDocument/didOpen" . ,text-document/did-open)
+          ("textDocument/didSave" . ,text-document/did-save)
+          ("textDocument/completion" . ,text-document/completion)
+          ("completionItem/resolve" . ,completion-item/resolve)
+          ("textDocument/signatureHelp" . ,text-document/signature-help)
+          ("$/cancelRequest" . ,ignore-request)
+          ("exit" . ,lsp-exit-handler)
+          ("shutdown" . ,shutdown-handler)
+          ;; custom commands
+          ("custom/loadFile" . ,custom/load-file))))
+    (json-rpc-loop (current-input-port) (current-output-port))))
+
 (define (start-lsp-server tcp-port)
   (parameterize
       ((json-rpc-log-level (lsp-server-log-level))
