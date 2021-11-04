@@ -68,20 +68,8 @@
             (let ((word (substring line word-start word-end)))
               (write-log 'debug (string-append "selected word: "
                                                word))
-              word)))))
-
-(define (get-word-up-to-cursor params)
-  (define file-path (get-uri-path params))
-  (define lines (read-file! file-path))
-  (define line-number (alist-ref* '(position line) params))
-  (define char-number (alist-ref* '(position character) params))
-  (define line (list-ref lines line-number))
-  (let loop ((pos char-number)
-             (result '()))
-    (let ((c (string-ref line pos)))
-      (if (identifier-char? c)
-          (if (= pos 0)
-              (list->string (cons c result))
-              (loop (- pos 1)
-                    (cons c result)))
-          (list->string result)))))
+              (make-editor-word word
+                                line-number
+                                line-number
+                                word-start
+                                word-end))))))

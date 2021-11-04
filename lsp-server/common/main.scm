@@ -6,6 +6,8 @@
   (display "Scheme LSP server started")
   (newline)
   (flush-output-port)
-  (thread-join! (start-lsp-server)))
+  ;;(thread-join! (start-lsp-server))
+  (start-lsp-loop)
+  )
 ;(main '())
 
