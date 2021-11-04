@@ -6,6 +6,15 @@
   (type apropos-info-type)
   (object apropos-info-object))
 
+(define-record-type <editor-word>
+  (make-editor-word text start-line end-line start-char end-char)
+  editor-word?
+  (text editor-word-text)
+  (start-line editor-word-start-line)
+  (end-line editor-word-end-line)
+  (start-char editor-word-start-char)
+  (end-char editor-word-end-char))
+
 (cond-expand
  (guile
   (define (intersperse lst delim)

@@ -2,7 +2,8 @@
 
 (export lsp-server-log-level
         start-lsp-server
-        start-lsp-server/background)
+        start-lsp-server/background
+        start-lsp-loop)
 
 (import (chicken base)
         (chicken condition)

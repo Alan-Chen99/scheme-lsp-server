@@ -49,7 +49,8 @@
   #f)
 
 (define-handler (text-document/definition params)
-  (define word (get-word-under-cursor params))
+  (define word (editor-word-text
+                (get-word-under-cursor params)))
   ($get-definition-location (string->symbol word)))
 
 (define-handler (text-document/did-change params)
@@ -94,7 +95,8 @@
   #f)
 
 (define-handler (text-document/completion params)
-  (define word (get-word-under-cursor params))
+  (define editor-word (get-word-under-cursor params))
+  (define word (editor-word-text editor-word))
   (write-log 'debug "getting completion suggestions for word " word)
   (if (or (not word)
           (< (string-length word) 3))
@@ -102,7 +104,8 @@
       (let ((suggestions ($apropos-list word)))
         (write-log 'debug (format "suggestions found: ~a~%"
                                   suggestions))
-        `((items .
+        `((isIncomplete . #t)
+          (items .
                  ,(list->vector
                    (map (lambda (ainfo)
                           (let* ((ainfo-module (apropos-info-module ainfo))
@@ -117,9 +120,23 @@
                                             (format "~a ~a"
                                                     module-name
                                                     id-name)
-                                            (format "~a" id-name))))
+                                            (format "~a" id-name)))
+                                 (start-line (alist-ref* '(position line)
+                                                         params))
+                                 (start-char (editor-word-start-char
+                                              editor-word))
+                                 (end-char (editor-word-end-char
+                                            editor-word))
+                                 (text-edit
+                                  `((range . ((start . ((line . ,start-line)
+                                                        (character . ,start-char)))
+                                              (end . ((line . ,start-line)
+                                                      (character . ,end-char)))))
+                                    (newText . ,id-name))))
                             `((label . ,label)
                               (insertText . ,id-name)
+                              (sortText . ,id-name)
+                              (textEdit . ,text-edit)
                               (data . ,(if ainfo-module
                                            `((identifier . ,id-name)
                                              (module . ,module-name))
@@ -145,12 +162,17 @@
                                     mod
                                     id)))
                     #f))))
-    (let ((doc ($fetch-documentation mod id)))
-      (cons `(documentation . ,doc)
-            params))))
+         (begin
+           (write-log 'debug
+                      (format #f "Calling $fetch-documentation for mod ~a id ~a"
+                              mod id))
+           (let ((doc ($fetch-documentation mod id)))
+             (cons `(documentation . ,doc)
+                   params)))))
 
 (define-handler (text-document/signature-help params)
-  (define cur-word (get-word-under-cursor params))
+  (define cur-word (editor-word-text
+                    (get-word-under-cursor params)))
   (define matches
     (filter (lambda (ap)
               (string=? (symbol->string (apropos-info-name ap))
