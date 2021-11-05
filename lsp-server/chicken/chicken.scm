@@ -23,6 +23,7 @@
 
 (define $server-capabilities
   `((completionProvider . ((resolveProvider . #t)))
+    (hoverProvider . #t)
     (signatureHelpProvider . ())
     (textDocumentSync . 1)))
 

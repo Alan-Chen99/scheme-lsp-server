@@ -96,12 +96,15 @@
 
 (define-handler (text-document/completion params)
   (define editor-word (get-word-under-cursor params))
-  (define word (editor-word-text editor-word))
-  (write-log 'debug "getting completion suggestions for word " word)
-  (if (or (not word)
-          (< (string-length word) 3))
+  (if (or (not editor-word)
+          (< (string-length (editor-word-text editor-word))
+             3))
       'null
-      (let ((suggestions ($apropos-list word)))
+      (let* ((word (editor-word-text editor-word))
+             (suggestions ($apropos-list word)))
+        (write-log 'debug "getting completion suggestions for word "
+                   word)
+
         (write-log 'debug (format "suggestions found: ~a~%"
                                   suggestions))
         `((isIncomplete . #t)
@@ -170,31 +173,47 @@
              (cons `(documentation . ,doc)
                    params)))))
 
+(define (fetch-signature-under-cursor params)
+  (define editor-word
+    (get-word-under-cursor params))
+  (if editor-word
+      (let* ((cur-word (editor-word-text editor-word))
+             (matches (filter (lambda (ap)
+                                (string=? (symbol->string (apropos-info-name ap))
+                                          cur-word))
+                              ($apropos-list cur-word))))
+        (if (null? matches)
+            (begin
+              (write-log 'info
+                         (format "no signature found for: ~a" cur-word))
+              'null)
+            (guard
+             (condition
+              (#t (begin (write-log 'warning
+                                    (format "Unable to fetch signature of `~a`"
+                                            cur-word))
+                         #f)))
+             (let* ((ainfo (car matches))
+                    (signature
+                     ($fetch-signature (apropos-info-module ainfo)
+                                       (apropos-info-name ainfo))))
+               signature))))
+      ""))
+
 (define-handler (text-document/signature-help params)
-  (define cur-word (editor-word-text
-                    (get-word-under-cursor params)))
-  (define matches
-    (filter (lambda (ap)
-              (string=? (symbol->string (apropos-info-name ap))
-                        cur-word))
-            ($apropos-list cur-word)))
-  (if (null? matches)
-      (begin
-        (write-log 'info
-                   (format "no signature found for: ~a" cur-word))
-        'null)
-      (guard
-          (condition
-           (#t (if (> (lsp-server-log-level) 2)
-                   (raise (make-json-rpc-internal-error
-                           (format "Error fetching signature of `~a`"
-                                   cur-word)))
-                   #f)))
-        (let* ((ainfo (car matches))
-               (signature
-                ($fetch-signature (apropos-info-module ainfo)
-                                  (apropos-info-name ainfo))))
-          `((signatures . ,(vector `((label . ,signature)))))))))
+  (let ((signature (fetch-signature-under-cursor params)))
+    `((signatures . ,(vector `((label . ,signature)))))))
+
+(define-handler (text-document/hover params)
+  (write-log 'debug
+             (format #f "hover with params: ~a" params))
+  (let ((signature (fetch-signature-under-cursor params)))
+    (if (and signature
+             (not (equal? signature ""))
+             (not (equal? signature 'null)))
+        `((contents . ((kind . "plaintext")
+                       (value . ,signature))))
+        #f)))
 
 (define-handler (custom/load-file params)
   (define file-path (get-uri-path params))
@@ -204,7 +223,7 @@
     (load file-path))
   #f)
 
-(define (start-lsp-loop)
+(define (parameterize-and-run thunk)
   (parameterize
       ((json-rpc-log-level (lsp-server-log-level))
        (log-level (lsp-server-log-level))
@@ -218,6 +237,7 @@
           ("textDocument/didOpen" . ,text-document/did-open)
           ("textDocument/didSave" . ,text-document/did-save)
           ("textDocument/completion" . ,text-document/completion)
+          ("textDocument/hover" . ,text-document/hover)
           ("completionItem/resolve" . ,completion-item/resolve)
           ("textDocument/signatureHelp" . ,text-document/signature-help)
           ("$/cancelRequest" . ,ignore-request)
@@ -225,30 +245,16 @@
           ("shutdown" . ,shutdown-handler)
           ;; custom commands
           ("custom/loadFile" . ,custom/load-file))))
-    (json-rpc-loop (current-input-port) (current-output-port))))
+    (thunk)))
+
+(define (start-lsp-loop)
+  (parameterize-and-run
+   (lambda ()
+     (json-rpc-loop (current-input-port) (current-output-port)))))
 
 (define (start-lsp-server tcp-port)
-  (parameterize
-      ((json-rpc-log-level (lsp-server-log-level))
-       (log-level (lsp-server-log-level))
-       (custom-error-codes '((definition-not-found-error . -32000)))
-       (json-rpc-handler-table
-        `(("initialize" . ,initialize-handler)
-          ("initialized" . ,initialized-handler)
-          ("textDocument/definition" . ,text-document/definition)
-          ("textDocument/didChange" . ,text-document/did-change)
-          ("textDocument/didClose" . ,text-document/did-close)
-          ("textDocument/didOpen" . ,text-document/did-open)
-          ("textDocument/didSave" . ,text-document/did-save)
-          ("textDocument/completion" . ,text-document/completion)
-          ("completionItem/resolve" . ,completion-item/resolve)
-          ("textDocument/signatureHelp" . ,text-document/signature-help)
-          ("$/cancelRequest" . ,ignore-request)
-          ("exit" . ,lsp-exit-handler)
-          ("shutdown" . ,shutdown-handler)
-          ;; custom commands
-          ("custom/loadFile" . ,custom/load-file))))
-    (json-rpc-start-server/tcp tcp-port)))
+  (parameterize-and-run
+   (lambda () (json-rpc-start-server/tcp tcp-port))))
 
 (define (start-lsp-server/background tcp-port)
   (define thread

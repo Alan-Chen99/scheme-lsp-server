@@ -37,6 +37,10 @@
   (define lines (read-file! file-path))
   (define line-number (alist-ref* '(position line) params))
   (define char-number (alist-ref* '(position character) params))
+  (write-log 'debug
+             (format #f "get-word-under-cursor: line-number ~a, char-number ~a"
+                     line-number
+                     char-number))
   (if (>= line-number (length lines))
       (begin (write-log 'error "line number out of reach: " line-number)
              #f)
@@ -44,7 +48,7 @@
              (line-length (string-length line))
              (word-end
               (if (>= char-number line-length)
-                  char-number
+                  (- line-length 1)
                   (let loop ((pos char-number))
                     (if (>= pos line-length)
                         pos
@@ -55,7 +59,8 @@
               (if (= char-number 0)
                   0
                   (let loop ((pos (- char-number 1)))
-                    (if (>= pos line-length)
+                    (if (and (> line-length 0)
+                             (>= pos line-length))
                         (loop (- pos 1))
                         (let ((c (string-ref line pos)))
                           (if (identifier-char? c)
@@ -63,13 +68,15 @@
                                   0
                                   (loop (- pos 1)))
                               (+ pos 1))))))))
-        (if (> word-start word-end)
-            #f
-            (let ((word (substring line word-start word-end)))
-              (write-log 'debug (string-append "selected word: "
-                                               word))
-              (make-editor-word word
-                                line-number
-                                line-number
-                                word-start
-                                word-end))))))
+        (begin (write-log 'debug
+                          (format #f "line contents: ~a" line))
+               (if (> word-start word-end)
+                   #f
+                   (let ((word (substring line word-start word-end)))
+                     (write-log 'debug (string-append "selected word: "
+                                                      word))
+                     (make-editor-word word
+                                       line-number
+                                       line-number
+                                       word-start
+                                       word-end)))))))
