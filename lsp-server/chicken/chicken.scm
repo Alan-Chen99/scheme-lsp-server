@@ -165,13 +165,33 @@
                                  (acc-loc (assoc right-loc-path
                                                  acc)))
                             (if acc-loc
-                                (cons right-loc
-                                      (alist-delete right-loc-path acc))
-                                (cons right-loc acc))))
+                                (begin
+                                  (write-log 'debug
+                                             (format "updating location: ~a ~a"
+                                                     right-loc-path
+                                                     (cdr right-loc)))
+                                  (cons right-loc
+                                        (alist-delete right-loc-path acc)))
+                                (begin
+                                  (write-log 'debug
+                                             (format "inserting location: ~a ~a"
+                                                     right-loc-path
+                                                     (cdr right-loc)))
+                                  (cons right-loc acc)))))
                         left-locations
                         right-locations)))
-             (hash-table-set! left k updated-locations))
-           (hash-table-set! left k right-locations))))
+             (begin
+               (write-log 'debug
+                          (format "updating identifier with locations: ~a ~a"
+                                  k
+                                  updated-locations))
+               (hash-table-set! left k updated-locations)))
+           (begin
+             (write-log 'debug
+                        (format "inserting new identifier with locations: ~a ~a"
+                                k
+                                right-locations))
+             (hash-table-set! left k right-locations)))))
    (hash-table-keys right))
   left)
 
@@ -193,7 +213,7 @@
   (define new-tags
     (parse-tags-file path))
   (define new-table
-    (hash-table-merge-updating! tags-table new-tags))
+    (join-definition-tables! tags-table new-tags))
 
   (write-log 'debug
              (format "new tags:~%~a"
@@ -210,20 +230,25 @@
   (define locations (hash-table-ref/default tags-table identifier '()))
 
   (if (not (null? locations))
-      (map (lambda (loc)
-             (let ((path (car loc))
-                   (line-number (cdr loc)))
-               (write-log 'debug (format "identifier ~a found: path ~a, line ~a "
-                                         identifier
-                                         path
-                                         line-number))
-               `((uri . ,(string-append "file://" path))
-                 (range . ((start . ((line . ,line-number)
-                                     (character . 0)))
-                           (end . ((line . ,line-number)
-                                   (character . 2))))))))
-           locations)
-      'null))
+      (begin
+        (write-log 'debug
+                   (format "locations for identifier ~a found: ~a"
+                           identifier
+                           locations))
+        (map (lambda (loc)
+              (let ((path (car loc))
+                    (line-number (cdr loc)))
+                (write-log 'debug (format "identifier ~a found: path ~a, line ~a "
+                                          identifier
+                                          path
+                                          line-number))
+                `((uri . ,(string-append "file://" path))
+                  (range . ((start . ((line . ,line-number)
+                                      (character . 0)))
+                            (end . ((line . ,line-number)
+                                    (character . 2))))))))
+            locations))
+      #()))
 
 (define (build-module-egg-mapping)
   (define-values (in out pid)
