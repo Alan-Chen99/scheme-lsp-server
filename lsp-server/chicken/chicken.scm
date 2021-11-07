@@ -34,7 +34,10 @@
   "chicken lsp server")
 
 (define ($initialize-lsp-server root)
-  (set! root-path root)
+  (set! root-path
+        (if (eq? root 'null)
+            "/tmp/"
+            root))
   (set! tags-path (make-pathname root-path "lsp-server-tags"))
   (set! module-egg-mapping (build-module-egg-mapping))
   (generate-tags tags-path eggs-path chicken-source-path)
