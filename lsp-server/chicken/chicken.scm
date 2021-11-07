@@ -248,7 +248,7 @@
                             (end . ((line . ,line-number)
                                     (character . 2))))))))
             locations))
-      #()))
+      '()))
 
 (define (build-module-egg-mapping)
   (define-values (in out pid)
