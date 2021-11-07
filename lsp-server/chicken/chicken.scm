@@ -1,5 +1,6 @@
 (import (apropos)
         (chicken base)
+        (chicken file)
         (chicken format)
         (chicken io)
         (chicken irregex)
@@ -26,7 +27,7 @@
   (make-pathname (system-cache-directory) "chicken-install"))
 (define chicken-source-path
   (or (get-environment-variable "CHICKEN_SRC") ""))
-(define tags-path "/tmp/lsp-server-tags")
+(define tags-path #f)
 (define root-path #f)
 
 (define $server-name
@@ -34,6 +35,7 @@
 
 (define ($initialize-lsp-server root)
   (set! root-path root)
+  (set! tags-path (make-pathname root-path "lsp-server-tags"))
   (set! module-egg-mapping (build-module-egg-mapping))
   (generate-tags tags-path eggs-path chicken-source-path)
   (set! tags-table (parse-tags-file tags-path)))
