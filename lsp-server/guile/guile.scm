@@ -1,7 +1,7 @@
 (define $server-name
   "guile lsp server")
 
-(define ($initialize-lsp-server)
+(define ($initialize-lsp-server root-path)
   #f)
 
 (define $server-capabilities
@@ -56,7 +56,7 @@
       #f))
 
 (define ($get-definition-location identifier)
-  (define obj (symbol->object identifier))
+  (define obj (symbol->object (string->symbol identifier)))
   (define program (program-source obj 0))
   (if program
       (let* ((file-path (source:file program))
@@ -74,6 +74,11 @@
               'definition-not-found-error
               (format "Definition not found: ~a" identifier)))))
 
+(define ($did-open file-path)
+  #f)
+
+(define ($did-save file-path)
+  #f)
 
 (define (build-procedure-signature module name proc-obj)
   (define args (procedure-arguments proc-obj))

@@ -10,7 +10,7 @@
 (define (write-log type msg . args)
   (define level (get-log-level type))
   (define error-port (current-error-port))
-  (when (<= level (json-rpc-log-level))
+  (when (<= level (log-level))
     (display (format "[~a] ~a"
                      (string-upcase (symbol->string type))
                      msg)

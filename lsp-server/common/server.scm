@@ -23,7 +23,8 @@
      (define-handler (handler params #:exit? #f) body ...))))
 
 (define-handler (initialize-handler params)
-  ($initialize-lsp-server)
+  (define root-path (get-root-path params))
+  ($initialize-lsp-server root-path)
   (set! lsp-server-state 'on)
   `((capabilities . ,$server-capabilities)
     (serverInfo . ((name . ,$server-name)
@@ -49,9 +50,10 @@
   #f)
 
 (define-handler (text-document/definition params)
-  (define word (editor-word-text
-                (get-word-under-cursor params)))
-  ($get-definition-location (string->symbol word)))
+  (define editor-word (get-word-under-cursor params))
+  (if editor-word
+      ($get-definition-location (editor-word-text editor-word))
+      'null))
 
 (define-handler (text-document/did-change params)
   (define file-path (get-uri-path params))
@@ -60,7 +62,7 @@
      (alist-ref 'text
                 (vector-ref (alist-ref 'contentChanges params) 0))
      "\r\n"
-     #t))
+     'infix))
   (if file-path
       (begin (update-file! file-path changes)
              (write-log 'debug
@@ -80,7 +82,8 @@
 (define-handler (text-document/did-open params)
   (define file-path (get-uri-path params))
   (if file-path
-      (begin (read-file! file-path)
+      (begin ($did-open file-path)
+             (read-file! file-path)
              (write-log 'debug
                         (format "file contents read: ~a"
                                 file-path)))
@@ -92,6 +95,7 @@
 (define-handler (text-document/did-save params)
   (define file-path (get-uri-path params))
   (write-log 'info "file saved.")
+  ($did-save file-path)
   #f)
 
 (define-handler (text-document/completion params)

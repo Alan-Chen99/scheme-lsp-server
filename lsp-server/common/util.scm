@@ -17,6 +17,9 @@
       (parse-uri uri)
       #f))
 
+(define (get-root-path params)
+  (alist-ref* '(rootPath) params))
+
 (define (parse-uri uri)
   (define file-prefix "file://")
   (define file-prefix-length 7)
@@ -47,3 +50,11 @@
 
 (define (symbols->string sl)
   (string-append "(" (string-join (map symbol->string sl)) ")"))
+
+(define (hash-table-merge-updating! target source)
+  (for-each (lambda (k)
+              (hash-table-set! target
+                               k
+                               (hash-table-ref source k)))
+            (hash-table-keys source))
+  target)
