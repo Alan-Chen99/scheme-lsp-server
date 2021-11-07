@@ -55,7 +55,7 @@
               (build-procedure-signature module-name identifier obj))
       #f))
 
-(define ($get-definition-location identifier)
+(define ($get-definition-locations identifier)
   (define obj (symbol->object (string->symbol identifier)))
   (define program (program-source obj 0))
   (if program
@@ -63,13 +63,15 @@
              (file-abs-path (if (absolute-file-name? file-path)
                                 file-path
                                 (find-absolute-path file-path))))
-        `((uri . ,(string-append "file://" file-abs-path))
-          (range . ((start . ((line . ,(source:line program))
-                              (character . ,(source:column program))))
-                    (end . ((line . ,(source:line program))
-                            (character . ,(+ (source:column program)
-                                             (string-length
-                                              (symbol->string identifier))))))))))
+        ;; TODO return all matches (see chicken.scm)
+        (list
+         `((uri . ,(string-append "file://" file-abs-path))
+           (range . ((start . ((line . ,(source:line program))
+                               (character . ,(source:column program))))
+                     (end . ((line . ,(source:line program))
+                             (character . ,(+ (source:column program)
+                                              (string-length
+                                               (symbol->string identifier)))))))))))
       (raise (make-json-rpc-custom-error
               'definition-not-found-error
               (format "Definition not found: ~a" identifier)))))

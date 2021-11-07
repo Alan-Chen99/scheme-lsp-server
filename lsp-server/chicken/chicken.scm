@@ -143,14 +143,34 @@
                 (loop (read-line)
                       (begin (hash-table-set! res
                                               identifier
-                                              (list src-path
-                                                    line-number))
+                                              `((,src-path . ,line-number)))
                              res)))
               (begin (write-log 'debug
                                 (format  "skipping ill-formed TAGS line: ~a"
                                          line))
                      (loop (read-line) res)))))))
 
+(define (join-definition-tables! left right)
+  (for-each
+   (lambda (k)
+     (let ((left-locations (hash-table-ref/default left k '()))
+           (right-locations (hash-table-ref right k)))
+       (if (not (null? left-locations))
+           (let ((updated-locations
+                  (fold (lambda (right-loc acc)
+                          (let* ((right-loc-path (car right-loc))
+                                 (acc-loc (assoc right-loc-path
+                                                 acc)))
+                            (if acc-loc
+                                (cons right-loc
+                                      (alist-delete right-loc-path acc))
+                                (cons right-loc acc))))
+                        left-locations
+                        right-locations)))
+             (hash-table-set! left k updated-locations))
+           (hash-table-set! left k right-locations))))
+   (hash-table-keys right))
+  left)
 
 (define (parse-tags-file path)
   (with-input-from-file path
@@ -164,7 +184,7 @@
             (let* ((src-path (parse-source-path line))
                    (def-table (read-definitions src-path)))
               (loop (read-line)
-                    (hash-table-merge res def-table))))))))
+                    (join-definition-tables! res def-table))))))))
 
 (define (read-tags! path)
   (define new-tags
@@ -177,24 +197,29 @@
                      (map (lambda (k)
                             (format "  ~a: ~a~%"
                                     k
-                                    (hash-table-ref/default new-tags k #f)))
+                                    (hash-table-ref/default new-tags
+                                                            k
+                                                            #f)))
                           (hash-table-keys new-tags))))
   (set! tags-table new-table))
 
-(define ($get-definition-location identifier)
-  (define match (hash-table-ref/default tags-table identifier #f))
-  (if match
-      (let ((path (car match))
-            (line-number (cadr match)))
-        (write-log 'debug (format "identifier ~a found: path ~a, line ~a "
-                                  identifier
-                                  path
-                                  line-number))
-          `((uri . ,(string-append "file://" path))
-            (range . ((start . ((line . ,line-number)
-                                (character . 0)))
-                      (end . ((line . ,line-number)
-                              (character . 2)))))))
+(define ($get-definition-locations identifier)
+  (define locations (hash-table-ref/default tags-table identifier '()))
+
+  (if (not (null? locations))
+      (map (lambda (loc)
+             (let ((path (car loc))
+                   (line-number (cdr loc)))
+               (write-log 'debug (format "identifier ~a found: path ~a, line ~a "
+                                         identifier
+                                         path
+                                         line-number))
+               `((uri . ,(string-append "file://" path))
+                 (range . ((start . ((line . ,line-number)
+                                     (character . 0)))
+                           (end . ((line . ,line-number)
+                                   (character . 2))))))))
+           locations)
       'null))
 
 (define (build-module-egg-mapping)

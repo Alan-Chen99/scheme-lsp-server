@@ -52,7 +52,8 @@
 (define-handler (text-document/definition params)
   (define editor-word (get-word-under-cursor params))
   (if editor-word
-      ($get-definition-location (editor-word-text editor-word))
+      (list->vector
+       ($get-definition-locations (editor-word-text editor-word)))
       'null))
 
 (define-handler (text-document/did-change params)
