@@ -15,7 +15,7 @@
          (raise (make-json-rpc-invalid-request-error
                  "Only exit request allowed after shutdown.")))
        (write-log 'debug
-                  (format #f "Handler ~a called with params ~a"
+                  (format "Handler ~a called with params ~a"
                           'handler
                           params))
        body ...))
@@ -174,7 +174,7 @@
                     #f))))
          (begin
            (write-log 'debug
-                      (format #f "Calling $fetch-documentation for mod ~a id ~a"
+                      (format "Calling $fetch-documentation for mod ~a id ~a"
                               mod id))
            (let ((doc ($fetch-documentation mod id)))
              (cons `(documentation . ,doc)
@@ -213,7 +213,7 @@
 
 (define-handler (text-document/hover params)
   (write-log 'debug
-             (format #f "hover with params: ~a" params))
+             (format "hover with params: ~a" params))
   (let ((signature (fetch-signature-under-cursor params)))
     (if (and signature
              (not (equal? signature ""))

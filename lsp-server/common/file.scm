@@ -38,7 +38,7 @@
   (define line-number (alist-ref* '(position line) params))
   (define char-number (alist-ref* '(position character) params))
   (write-log 'debug
-             (format #f "get-word-under-cursor: line-number ~a, char-number ~a"
+             (format "get-word-under-cursor: line-number ~a, char-number ~a"
                      line-number
                      char-number))
   (if (>= line-number (length lines))
@@ -69,7 +69,7 @@
                                   (loop (- pos 1)))
                               (+ pos 1))))))))
         (begin (write-log 'debug
-                          (format #f "line contents: ~a" line))
+                          (format "line contents: ~a" line))
                (if (> word-start word-end)
                    #f
                    (let ((word (substring line word-start word-end)))

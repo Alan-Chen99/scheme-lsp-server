@@ -70,11 +70,8 @@
                                (character . ,(source:column program))))
                      (end . ((line . ,(source:line program))
                              (character . ,(+ (source:column program)
-                                              (string-length
-                                               (symbol->string identifier)))))))))))
-      (raise (make-json-rpc-custom-error
-              'definition-not-found-error
-              (format "Definition not found: ~a" identifier)))))
+                                              (string-length identifier))))))))))
+      '()))
 
 (define ($did-open file-path)
   #f)

@@ -79,7 +79,7 @@
             (list identifier)))
   (begin
     (write-log 'debug
-               (format #f "looking up doc-path: ~a" doc-path))
+               (format "looking up doc-path: ~a" doc-path))
     (with-output-to-string
       (lambda ()
         (describe (lookup-node doc-path))))))
