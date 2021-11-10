@@ -40,7 +40,7 @@
             (create-temporary-file)
             (make-pathname root-path "lsp-server-tags")))
   (set! module-egg-mapping (build-module-egg-mapping))
-  (generate-tags tags-path eggs-path chicken-source-path)
+  (generate-tags tags-path eggs-path chicken-source-path root-path)
   (set! tags-table (parse-tags-file tags-path)))
 
 (define $server-capabilities
@@ -246,7 +246,7 @@
                   (range . ((start . ((line . ,line-number)
                                       (character . 0)))
                             (end . ((line . ,line-number)
-                                    (character . 2))))))))
+                                    (character . 0))))))))
             locations))
       '()))
 

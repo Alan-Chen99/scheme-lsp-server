@@ -100,6 +100,8 @@
   #f)
 
 (define-handler (text-document/completion params)
+  (define cur-char-number
+    (alist-ref* '(position character) params))
   (define editor-word (get-word-under-cursor params))
   (if (or (not editor-word)
           (< (string-length (editor-word-text editor-word))
@@ -139,7 +141,7 @@
                                   `((range . ((start . ((line . ,start-line)
                                                         (character . ,start-char)))
                                               (end . ((line . ,start-line)
-                                                      (character . ,end-char)))))
+                                                      (character . ,cur-char-number)))))
                                     (newText . ,id-name))))
                             `((label . ,label)
                               (insertText . ,id-name)
