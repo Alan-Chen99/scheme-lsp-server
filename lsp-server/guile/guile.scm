@@ -1,3 +1,31 @@
+(define-module (lsp-server guile)
+
+#:export ($apropos-list
+          $did-open
+          $did-save
+          $fetch-documentation
+          $fetch-signature
+          $get-definition-locations
+          $initialize-lsp-server
+          $server-capabilities
+          $server-name
+          $tcp-listen
+          $tcp-accept)
+
+#:use-module (scheme base)
+#:use-module (srfi srfi-1)
+#:use-module (srfi srfi-69)
+
+#:use-module (ice-9 documentation)
+#:use-module (ice-9 session)
+
+#:use-module (system vm program)
+
+#:declarative? #f)
+
+(include "../common/base.scm")
+(include "../common/basic-log.scm")
+
 (define $server-name
   "guile lsp server")
 
@@ -122,3 +150,4 @@
       (canonicalize-path (string-append base-path "/" path))
       #f))
 
+)

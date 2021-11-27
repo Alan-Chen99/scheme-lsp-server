@@ -24,12 +24,13 @@
         srfi-69
 
         (json-rpc)
-        (json-rpc lolevel))
+        (json-rpc lolevel)
 
-(include "basic-log.scm")
-(include "util.scm")
+        (lsp-server internal))
+
 (cond-expand
-  (chicken (include "../chicken/chicken.scm"))
-  (else))
+ (chicken (import (lsp-server chicken)))
+ (else))
+
 (include "file.scm")
 (include "server.scm"))

@@ -21,14 +21,10 @@
 
 #:use-module (system vm program)
 
+#:use-module (lsp-server internal)
+
 #:declarative? #f)
 
-(include "lsp-server/common/basic-log.scm")
-(include "lsp-server/common/base.scm")
-(include "lsp-server/common/util.scm")
 (include "lsp-server/guile/guile.scm")
 (include "lsp-server/common/file.scm")
 (include "lsp-server/common/server.scm")
-
-
-
