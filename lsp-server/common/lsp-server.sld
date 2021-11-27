@@ -26,7 +26,7 @@
         (json-rpc)
         (json-rpc lolevel)
 
-        (lsp-server internal))
+        (lsp-server private))
 
 (cond-expand
  (chicken (import (lsp-server chicken)))

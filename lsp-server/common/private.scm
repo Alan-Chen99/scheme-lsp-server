@@ -1,4 +1,4 @@
-(define-library (lsp-server internal)
+(define-library (lsp-server private)
 
 (export make-apropos-info
         apropos-info-module

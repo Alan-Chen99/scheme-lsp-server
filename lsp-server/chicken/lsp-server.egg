@@ -12,11 +12,11 @@
  (component-options
   (csc-options "-d3" "-O0" "-f" "-X" "r7rs" "-R" "r7rs" "-f"))
  (components
-  (extension lsp-server.internal
-             (source "../common/internal.scm"))
+  (extension lsp-server.private
+             (source "../common/private.scm"))
   (extension lsp-server.chicken
              (source "../chicken/chicken.scm")
-             (component-dependencies lsp-server.internal))
+             (component-dependencies lsp-server.private))
   (extension lsp-server 
              (source "../common/lsp-server.sld")
              (source-dependencies "../common/file.scm"
