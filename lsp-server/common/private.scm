@@ -162,6 +162,7 @@
     (define start-char (range-start-char range))
     (define end-line (range-end-line range))
     (define end-char (range-end-char range))
+    (define doc-size (length doc))
     (cond ((= start-line end-line)
            (append-lines*
             (take doc start-line)
@@ -170,9 +171,11 @@
                              ""
                              start-char
                              end-char))
-            (take-right doc (- (length doc)
-                               end-line
-                               1))))
+            (if (< end-line doc-size)
+                (take-right doc (- doc-size
+                                   end-line
+                                   1))
+                '())))
           (else
            (append-lines*
             (take doc start-line)
@@ -189,9 +192,11 @@
                              ""
                              0
                              end-char))
-            (take-right doc (- (length doc)
-                               end-line
-                               1))))))
+            (if (< end-line doc-size)
+                (take-right doc (- doc-size
+                                   end-line
+                                   1))
+                '())))))
 
 
   (define (apply-insert-change change doc)
@@ -201,19 +206,24 @@
     (define start-char (range-start-char range))
     (define end-line (range-end-line range))
     (define end-char (range-end-char range))
+    (define doc-size (length doc))
 
     (cond ((= start-line end-line)
            (append-lines*
             (take doc start-line)
-            (split-lines
-             (let ((old-line (list-ref doc start-line)))
-               (string-replace old-line
-                               (car (append-lines text))
-                               start-char
-                               end-char)))
-            (take-right doc (- (length doc)
-                               end-line
-                               1))))
+            (if (< start-line doc-size)
+                (split-lines
+                 (let ((old-line (list-ref doc start-line)))
+                   (string-replace old-line
+                                   (car (append-lines text))
+                                   start-char
+                                   end-char)))
+                text)
+            (if (< start-line doc-size)
+                (take-right doc (- doc-size
+                                   start-line
+                                   1))
+                '())))
           (else
            (append-lines*
             (take doc start-line)
