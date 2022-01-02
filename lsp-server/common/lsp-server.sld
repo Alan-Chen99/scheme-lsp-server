@@ -18,7 +18,7 @@
         r7rs
         scheme
         srfi-1
-        srfi-13 ;; string-upcase
+        srfi-130 ;; string-upcase
         srfi-18
         srfi-28
         srfi-69

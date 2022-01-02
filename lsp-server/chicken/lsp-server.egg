@@ -22,4 +22,3 @@
              (source-dependencies "../common/file.scm"
                                   "../common/server.scm")
              (component-dependencies lsp-server.chicken))))
-

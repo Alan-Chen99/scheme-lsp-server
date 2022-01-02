@@ -34,7 +34,7 @@
         srfi-13
         srfi-130
 
-        (lsp-server internal))
+        (lsp-server private))
 
 (begin
 
@@ -69,7 +69,7 @@
       (signatureHelpProvider . ())
       (definitionProvider . ())
       (textDocumentSync . ((save . #t)
-                           (change . 1)))))
+                           (change . 2)))))
 
   (define $tcp-listen tcp-listen)
 

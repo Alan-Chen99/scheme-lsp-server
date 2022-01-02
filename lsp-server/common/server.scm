@@ -15,7 +15,7 @@
          (raise (make-json-rpc-invalid-request-error
                  "Only exit request allowed after shutdown.")))
        (write-log 'debug
-                  (format "Handler ~a called with params ~a"
+                  (format "Handler ~a called with params ~s"
                           'handler
                           params))
        body ...))
@@ -65,7 +65,8 @@
      "\r\n"
      'infix))
   (if file-path
-      (begin (update-file! file-path changes)
+      (begin (update-file! file-path
+                           (alist-ref 'contentChanges params))
              (write-log 'debug
                         (format "file contents updated: ~a"
                                 file-path)))

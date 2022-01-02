@@ -8,14 +8,30 @@
         (hash-table-update!/default (file-table)
                                     path
                                     (lambda (v)
-                                      lines)
+                                      (map (lambda (s)
+                                             (string-append s "\n"))
+                                           lines))
                                     lines)
         lines)))
 
+
+
+(define (update-file! path . args)
+  (define change-contents (if (null? args)
+                              #f
+                              (parse-change-contents (car args))))
+
+  (hash-table-update!/default (file-table)
+                              path
+                              (lambda (contents)
+                                (apply-change change-contents contents))
+                              (change-contents-text change-contents)))
+#;
 (define (update-file! path . contents)
   (let ((lines (if (null? contents)
-                   (call-with-input-file path read-lines)
-                   (car contents))))
+                   (call-with-input-file path
+                     (list->vector read-lines))
+                   (list->vector (car contents)))))
     (hash-table-update!/default (file-table)
                                 path
                                 (lambda (v) lines)
