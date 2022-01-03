@@ -187,11 +187,13 @@
               (if (string=? new-line "")
                   '()
                   (split-lines new-line)))
-            (split-lines
-             (string-replace (list-ref doc end-line)
-                             ""
-                             0
-                             end-char))
+            (if (< end-line doc-size)
+                (split-lines
+                 (string-replace (list-ref doc end-line)
+                                 ""
+                                 0
+                                 end-char))
+                '())
             (if (< end-line doc-size)
                 (take-right doc (- doc-size
                                    end-line
