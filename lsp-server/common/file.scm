@@ -84,7 +84,7 @@
                          (if (= pos 0)
                              0
                              (loop (- pos 1))))
-                        (else pos)))))))
+                        (else (+ pos 1))))))))
     (if (> word-start word-end)
         #f
         (let ((word (substring contents word-start word-end)))
