@@ -17,8 +17,11 @@
   (extension lsp-server.chicken
              (source "../chicken/chicken.scm")
              (component-dependencies lsp-server.private))
+  (extension lsp-server.document
+             (source "../common/document.scm"))
   (extension lsp-server 
              (source "../common/lsp-server.sld")
              (source-dependencies "../common/file.scm"
                                   "../common/server.scm")
-             (component-dependencies lsp-server.chicken))))
+             (component-dependencies lsp-server.chicken
+                                     lsp-server.document))))

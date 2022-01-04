@@ -26,6 +26,7 @@
         (json-rpc)
         (json-rpc lolevel)
 
+        (lsp-server document)
         (lsp-server private))
 
 (cond-expand

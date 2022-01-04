@@ -64,15 +64,22 @@
                 (vector-ref (alist-ref 'contentChanges params) 0))
      "\r\n"
      'infix))
-  (if file-path
-      (begin (update-file! file-path
-                           (alist-ref 'contentChanges params))
-             (write-log 'debug
-                        (format "file contents updated: ~a"
-                                file-path)))
-      (write-log 'debug
-                 (format "file-path not found: ~a"
-                         file-path)))
+  (cond ((and file-path (not (hash-table-ref/default (file-table) file-path #f)))
+         ($did-open file-path)
+         (read-file! file-path)
+         (write-log 'debug
+                    (format "file contents read: ~a"
+                            file-path)))
+        (file-path
+         (update-file! file-path
+                       (alist-ref 'contentChanges params))
+         (write-log 'debug
+                    (format "file contents updated: ~a"
+                            file-path)))
+        (else
+         (write-log 'debug
+                    (format "file-path not found: ~a"
+                            file-path))))
   #f)
 
 (define-handler (text-document/did-close params)
@@ -90,8 +97,12 @@
                         (format "file contents read: ~a"
                                 file-path)))
       (write-log 'debug
-                        (format "file-path not found: ~a"
-                                file-path)))
+                 (format "file-path not found: ~a"
+                         file-path)))
+  (call-with-output-file "/tmp/current.scm"
+    (lambda (p)
+      (let ((contents (hash-table-ref (file-table) file-path)))
+        (display contents p))))
   #f)
 
 (define-handler (text-document/did-save params)
@@ -228,7 +239,7 @@
   (write-log 'debug "loading file: " file-path)
   (guard (condition
           (#t (write-log 'warning "error loading file")))
-    (load file-path))
+         (load file-path))
   #f)
 
 (define (parameterize-and-run thunk)
