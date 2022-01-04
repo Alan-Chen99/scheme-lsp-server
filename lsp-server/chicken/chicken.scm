@@ -54,7 +54,10 @@
     "chicken lsp server")
 
   (define ($initialize-lsp-server root)
-    (set! root-path root)
+    (set! root-path
+          (if (and root (not (equal? root 'null)))
+              root
+              "."))
     (set! tags-path
           (if (eq? root 'null)
               (create-temporary-file)
@@ -123,6 +126,8 @@
     (read-tags! tags-path))
 
   (define (generate-tags tags-file . dirs)
+    (write-log 'info
+               (format "GENERATE-TAGS: tags-file: ~s, dir: ~s" tags-file dirs))
     (system
      (format "find ~a -type f -iname \"*.scm\" | etags --regex='/[ \\t]+([ \\t]*define[ \\t]+(?[ \\t]*\\([^ \\t)]+\\)/\\1/' -o ~a - > /dev/null"
              (string-intersperse dirs " ")

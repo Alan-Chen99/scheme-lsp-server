@@ -67,6 +67,8 @@
   (cond ((and file-path (not (hash-table-ref/default (file-table) file-path #f)))
          ($did-open file-path)
          (read-file! file-path)
+         (update-file! file-path
+                       (alist-ref 'contentChanges params))
          (write-log 'debug
                     (format "file contents read: ~a"
                             file-path)))

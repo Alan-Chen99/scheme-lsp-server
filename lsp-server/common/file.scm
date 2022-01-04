@@ -27,7 +27,10 @@
                                   path
                                   (lambda (contents)
                                     (apply-change change-contents contents))
-                                  (change-contents-text change-contents))
+                                  (call-with-input-file path
+                                    (lambda (p)
+                                      (apply-change change-contents
+                                                    (read-string #f p)))))
       ;; if range is not set (#f), the client will send the complete file.
       ;; TODO: read text instead of file from disk
       (let ((contents (if (null? args)
@@ -37,7 +40,8 @@
                           (car args))))
         (hash-table-update!/default (file-table)
                                     path
-                                    (lambda (v) contents)
+                                    (lambda (v)
+                                      (apply-change change-contents contents))
                                     contents)
         contents))
   (call-with-output-file "/tmp/current.scm"
