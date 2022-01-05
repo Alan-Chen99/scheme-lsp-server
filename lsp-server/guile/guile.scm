@@ -1,8 +1,8 @@
 (define-module (lsp-server guile)
 
 #:export ($apropos-list
-          $did-open
-          $did-save
+          $open-file
+          $save-file
           $fetch-documentation
           $fetch-signature
           $get-definition-locations
@@ -101,10 +101,10 @@
                                               (string-length identifier))))))))))
       '()))
 
-(define ($did-open file-path)
+(define ($open-file file-path)
   #f)
 
-(define ($did-save file-path)
+(define ($save-file file-path)
   #f)
 
 (define (build-procedure-signature module name proc-obj)

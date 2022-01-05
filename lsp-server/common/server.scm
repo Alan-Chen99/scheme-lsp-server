@@ -65,7 +65,7 @@
      "\r\n"
      'infix))
   (cond ((and file-path (not (hash-table-ref/default (file-table) file-path #f)))
-         ($did-open file-path)
+         ($open-file file-path)
          (read-file! file-path)
          (update-file! file-path
                        (alist-ref 'contentChanges params))
@@ -93,7 +93,7 @@
 (define-handler (text-document/did-open params)
   (define file-path (get-uri-path params))
   (if file-path
-      (begin ($did-open file-path)
+      (begin ($open-file file-path)
              (read-file! file-path)
              (write-log 'debug
                         (format "file contents read: ~a"
@@ -101,16 +101,12 @@
       (write-log 'debug
                  (format "file-path not found: ~a"
                          file-path)))
-  (call-with-output-file "/tmp/current.scm"
-    (lambda (p)
-      (let ((contents (hash-table-ref (file-table) file-path)))
-        (display contents p))))
   #f)
 
 (define-handler (text-document/did-save params)
   (define file-path (get-uri-path params))
   (write-log 'info "file saved.")
-  ($did-save file-path)
+  ($save-file file-path)
   #f)
 
 (define-handler (text-document/completion params)

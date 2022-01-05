@@ -41,13 +41,9 @@
         (hash-table-update!/default (file-table)
                                     path
                                     (lambda (v)
-                                      (apply-change change-contents contents))
+                                      contents)
                                     contents)
-        contents))
-  (call-with-output-file "/tmp/current.scm"
-    (lambda (p)
-      (let ((contents (hash-table-ref (file-table) path)))
-        (display contents p)))))
+        contents)))
 
 (define (free-file! path)
   (define file (hash-table-ref/default (file-table) path #f))

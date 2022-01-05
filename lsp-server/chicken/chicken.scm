@@ -1,8 +1,8 @@
 (define-library (lsp-server chicken)
 
 (export $apropos-list
-        $did-open
-        $did-save
+        $open-file
+        $save-file
         $fetch-documentation
         $fetch-signature
         $get-definition-locations
@@ -117,11 +117,11 @@
         (node-signature
          (lookup-node (list egg identifier)))))
 
-  (define ($did-open file-path)
+  (define ($open-file file-path)
     (generate-tags tags-path file-path)
     (read-tags! tags-path))
 
-  (define ($did-save file-path)
+  (define ($save-file file-path)
     (generate-tags tags-path file-path)
     (read-tags! tags-path))
 
