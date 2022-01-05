@@ -16,9 +16,12 @@
              (source "../common/private.scm"))
   (extension lsp-server.chicken
              (source "../chicken/chicken.scm")
-             (component-dependencies lsp-server.private))
+             (component-dependencies lsp-server.private
+                                     lsp-server.tags))
   (extension lsp-server.document
              (source "../common/document.scm"))
+  (extension lsp-server.tags
+             (source "../common/tags.scm"))
   (extension lsp-server 
              (source "../common/lsp-server.sld")
              (source-dependencies "../common/file.scm"

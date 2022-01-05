@@ -34,7 +34,8 @@
         srfi-13
         srfi-130
 
-        (lsp-server private))
+        (lsp-server private)
+        (lsp-server tags))
 
 (begin
 
@@ -125,14 +126,6 @@
     (generate-tags tags-path file-path)
     (read-tags! tags-path))
 
-  (define (generate-tags tags-file . dirs)
-    (write-log 'info
-               (format "GENERATE-TAGS: tags-file: ~s, dir: ~s" tags-file dirs))
-    (system
-     (format "find ~a -type f -iname \"*.scm\" | etags --regex='/[ \\t]+([ \\t]*define[ \\t]+(?[ \\t]*\\([^ \\t)]+\\)/\\1/' -o ~a - > /dev/null"
-             (string-intersperse dirs " ")
-             tags-file)))
-
   (define (parse-source-path line)
     (let ((fields (string-split line ",")))
       (unless (> (length fields) 1)
@@ -142,14 +135,7 @@
   (define (read-definitions src-path)
     (define regex
       (irregex '(: (* whitespace)
-                   #\(
-                   (or (: "define" (* any))
-                       "set!")
-                   (+ whitespace)
-                   (? #\()
-                   (submatch (+ (~ (or whitespace
-                                       #\)))))
-                   (? #\))
+                   (submatch (+ (~ whitespace)))
                    (* whitespace)
                    #\delete
                    (? (: (~ numeric) (* any) #\x1))

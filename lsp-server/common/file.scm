@@ -1,11 +1,17 @@
 (define file-table
   (make-parameter (make-hash-table)))
 
+(define (read-contents port)
+  (define raw-contents (read-string #f port))
+  (if (eof-object? raw-contents)
+      ""
+      raw-contents))
+
 (define (read-file! path)
   (if (hash-table-exists? (file-table) path)
       (hash-table-ref (file-table) path)
       (let ((contents (call-with-input-file path
-                        (lambda (p) (read-string #f p)))))
+                            (lambda (p) (read-contents p)))))
         (hash-table-update!/default (file-table)
                                     path
                                     (lambda (v)
@@ -30,13 +36,13 @@
                                   (call-with-input-file path
                                     (lambda (p)
                                       (apply-change change-contents
-                                                    (read-string #f p)))))
+                                                    (read-contents p)))))
       ;; if range is not set (#f), the client will send the complete file.
       ;; TODO: read text instead of file from disk
       (let ((contents (if (null? args)
                           (call-with-input-file path
                             (lambda (p)
-                              (read-string #f p)))
+                              (read-contents p)))
                           (car args))))
         (hash-table-update!/default (file-table)
                                     path
@@ -60,7 +66,9 @@
   (define contents (read-file! file-path))
   (define line-number (alist-ref* '(position line) params))
   (define char-number (alist-ref* '(position character) params))
-  (define text-pos (line/char->pos contents line-number char-number))
+  (define text-pos
+    (min (line/char->pos contents line-number char-number)
+         (- (document-length contents) 1)))
 
   (let* ((word-end
           (let loop ((pos text-pos))

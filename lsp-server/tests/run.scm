@@ -3,7 +3,8 @@
         test)
 
 (import (lsp-server private)
-        (lsp-server document))
+        (lsp-server document)
+        (lsp-server tags))
 
 (test-group "Line manipulation"
   (test '()
@@ -219,4 +220,32 @@
     (line/char->pos "0123\n56" 1 0))
 
   (test 6
-    (line/char->pos "0123\n56" 1 1)))
+        (line/char->pos "0123\n56" 1 1)))
+
+(test-group "tag generation"
+  (test "x"
+    (parse-definition-line "define x"))
+
+  (test "func"
+    (parse-definition-line "(define   (func x)"))
+
+  (test "my-macro"
+    (parse-definition-line "(define-syntax my-macro"))
+
+  (test "var"
+    (parse-definition-line "(define\n var"))
+
+  (test "var"
+    (parse-definition-line "(define var (+ x 1))"))
+
+  (test "var"
+    (parse-definition-line "(set! var (+ x 1))"))
+
+  (test #f
+    (parse-definition-line "defin var"))
+
+  (test #f
+    (parse-definition-line "definevar"))
+
+  (test #f
+    (parse-definition-line "(define(var")))
