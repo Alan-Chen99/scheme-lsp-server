@@ -81,7 +81,7 @@
 
   (define ($apropos-list identifier)
     (define suggestions
-      (apropos-information-list identifier #:macros? #t))
+      (apropos-information-list identifier #:macros? #t #:imported? #t))
     (map (lambda (s)
            (let* ((mod-id-pair (car s))
                   (mod (let ((fst (car mod-id-pair)))
@@ -235,6 +235,7 @@
     (define new-table
       (join-definition-tables! tags-table new-tags))
 
+    #;
     (write-log 'debug
                (format "new tags:~%~a"
                        (map (lambda (k)

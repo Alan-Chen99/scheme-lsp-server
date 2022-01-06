@@ -113,6 +113,11 @@
   (define cur-char-number
     (alist-ref* '(position character) params))
   (define editor-word (get-word-under-cursor params))
+  (write-log 'debug
+             (format "editor-word: ~a, start-char: ~a, end-char: ~a~%"
+                     (editor-word-text editor-word)
+                     (editor-word-start-char editor-word)
+                     (editor-word-end-char editor-word)))
   (if (or (not editor-word)
           (< (string-length (editor-word-text editor-word))
              3))
@@ -122,8 +127,14 @@
         (write-log 'debug "getting completion suggestions for word "
                    word)
 
-        (write-log 'debug (format "suggestions found: ~a~%"
-                                  suggestions))
+        (write-log 'debug
+                   (format "suggestions found: ~a~%"
+                           (fold (lambda (sug acc)
+                                   (format "~a ~a"
+                                           acc
+                                           (apropos-info-name sug)))
+                                 ""
+                                 suggestions)))
         `((isIncomplete . #t)
           (items .
                  ,(list->vector

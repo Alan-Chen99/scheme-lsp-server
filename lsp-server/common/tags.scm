@@ -67,17 +67,22 @@
       (lambda ()
         (for-each
          (lambda (f)
-           (if (directory? f)
-               (let ((files (find-files f
-                                        #:test (irregex
-                                                '(: (* any)
-                                                    (or ".scm"
-                                                        ".sld"
-                                                        ".ss"))))))
-                 (for-each (lambda (file)
-                             (generate-tags-for-file file))
-                           files))
-               (generate-tags-for-file f)))
+           (guard
+            (condition
+             (#t (write-log 'warning
+                            (format "generate-tags: can't read file ~a"
+                                    f))))
+            (if (directory? f)
+                (let ((files (find-files f
+                                         #:test (irregex
+                                                 '(: (* any)
+                                                     (or ".scm"
+                                                         ".sld"
+                                                         ".ss"))))))
+                  (for-each (lambda (file)
+                              (generate-tags-for-file file))
+                            files))
+                (generate-tags-for-file f))))
          (filter (lambda (f)
                    (not (string=? f "")))
                  files)))))
