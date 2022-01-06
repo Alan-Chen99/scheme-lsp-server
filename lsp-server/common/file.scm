@@ -180,5 +180,3 @@
                   start-line
                   (range-start-char range)
                   (range-length range))))
-
-

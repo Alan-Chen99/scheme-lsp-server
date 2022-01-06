@@ -31,7 +31,6 @@
         scheme
         srfi-1
         srfi-69
-        srfi-13
         srfi-130
 
         (lsp-server private)
@@ -81,18 +80,22 @@
 
   (define ($apropos-list identifier)
     (define suggestions
-      (apropos-information-list identifier #:macros? #t #:imported? #t))
-    (map (lambda (s)
-           (let* ((mod-id-pair (car s))
-                  (mod (let ((fst (car mod-id-pair)))
-                         (if (eqv? fst '||)
-                             #f
-                             (map string->symbol
-                                  (string-split (symbol->string fst) ".")))))
-                  (id (cdr mod-id-pair))
-                  (type (cdr s)))
-             (make-apropos-info mod id type #f)))
-         suggestions))
+      (apropos-information-list identifier #:macros? #t #:imported? #f))
+    (fold (lambda (s acc)
+            (let* ((mod-id-pair (car s))
+                   (mod (let ((fst (car mod-id-pair)))
+                          (if (eqv? fst '||)
+                              #f
+                              (map string->symbol
+                                   (string-split (symbol->string fst) ".")))))
+                   (id (cdr mod-id-pair))
+                   (type (cdr s)))
+              (if (string-prefix? identifier (symbol->string id))
+                  (cons (make-apropos-info mod id type #f)
+                        acc)
+                  acc)))
+          '()
+          suggestions))
 
 
   (define ($fetch-documentation module identifier)
