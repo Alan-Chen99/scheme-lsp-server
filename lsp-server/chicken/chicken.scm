@@ -178,33 +178,13 @@
                                    (acc-loc (assoc right-loc-path
                                                    acc)))
                               (if acc-loc
-                                  (begin
-                                    (write-log 'debug
-                                               (format "updating location: ~a ~a"
-                                                       right-loc-path
-                                                       (cdr right-loc)))
-                                    (cons right-loc
-                                          (alist-delete right-loc-path acc)))
-                                  (begin
-                                    (write-log 'debug
-                                               (format "inserting location: ~a ~a"
-                                                       right-loc-path
-                                                       (cdr right-loc)))
-                                    (cons right-loc acc)))))
+                                  (cons right-loc
+                                        (alist-delete right-loc-path acc))
+                                  (cons right-loc acc))))
                           left-locations
                           right-locations)))
-               (begin
-                 (write-log 'debug
-                            (format "updating identifier with locations: ~a ~a"
-                                    k
-                                    updated-locations))
-                 (hash-table-set! left k updated-locations)))
-             (begin
-               (write-log 'debug
-                          (format "inserting new identifier with locations: ~a ~a"
-                                  k
-                                  right-locations))
-               (hash-table-set! left k right-locations)))))
+               (hash-table-set! left k updated-locations))
+             (hash-table-set! left k right-locations))))
      (hash-table-keys right))
     left)
 
