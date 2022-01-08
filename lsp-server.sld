@@ -7,6 +7,7 @@
 
 (import (scheme base)
         (scheme file)
+        (scheme load)
         (scheme write)
         (srfi srfi-1)
         (srfi srfi-8) ;; receive

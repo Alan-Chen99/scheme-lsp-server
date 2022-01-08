@@ -19,7 +19,7 @@ GUILE_WARNINGS = -Wunbound-variable -Warity-mismatch -Wformat
 SUFFIXES = .sld .scm .go
 
 .scm.go:
-	$(AM_V_GEN)$(top_builddir)/pre-inst-env $(GUILE_TOOLS) compile $(GUILE_WARNINGS) -O0 --r7rs -o "$@" "$<"
+	$(AM_V_GEN)$(top_builddir)/pre-inst-env $(GUILE_TOOLS) compile $(GUILE_WARNINGS) --r7rs -o "$@" "$<"
 
 .sld.go:
-	$(AM_V_GEN)$(top_builddir)/pre-inst-env $(GUILE_TOOLS) compile $(GUILE_WARNINGS) -O0 --r7rs -o "$@" "$<"
+	$(AM_V_GEN)$(top_builddir)/pre-inst-env $(GUILE_TOOLS) compile $(GUILE_WARNINGS) --r7rs -o "$@" "$<"

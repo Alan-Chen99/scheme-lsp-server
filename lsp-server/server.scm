@@ -66,6 +66,12 @@
        ($get-definition-locations (editor-word-text editor-word)))
       'null))
 
+(define (load-protected path)
+  (guard (condition
+          (#t (write-log 'warning
+                         (format "error loading file ~a" path))))
+         (load path)))
+
 (define-handler (text-document/did-change params)
   (define file-path (get-uri-path params))
   (define changes
@@ -92,6 +98,7 @@
          (write-log 'debug
                     (format "file-path not found: ~a"
                             file-path))))
+  #;
   (with-output-to-file "/tmp/current-file.scm"
     (lambda ()
       (display (hash-table-ref (file-table) file-path))))
@@ -108,6 +115,8 @@
   (if file-path
       (begin ($open-file file-path)
              (read-file! file-path)
+             (load-protected file-path)
+             #;
              (with-output-to-file "/tmp/current-file.scm"
                (lambda ()
                  (display (hash-table-ref (file-table) file-path))))
@@ -123,6 +132,7 @@
   (define file-path (get-uri-path params))
   (write-log 'info "file saved.")
   ($save-file file-path)
+  (load-protected file-path)
   #f)
 
 (define-handler (text-document/completion params)

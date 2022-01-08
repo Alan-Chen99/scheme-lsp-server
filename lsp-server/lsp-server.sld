@@ -5,23 +5,21 @@
         start-lsp-server/background
         start-lsp-loop)
 
-(import (chicken base)
-        (chicken condition)
-        (except (chicken io) read-string)
-        (chicken port)
-        (chicken process)
-        (chicken process-context)
-        (chicken string)
+(import (except (chicken io) read-string)
+        (only (chicken base) alist-ref)
         (chicken tcp)
         apropos
         medea
         r7rs
-        scheme
-        srfi-1
-        srfi-130 ;; string-upcase
-        srfi-18
-        srfi-28
-        srfi-69
+        (scheme base)
+        (scheme file)
+        (scheme load)
+        (scheme write)
+        (srfi 1)
+        (srfi 18)
+        (srfi 28)
+        (srfi 69)
+        (srfi 130) ;; string-upcase
 
         (json-rpc)
         (json-rpc lolevel)
