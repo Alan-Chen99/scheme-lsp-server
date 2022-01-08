@@ -1,12 +1,13 @@
 include guile.am
 
 NOCOMP_SOURCES =       \
-  lsp-server/common/base.scm      \
-  lsp-server/common/basic-log.scm \
-  lsp-server/common/file.scm      \
-  lsp-server/common/server.scm    \
-  lsp-server/common/util.scm      \
-  lsp-server/guile/guile.scm
+  lsp-server/file.scm      \
+  lsp-server/server.scm
+
+SOURCES = \
+  lsp-server/guile.scm \
+  lsp-server/document.scm \
+  lsp-server/private.scm
 
 LIBRARY_DEFINITIONS =  \
   lsp-server.sld

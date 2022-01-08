@@ -169,33 +169,6 @@
                    "")
                   document)))
 
-
-(test-group "append-lines[*]"
-    (test '("ab\n")
-      (append-lines '("a" "b\n")))
-
-    (test '("a\n" "b\n")
-      (append-lines '("a\n" "b\n")))
-
-    (test '()
-      (append-lines '()))
-
-    (test '("a")
-      (append-lines '("a")))
-
-    (test '()
-      (append-lines '("")))
-
-    (test '("a\n" "b\n" "c\n")
-      (append-lines* '("a\n" "b\n") '("c\n")))
-
-    (test '("ac\n")
-      (append-lines* '("a") '("c\n")))
-
-    (test '("ac\n" "b")
-      (append-lines* '("a") '("c\n") '("b"))))
-
-
 (test-group "document insertion/expansion/contraction"
   (test "a     b"
     (document-expand "ab" 1 5))

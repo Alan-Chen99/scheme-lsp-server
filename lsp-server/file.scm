@@ -2,7 +2,13 @@
   (make-parameter (make-hash-table)))
 
 (define (read-contents port)
-  (define raw-contents (read-string #f port))
+  (define raw-contents
+    (let loop ((c (read-char port))
+               (res ""))
+      (if (eof-object? c)
+          res
+          (loop (read-char port)
+                (string-append res (string c))))))
   (if (eof-object? raw-contents)
       ""
       raw-contents))
@@ -69,47 +75,54 @@
   (define char-number (alist-ref* '(position character) params))
   (define text-pos
     (min (line/char->pos contents line-number char-number)
-         (- (document-length contents) 1)))
+         (max (- (document-length contents) 1)
+              0)))
 
-  (let* ((word-end
-          (let loop ((pos text-pos)
-                     (cn char-number))
-            (cond ((>= pos contents-length)
-                   cn)
-                  ((identifier-char? (string-ref contents pos))
-                   (loop (+ pos 1) (+ cn 1)))
-                  (else cn))))
-         (word-start
-          (if (<= char-number 0)
-              (if (identifier-char? (string-ref contents text-pos))
-                  0
-                  #f)
-              (let loop ((pos (- text-pos 1))
-                         (cn (- char-number 1)))
-                (let ((c (string-ref contents pos)))
-                  (cond ((char=? c #\newline)
-                         (+ cn 1))
-                        ((identifier-char? c)
-                         (if (= cn 0)
-                             0
-                             (loop (- pos 1)
-                                   (- cn 1))))
-                        (else (+ cn 1))))))))
-    (cond ((or (not word-start) (not word-end))
-           #f)
-          ((> word-start word-end) #f)
-          (else
-           (let ((word (substring
-                        contents
-                        (line/char->pos contents line-number word-start)
-                        (line/char->pos contents line-number word-end))))
-             (write-log 'debug (string-append "selected word: "
-                                              word))
-             (make-editor-word word
-                               line-number
-                               line-number
-                               word-start
-                               word-end))))))
+  (if (= contents-length 0)
+      #f
+      (let* ((word-end
+              (let loop ((pos text-pos)
+                         (cn char-number))
+                (cond ((>= pos contents-length)
+                       cn)
+                      ((identifier-char? (string-ref contents pos))
+                       (loop (+ pos 1) (+ cn 1)))
+                      (else cn))))
+             (word-start
+              (if (<= text-pos 0)
+                  (if (identifier-char? (string-ref contents text-pos))
+                      0
+                      #f)
+                  (let loop ((pos (- text-pos 1))
+                             (cn (- char-number 1)))
+                    (if (= pos 0)
+                        (if (identifier-char? (string-ref contents 0))
+                            0
+                            (+ cn 1))
+                        (let ((c (string-ref contents pos)))
+                          (cond ((char=? c #\newline)
+                                 (+ cn 1))
+                                ((identifier-char? c)
+                                 (if (= cn 0)
+                                     0
+                                     (loop (- pos 1)
+                                           (- cn 1))))
+                                (else (+ cn 1)))))))))
+        (cond ((or (not word-start) (not word-end))
+               #f)
+              ((> word-start word-end) #f)
+              (else
+               (let ((word (substring
+                            contents
+                            (line/char->pos contents line-number word-start)
+                            (line/char->pos contents line-number word-end))))
+                 (write-log 'debug (string-append "selected word: "
+                                                  word))
+                 (make-editor-word word
+                                   line-number
+                                   line-number
+                                   word-start
+                                   word-end)))))))
 
 (define-record-type <change-contents>
   (make-change-contents range text)

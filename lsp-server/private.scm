@@ -13,9 +13,6 @@
         editor-word-start-char
         editor-word-start-line
 
-        append-lines
-        append-lines*
-
         intersperse
         
         join-module-name
@@ -31,21 +28,63 @@
         hash-table-merge-updating!
 
         write-log
-        log-level)
+        log-level
+
+        $string-split)
 
 (import (scheme base)
         (scheme char)
-        (scheme write)
-        r7rs
+        (scheme write))
+
+(cond-expand
+ (guile (import
+         (srfi srfi-1)
+         (srfi srfi-28)
+         (srfi srfi-69)
+         (srfi srfi-13)))
+ (else (import
         (srfi 1)
         (srfi 28)
         (srfi 69)
-        (srfi 130))
+        (srfi 130))))
 
 (cond-expand
- (chicken (import (only (chicken base) intersperse))))
+ (chicken (import (only (chicken base) intersperse)
+                  r7rs)))
 
 (begin
+  ;;; Guile's string-split uses char for delim-str. Redefining it
+  ;;; leads to strange behavior (i.e. string-prefix? is not found
+  ;;; anymore. So we export a generic one.
+  (cond-expand
+   (guile
+    (define ($string-split str delim-str . args)
+      (define len (string-length str))
+      (define dem-len (string-length delim-str))
+      (let loop ((i 0)
+                 (cur-word "")
+                 (res '()))
+        (cond ((>= i len)
+               (reverse (cons cur-word res)))
+              (else
+               (let ((c (string-ref str i)))
+                 (if (and (>= (- len i)
+                              dem-len)
+                          (string-prefix? delim-str
+                                          str
+                                          0
+                                          dem-len
+                                          i
+                                          len))
+                     (loop (+ i dem-len)
+                           ""
+                           (cons cur-word res))
+                     (loop (+ i 1)
+                           (string-append cur-word (string c))
+                           res))))))))
+     (else
+      (define $string-split string-split)))
+  
   (define-record-type <apropos-info>
     (make-apropos-info module name type object)
     apropos-info?
@@ -89,46 +128,6 @@
                         (cons (car rem) cur-str)
                         result)))))
 
-
-  (define (append-lines lines)
-    (let loop ((rem lines)
-               (cur-word "")
-               (result '()))
-      (cond ((null? rem)
-             (reverse (if (not (string=? cur-word ""))
-                          (cons cur-word result)
-                          result)))
-            (else
-             (let* ((fst (car rem))
-                    (len (string-length fst)))
-               (if (= len 0)
-                   (loop (cdr rem)
-                         cur-word
-                         result)
-                   (if (char=? (string-ref fst (- len 1))
-                               #\newline)
-                       (loop (cdr rem)
-                             ""
-                             (cons (string-append cur-word fst)
-                                   result))
-                       (loop (cdr rem)
-                             (string-append cur-word fst)
-                             result))))))))
-
-  (define (append-lines* . args)
-    (append-lines (apply append args)))
-
-
-  (define (split-lines text)
-    (define unix-text
-      (string-remove (lambda (s)
-                       (char=? s #\return))
-                     text))
-    (write-log 'info
-               (format "split-lines: ~s" text))
-
-    (string-split-keeping unix-text #\newline))
-
   (cond-expand
    (guile
     (define (intersperse lst delim)
@@ -155,7 +154,7 @@
 
   (define (split-module-name mod)
     (map string->symbol
-         (string-split
+         ($string-split
           (substring mod
                      1
                      (- (string-length mod) 1))
@@ -252,7 +251,6 @@
                (display (format "~a    " s) error-port))
              args))
       (newline error-port)
-      (flush-output-port error-port)))
-  ))
+      (flush-output-port error-port)))))
 
 

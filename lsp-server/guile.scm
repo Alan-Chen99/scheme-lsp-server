@@ -10,21 +10,19 @@
           $server-capabilities
           $server-name
           $tcp-listen
-          $tcp-accept)
+          $tcp-accept
+          alist-ref)
 
 #:use-module (scheme base)
+#:use-module (scheme write)
 #:use-module (srfi srfi-1)
+#:use-module (srfi srfi-28)
 #:use-module (srfi srfi-69)
-
 #:use-module (ice-9 documentation)
+#:use-module (ice-9 optargs)
 #:use-module (ice-9 session)
-
 #:use-module (system vm program)
-
-#:declarative? #f)
-
-(include "../common/base.scm")
-(include "../common/basic-log.scm")
+#:use-module (lsp-server private))
 
 (define $server-name
   "guile lsp server")
@@ -33,10 +31,7 @@
   #f)
 
 (define $server-capabilities
-  `((completionProvider . ((resolveProvider . #t)))
-    (definitionProvider . ())
-    (signatureHelpProvider . ())
-    (textDocumentSync . 1)))
+  `((definitionProvider . ())))
 
 (define ($tcp-listen server-port)
   (define sock (socket PF_INET SOCK_STREAM 0))
@@ -101,6 +96,12 @@
                                               (string-length identifier))))))))))
       '()))
 
+(define (alist-ref key lst)
+  (define res (assoc key lst))
+  (if res
+      (cdr res)
+      #f))
+
 (define ($open-file file-path)
   #f)
 
@@ -127,15 +128,6 @@
           (reverse res)
           (loop (cons line res))))))
 
-;; TODO implement the same interface as in SRFI-152
-(define (string-split str delim-str . args)
-  (if (string-null? delim-str)
-      #f
-      (let ((delim (if (equal? delim-str "\r\n")
-                       #\newline
-                       (string-ref delim-str 0))))
-        ((@ (guile) string-split) str delim))))
-
 (define (symbol->object sym)
   (and (symbol? sym)
        (module-defined? (current-module) sym)
@@ -149,5 +141,3 @@
   (if base-path
       (canonicalize-path (string-append base-path "/" path))
       #f))
-
-)

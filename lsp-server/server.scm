@@ -22,11 +22,21 @@
     ((define-handler (handler params) body ...)
      (define-handler (handler params #:exit? #f) body ...))))
 
+;; all implementations should implement at least following
+;; capabilities.
+(define mandatory-capabilities
+  '((textDocumentSync . ((save . #t)
+                         (change . 2)))
+    (hoverProvider . #t)
+    (completionProvider . ((resolveProvider . #t)))
+    (signatureHelpProvider . ())))
+
 (define-handler (initialize-handler params)
   (define root-path (get-root-path params))
   ($initialize-lsp-server root-path)
   (set! lsp-server-state 'on)
-  `((capabilities . ,$server-capabilities)
+  `((capabilities . ,(append mandatory-capabilities
+                             $server-capabilities))
     (serverInfo . ((name . ,$server-name)
                    (version . "0.1.0")))))
 
@@ -59,7 +69,7 @@
 (define-handler (text-document/did-change params)
   (define file-path (get-uri-path params))
   (define changes
-    (string-split
+    ($string-split
      (alist-ref 'text
                 (vector-ref (alist-ref 'contentChanges params) 0))
      "\r\n"
@@ -82,6 +92,9 @@
          (write-log 'debug
                     (format "file-path not found: ~a"
                             file-path))))
+  (with-output-to-file "/tmp/current-file.scm"
+    (lambda ()
+      (display (hash-table-ref (file-table) file-path))))
   #f)
 
 (define-handler (text-document/did-close params)
@@ -95,6 +108,9 @@
   (if file-path
       (begin ($open-file file-path)
              (read-file! file-path)
+             (with-output-to-file "/tmp/current-file.scm"
+               (lambda ()
+                 (display (hash-table-ref (file-table) file-path))))
              (write-log 'debug
                         (format "file contents read: ~a"
                                 file-path)))

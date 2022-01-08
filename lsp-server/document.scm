@@ -11,12 +11,13 @@
         line/char->pos)
 
 (import (scheme base)
-        (chicken port)
-        (srfi 28)
-        (srfi 130)
-
         (lsp-server private))
 
+(cond-expand
+ (guile (import (srfi srfi-28)
+                (srfi srfi-13)))
+ (else (import (srfi 28)
+               (srfi 130))))
 
 (begin
   (define (make-document)

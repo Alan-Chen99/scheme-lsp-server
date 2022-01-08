@@ -67,12 +67,7 @@
     (set! tags-table (parse-tags-file tags-path)))
 
   (define $server-capabilities
-    `((completionProvider . ((resolveProvider . #t)))
-      (hoverProvider . #t)
-      (signatureHelpProvider . ())
-      (definitionProvider . ())
-      (textDocumentSync . ((save . #t)
-                           (change . 2)))))
+    `((definitionProvider . ())))
 
   (define $tcp-listen tcp-listen)
 

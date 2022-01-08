@@ -1,7 +1,7 @@
 moddir=$(datadir)/guile/site/$(GUILE_EFFECTIVE_VERSION)
 godir=$(libdir)/guile/$(GUILE_EFFECTIVE_VERSION)/site-ccache
 
-GOBJECTS = $(LIBRARY_DEFINITIONS:%.sld=%.go)
+GOBJECTS =  $(SOURCES:%.scm=%.go) $(LIBRARY_DEFINITIONS:%.sld=%.go)
 
 nobase_dist_mod_DATA = $(SOURCES) $(LIBRARY_DEFINITIONS) $(NOCOMP_SOURCES)
 nobase_go_DATA = $(GOBJECTS)
@@ -16,10 +16,10 @@ $(guile_install_go_files): install-nobase_dist_modDATA
 
 CLEANFILES = $(GOBJECTS)
 GUILE_WARNINGS = -Wunbound-variable -Warity-mismatch -Wformat
-SUFFIXES = .sld .go
+SUFFIXES = .sld .scm .go
 
 .scm.go:
-	$(AM_V_GEN)$(top_builddir)/pre-inst-env $(GUILE_TOOLS) compile $(GUILE_WARNINGS) --r7rs -o "$@" "$<"
+	$(AM_V_GEN)$(top_builddir)/pre-inst-env $(GUILE_TOOLS) compile $(GUILE_WARNINGS) -O0 --r7rs -o "$@" "$<"
 
 .sld.go:
-	$(AM_V_GEN)$(top_builddir)/pre-inst-env $(GUILE_TOOLS) compile $(GUILE_WARNINGS) --r7rs -o "$@" "$<"
+	$(AM_V_GEN)$(top_builddir)/pre-inst-env $(GUILE_TOOLS) compile $(GUILE_WARNINGS) -O0 --r7rs -o "$@" "$<"
