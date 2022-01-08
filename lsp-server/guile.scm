@@ -89,9 +89,10 @@
         ;; TODO return all matches (see chicken.scm)
         (list
          `((uri . ,(string-append "file://" file-abs-path))
-           (range . ((start . ((line . ,(source:line program))
-                               (character . ,(source:column program))))
-                     (end . ((line . ,(source:line program))
+           (range . ((start . ((line . ,(- (source:line program) 1))
+                               (character . ,(- (source:column program)
+                                                1))))
+                     (end . ((line . ,(- (source:line program) 1))
                              (character . ,(+ (source:column program)
                                               (string-length identifier))))))))))
       '()))
