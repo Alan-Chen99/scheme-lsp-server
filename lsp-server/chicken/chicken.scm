@@ -15,6 +15,7 @@
 (import (apropos)
         (chicken base)
         (chicken file)
+        (chicken foreign)
         (chicken format)
         (chicken io)
         (chicken irregex)
@@ -23,6 +24,7 @@
         (chicken port)
         (chicken process)
         (chicken process-context)
+        (chicken random)
         (only (chicken string) string-intersperse)
         (chicken tcp)
         chicken-doc
@@ -33,6 +35,8 @@
         srfi-69
         srfi-130
 
+        nrepl
+        (srfi 18)
         (lsp-server private)
         (lsp-server tags))
 
@@ -42,29 +46,61 @@
 ;;; to fetch the correct documentation with chicken-doc
   (define module-egg-mapping #f)
 
-  (define tags-table #f)
+  ;;; Maps identifiers (string) to an alist that maps the path of
+  ;;; a source file (string) to a <tag-info> record.
+  (define tags-table
+    (make-parameter (make-hash-table)))
+
   (define eggs-path
     (make-pathname (system-cache-directory) "chicken-install"))
+
   (define chicken-source-path
     (or (get-environment-variable "CHICKEN_SRC") ""))
-  (define tags-path #f)
-  (define root-path #f)
+
+  (define tags-path
+    (make-parameter #f))
+
+  (define root-path
+    (make-parameter #f))
 
   (define $server-name
     "chicken lsp server")
 
+  (define (initialize-tags-path)
+    (when (not (tags-path))
+      (tags-path (if (eq? (root-path) 'null)
+                     (create-temporary-file)
+                     (make-pathname (root-path) "CHICKEN-TAGS")))))
+
+  (define (pick-port)
+    (+ (pseudo-random-integer 2000)
+       8001))
+
+  (define (spawn-nrepl-on-random-port)
+    (define port (pick-port))
+    (write-log 'info (format "open nrepl on port ~a" port))
+    (nrepl port))
+
   (define ($initialize-lsp-server root)
-    (set! root-path
-          (if (and root (not (equal? root 'null)))
-              root
-              "."))
-    (set! tags-path
-          (if (eq? root 'null)
-              (create-temporary-file)
-              (make-pathname root-path "lsp-server-tags")))
+    (root-path (if (and root (not (equal? root 'null)))
+                   root
+                   "."))
+    ;;(initialize-tags-path)
     (set! module-egg-mapping (build-module-egg-mapping))
-    (generate-tags tags-path eggs-path chicken-source-path root-path)
-    (set! tags-table (parse-tags-file tags-path)))
+    ;;(generate-tags (tags-path) #t eggs-path chicken-source-path (root-path))
+    (generate-tags! eggs-path)
+    (generate-tags! chicken-source-path)
+    (generate-tags! (root-path))
+    (write-log 'debug "waiting for nrepl incoming request")
+    (thread-start! (make-thread (lambda ()
+                                  (guard (condition (#t (begin
+                                                          (write-log 'error
+                                                                     (format "port ~a already used. Trying spawning nrepl again"))
+                                                          (spawn-nrepl-on-random-port))))
+                                         (spawn-nrepl-on-random-port)))))
+
+    ;;(tags-table (parse-tags-file (tags-path)))
+    #t)
 
   (define $server-capabilities
     `((definitionProvider . ())))
@@ -117,18 +153,10 @@
          (lookup-node (list egg identifier)))))
 
   (define ($open-file file-path)
-    (generate-tags tags-path file-path)
-    (read-tags! tags-path))
+    (generate-tags! file-path))
 
   (define ($save-file file-path)
-    (generate-tags tags-path file-path)
-    (read-tags! tags-path))
-
-  (define (parse-source-path line)
-    (let ((fields (string-split line ",")))
-      (unless (> (length fields) 1)
-        (error "ill-formed TAGS source path" line))
-      (car fields)))
+    (generate-tags! file-path))
 
   (define (read-definitions src-path)
     (define regex
@@ -139,7 +167,7 @@
                    (? (: (~ numeric) (* any) #\x1))
                    (submatch (+ numeric))
                    #\,
-                   (+ numeric))))
+                   (submatch (+ numeric)))))
     (let loop ((line (read-line))
                (res (make-hash-table)))
       (if (or (eof-object? line)
@@ -148,16 +176,18 @@
           (let ((submatches (irregex-match regex line)))
             (if (and submatches
                      (>= (irregex-match-num-submatches submatches)
-                         2))
+                         3))
                 (let ((identifier (irregex-match-substring submatches 1))
                       (line-number
                        (- (string->number
                            (irregex-match-substring submatches 2))
-                          1)))
+                          1))
+                      (char-number
+                       (string->number (irregex-match-substring submatches 3))))
                   (loop (read-line)
                         (begin (hash-table-set! res
                                                 identifier
-                                                `((,src-path . ,line-number)))
+                                                `((,src-path . ,(make-tag-info src-path line-number char-number))))
                                res)))
                 (begin (write-log 'debug
                                   (format  "skipping ill-formed TAGS line: ~a"
@@ -186,72 +216,12 @@
      (hash-table-keys right))
     left)
 
-  (define (parse-tags-file path)
-    (with-input-from-file path
-      (lambda ()
-        (let ((first-line (read-line)))
-          (if (eof-object? first-line)
-              (begin
-                (write-log 'warning
-                           (format "empty TAGS file: ~a" path))
-                (make-hash-table))
-              (begin
-                (unless (string-prefix? "\f" first-line)
-                  (error "parse-tags-file: ill-formed tags file (should start with \f)"))
-                (let loop ((line (read-line))
-                           (res (make-hash-table)))
-                  (if (eof-object? line)
-                      res
-                      (let* ((src-path (parse-source-path line))
-                             (def-table (read-definitions src-path)))
-                        (loop (read-line)
-                              (join-definition-tables! res def-table)))))))))))
-
-  (define (read-tags! path)
-    (define new-tags
-      (parse-tags-file path))
-    (define new-table
-      (join-definition-tables! tags-table new-tags))
-
-    #;
-    (write-log 'debug
-               (format "new tags:~%~a"
-                       (map (lambda (k)
-                              (format "  ~a: ~a~%"
-                                      k
-                                      (hash-table-ref/default new-tags
-                                                              k
-                                                              #f)))
-                            (hash-table-keys new-tags))))
-    (set! tags-table new-table))
-
   (define ($get-definition-locations identifier)
-    (define locations (hash-table-ref/default tags-table identifier '()))
-
-    (if (not (null? locations))
-        (begin
-          (write-log 'debug
-                     (format "locations for identifier ~a found: ~a"
-                             identifier
-                             locations))
-          (map (lambda (loc)
-                 (let ((path (car loc))
-                       (line-number (cdr loc)))
-                   (write-log 'debug (format "identifier ~a found: path ~a, line ~a "
-                                             identifier
-                                             path
-                                             line-number))
-                   `((uri . ,(string-append "file://" path))
-                     (range . ((start . ((line . ,line-number)
-                                         (character . 0)))
-                               (end . ((line . ,line-number)
-                                       (character . 0))))))))
-               locations))
-        '()))
+    (get-definition-locations identifier))
 
   (define (build-module-egg-mapping)
     (define-values (in out pid)
-      (process "chicken-status" '("-c")))
+      (process (chicken-status) '("-c")))
     (define (egg-line? str)
       (irregex-match
        '(: (submatch (+ any)) (+ space) (+ #\.) (* any))
@@ -288,5 +258,10 @@
   (define (module-egg mod)
     (hash-table-ref/default module-egg-mapping
                             mod
-                            #f)))
+                            #f))
+
+  (define (chicken-status)
+    (make-pathname
+     (foreign-value "C_TARGET_BIN_HOME" c-string)
+     (foreign-value "C_CHICKEN_STATUS_PROGRAM" c-string))))
 )

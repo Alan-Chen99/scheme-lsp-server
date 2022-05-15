@@ -1,33 +1,32 @@
-(define-library (lsp-server)
+(define-module (lsp-server)
 
-(export lsp-server-log-level
-        start-lsp-server
-        start-lsp-server/background
-        start-lsp-loop)
+#:export (lsp-server-log-level
+          start-lsp-server
+          start-lsp-server/background
+          start-lsp-loop)
 
-(import (scheme base)
-        (scheme file)
-        (scheme load)
-        (scheme write)
-        (srfi srfi-1)
-        (srfi srfi-8) ;; receive
-        (srfi srfi-9)
-        (srfi srfi-13)
-        (srfi srfi-18)
-        (srfi srfi-28) ;; simple-format
-        (srfi srfi-69)
+#:use-module (scheme base)
+#:use-module (scheme file)
+#:use-module (scheme load)
+#:use-module (scheme write)
+#:use-module (srfi srfi-1)
+#:use-module (srfi srfi-8) ;; receive
+#:use-module (srfi srfi-9)
+#:use-module (srfi srfi-13)
+#:use-module (srfi srfi-18)
+#:use-module (srfi srfi-28) ;; simple-format
+#:use-module (srfi srfi-69)
 
-        (json-rpc)
-        (json-rpc lolevel)
-        (ice-9 documentation)
-        (ice-9 session)
+#:use-module (json-rpc)
+#:use-module (json-rpc lolevel)
+#:use-module (ice-9 documentation)
+#:use-module (ice-9 session)
 
-        (system vm program)
+#:use-module (system vm program)
 
-        (lsp-server guile)
-        (lsp-server document)
-        (lsp-server private))
+#:use-module (lsp-server guile)
+#:use-module (lsp-server document)
+#:use-module (lsp-server private))
 
-(begin
-  (include "lsp-server/file.scm")
-  (include "lsp-server/server.scm")))
+(include "lsp-server/file.scm")
+(include "lsp-server/server.scm")

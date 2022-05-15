@@ -29,6 +29,7 @@
 
         write-log
         log-level
+        satisfies-log-level?
 
         $string-split)
 
@@ -50,7 +51,8 @@
 
 (cond-expand
  (chicken (import (only (chicken base) intersperse)
-                  r7rs)))
+                  r7rs))
+ (else))
 
 (begin
   ;;; Guile's string-split uses char for delim-str. Redefining it
@@ -102,8 +104,6 @@
     (start-char editor-word-start-char)
     (end-char editor-word-end-char))
 
-  
-  
   (define (delete-lines lines start end)
     (define len (length lines))
     (append (take lines start)
@@ -193,7 +193,7 @@
     (define file-prefix-length 7)
     (define uri-length (string-length uri))
     (if (<= uri-length file-prefix-length)
-        #f
+        (error "invalid uri" uri)
         (let ((prefix (substring uri 0 file-prefix-length)))
           (if (equal? prefix file-prefix)
               (substring uri file-prefix-length uri-length)
@@ -220,6 +220,8 @@
   (define (symbols->string sl)
     (string-append "(" (string-join (map symbol->string sl)) ")"))
 
+  ;;; merge contents of hash-tables source and target, updating
+  ;;; the contents of the latter.
   (define (hash-table-merge-updating! target source)
     (for-each (lambda (k)
                 (hash-table-set! target
@@ -228,7 +230,7 @@
               (hash-table-keys source))
     target)
 
-  (define log-level (make-parameter 3))
+  (define log-level (make-parameter 'info))
 
   (define (get-log-level symb)
     (cond ((eqv? symb 'error) 0)
@@ -237,12 +239,14 @@
           ((eqv? symb 'debug) 3)
           (else (error "invalid log level" symb))))
 
-  (define (write-log type msg . args)
-    (define level (get-log-level type))
+  (define (satisfies-log-level? target-level)
+    (>= (get-log-level (log-level)) (get-log-level target-level)))
+
+  (define (write-log target-level msg . args)
     (define error-port (current-error-port))
-    (when (<= level (log-level))
+    (when (satisfies-log-level? target-level)
       (display (format "[~a] ~a"
-                       (string-upcase (symbol->string type))
+                       (string-upcase (symbol->string target-level))
                        msg)
                error-port)
       (when (not (null? args))
@@ -250,7 +254,6 @@
         (map (lambda (s)
                (display (format "~a    " s) error-port))
              args))
-      (newline error-port)
-      (flush-output-port error-port)))))
+      (newline error-port)))))
 
 

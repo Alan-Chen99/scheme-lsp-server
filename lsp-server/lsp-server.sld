@@ -20,6 +20,7 @@
         (srfi 28)
         (srfi 69)
         (srfi 130) ;; string-upcase
+        utf8
 
         (json-rpc)
         (json-rpc lolevel)

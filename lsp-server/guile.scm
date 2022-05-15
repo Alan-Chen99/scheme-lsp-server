@@ -79,23 +79,42 @@
       #f))
 
 (define ($get-definition-locations identifier)
+  (write-log 'debug
+             (format "$get-definition-locations ~a" identifier))
   (define obj (symbol->object (string->symbol identifier)))
-  (define program (program-source obj 0))
-  (if program
-      (let* ((file-path (source:file program))
-             (file-abs-path (if (absolute-file-name? file-path)
-                                file-path
-                                (find-absolute-path file-path))))
-        ;; TODO return all matches (see chicken.scm)
-        (list
-         `((uri . ,(string-append "file://" file-abs-path))
-           (range . ((start . ((line . ,(- (source:line program) 1))
-                               (character . ,(- (source:column program)
-                                                1))))
-                     (end . ((line . ,(- (source:line program) 1))
-                             (character . ,(+ (source:column program)
-                                              (string-length identifier))))))))))
-      '()))
+  (write-log 'debug (format "obj: ~a" obj))
+  (if (procedure? obj)
+      (begin
+        (write-log 'debug "in")
+       (let ((program (program-source obj 0)))
+         (write-log 'debug
+                    (format "program: ~a" program))
+         (if program
+             (let ((file-path (source:file program)))
+               (write-log 'debug (format "file-path ~a" file-path))
+               (if file-path
+                   (let ((file-abs-path (if (absolute-file-name? file-path)
+                                            file-path
+                                            (find-absolute-path file-path))))
+                     ;; TODO return all matches (see chicken.scm)
+                     (list
+                      `((uri . ,(string-append "file://" file-abs-path))
+                        (range . ((start . ((line . ,(- (source:line program) 1))
+                                            (character . ,(- (source:column program)
+                                                             1))))
+                                  (end . ((line . ,(- (source:line program) 1))
+                                          (character . ,(+ (source:column program)
+                                                           (string-length identifier))))))))))
+                   (begin
+                     (write-log 'debug
+                                (format "definition does not have a source file: ~a"
+                                        file-path))
+                     '())))
+             '())))
+      (begin
+        (write-log 'debug
+                   (format "definition not found: ~a" identifier))
+        '())))
 
 (define (alist-ref key lst)
   (define res (assoc key lst))
@@ -104,9 +123,14 @@
       #f))
 
 (define ($open-file file-path)
+  (load-protected file-path)
   #f)
 
 (define ($save-file file-path)
+  (load-protected file-path)
+
+
+  
   #f)
 
 (define (build-procedure-signature module name proc-obj)
@@ -130,9 +154,10 @@
           (loop (cons line res))))))
 
 (define (symbol->object sym)
-  (and (symbol? sym)
-       (module-defined? (current-module) sym)
-       (module-ref (current-module) sym)))
+  (if (and (symbol? sym)
+           (module-defined? (current-module) sym))
+      (module-ref (current-module) sym)
+      #f))
 
 (define (find-absolute-path path)
   (define base-path
@@ -142,3 +167,9 @@
   (if base-path
       (canonicalize-path (string-append base-path "/" path))
       #f))
+
+(define (load-protected path)
+  (guard (condition
+          (#t (write-log 'warning
+                         (format "error loading file ~a" path))))
+         (load path)))

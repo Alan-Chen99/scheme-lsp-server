@@ -1,8 +1,5 @@
-(define lsp-server-log-level (make-parameter 2))
+(define lsp-server-log-level (make-parameter 'debug))
 (define lsp-server-state 'off)
-
-;; (define (run)
-;;   (json-rpc-loop (current-input-port) (current-output-port)))
 
 (define (shutting-down?)
   (eqv? lsp-server-state 'shutdown))
@@ -17,7 +14,7 @@
        (write-log 'debug
                   (format "Handler ~a called with params ~s"
                           'handler
-                          params))
+                          (truncate-string (format "~a" params))))
        body ...))
     ((define-handler (handler params) body ...)
      (define-handler (handler params #:exit? #f) body ...))))
@@ -33,7 +30,8 @@
 
 (define-handler (initialize-handler params)
   (define root-path (get-root-path params))
-  ($initialize-lsp-server root-path)
+  (when ($initialize-lsp-server root-path)
+    (write-log 'info "LSP server initialized"))
   (set! lsp-server-state 'on)
   `((capabilities . ,(append mandatory-capabilities
                              $server-capabilities))
@@ -62,15 +60,19 @@
 (define-handler (text-document/definition params)
   (define editor-word (get-word-under-cursor params))
   (if editor-word
-      (list->vector
-       ($get-definition-locations (editor-word-text editor-word)))
+      (let ((def-locs ($get-definition-locations (editor-word-text editor-word))))
+        (if (not (null? def-locs))
+            (let ((v (list->vector def-locs)))
+              (write-log 'debug
+                         (format "$get-definition-locations resulted in ~a"
+                                 v))
+              v)
+            (begin
+              (write-log 'debug
+                         (format "no definitions found for ~a"
+                                 (editor-word-text editor-word)))
+              'null)))
       'null))
-
-(define (load-protected path)
-  (guard (condition
-          (#t (write-log 'warning
-                         (format "error loading file ~a" path))))
-         (load path)))
 
 (define-handler (text-document/did-change params)
   (define file-path (get-uri-path params))
@@ -99,7 +101,8 @@
                     (format "file-path not found: ~a"
                             file-path))))
   #;
-  (with-output-to-file "/tmp/current-file.scm"
+  (with-output-to-file
+      (string-append "/tmp/" (remove-slashes file-path))
     (lambda ()
       (display (hash-table-ref (file-table) file-path))))
   #f)
@@ -115,11 +118,13 @@
   (if file-path
       (begin ($open-file file-path)
              (read-file! file-path)
-             (load-protected file-path)
-             #;
-             (with-output-to-file "/tmp/current-file.scm"
-               (lambda ()
-                 (display (hash-table-ref (file-table) file-path))))
+             (let ((tmp-file (string-append "/tmp/" (remove-slashes file-path))))
+               (write-log 'debug
+                          (format "dumping content read into ~a" tmp-file))
+               #;
+               (with-output-to-file tmp-file
+                       (lambda ()
+                         (display (hash-table-ref (file-table) file-path)))))
              (write-log 'debug
                         (format "file contents read: ~a"
                                 file-path)))
@@ -132,7 +137,6 @@
   (define file-path (get-uri-path params))
   (write-log 'info "file saved.")
   ($save-file file-path)
-  (load-protected file-path)
   #f)
 
 (define-handler (text-document/completion params)
@@ -213,7 +217,7 @@
                            "error resolving "
                            mod
                            id)
-                (if (> (lsp-server-log-level) 2)
+                (if (satisfies-log-level? 'info)
                     (raise (make-json-rpc-internal-error
                             (format "Error resolving ~a ~a"
                                     mod
@@ -238,7 +242,7 @@
                               ($apropos-list cur-word))))
         (if (null? matches)
             (begin
-              (write-log 'info
+              (write-log 'warning
                          (format "no signature found for: ~a" cur-word))
               'null)
             (guard
@@ -302,9 +306,13 @@
     (thunk)))
 
 (define (start-lsp-loop)
+  (write-log 'info "LSP loop started")
   (parameterize-and-run
    (lambda ()
-     (json-rpc-loop (current-input-port) (current-output-port)))))
+     (let ((thread (thread-start!
+                    (make-thread (lambda ()
+                                   (json-rpc-loop (current-input-port) (current-output-port)))))))
+       (thread-join! thread)))))
 
 (define (start-lsp-server tcp-port)
   (parameterize-and-run
@@ -315,3 +323,20 @@
     (make-thread (lambda () (start-lsp-server tcp-port))))
   (thread-start! thread)
   thread)
+
+(define (remove-slashes path)
+  (define new-path (make-string (string-length path)))
+  (string-fold (lambda (c i)
+                 (if (char=? c #\/)
+                     (string-set! new-path i #\.)
+                     (string-set! new-path i c))
+                 (+ i 1))
+               0
+               path)
+  new-path)
+
+(define (truncate-string str)
+  (define max-length 40)
+  (if (< (string-length str) max-length)
+      str
+      (string-append (string-take str max-length) " ...")))

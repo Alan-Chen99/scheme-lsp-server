@@ -2,7 +2,8 @@
         (srfi 1)
         test)
 
-(import (lsp-server private)
+(import (lsp-server chicken)
+        (lsp-server private)
         (lsp-server document)
         (lsp-server tags))
 
@@ -169,15 +170,30 @@
                    "")
                   document)))
 
+#;
+(test-group "range normalization"
+  (test 2
+    (normalize-range
+     (range-start-line (make-range 2 5 2 7)))))
+
 (test-group "document insertion/expansion/contraction"
+  (test "     ab"
+    (document-expand "ab" 0 5))
+  
   (test "a     b"
     (document-expand "ab" 1 5))
+
+  (test "ab     "
+    (document-expand "ab" 2 5))
 
   (test "a123   b"
     (document-insert "a   b" "123" 1))
 
   (test "a12345   b"
     (document-insert "a   b" "12345" 1))
+
+  (test "ab12345"
+    (document-insert "ab" "12345" 2))
 
   (test "abe"
     (document-contract "abcde" 2 4)))
@@ -193,26 +209,32 @@
     (line/char->pos "0123\n56" 1 0))
 
   (test 6
-        (line/char->pos "0123\n56" 1 1)))
+        (line/char->pos "0123\n56" 1 1))
+
+  (test 7
+        (line/char->pos "0123\n56" 1 2))
+
+  (test 4
+        (line/char->pos "0123\n56" 0 4)))
 
 (test-group "tag generation"
   (test "x"
-    (parse-definition-line "define x"))
+    (car (parse-definition-line "define x")))
 
   (test "func"
-    (parse-definition-line "(define   (func x)"))
+    (car (parse-definition-line "(define   (func x)")))
 
   (test "my-macro"
-    (parse-definition-line "(define-syntax my-macro"))
+    (car (parse-definition-line "(define-syntax my-macro")))
 
   (test "var"
-    (parse-definition-line "(define\n var"))
+    (car (parse-definition-line "(define\n var")))
 
   (test "var"
-    (parse-definition-line "(define var (+ x 1))"))
+    (car (parse-definition-line "(define var (+ x 1))")))
 
   (test "var"
-    (parse-definition-line "(set! var (+ x 1))"))
+    (car (parse-definition-line "(set! var (+ x 1))")))
 
   (test #f
     (parse-definition-line "defin var"))
