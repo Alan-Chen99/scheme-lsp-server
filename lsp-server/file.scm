@@ -1,29 +1,17 @@
 (define file-table
   (make-parameter (make-hash-table)))
 
-(define (read-contents port)
-  (define raw-contents
-    (let loop ((c (read-char port))
-               (res ""))
-      (if (eof-object? c)
-          res
-          (loop (read-char port)
-                (string-append res (string c))))))
-  (if (eof-object? raw-contents)
-      ""
-      raw-contents))
-
 (define (read-file! path)
   (if (hash-table-exists? (file-table) path)
       (hash-table-ref (file-table) path)
-      (let ((contents (call-with-input-file path
-                            (lambda (p) (read-contents p)))))
+      (let ((doc (call-with-input-file path
+                   (lambda (p) (read-document p)))))
         (hash-table-update!/default (file-table)
                                     path
                                     (lambda (v)
-                                      contents)
-                                    contents)
-        contents)))
+                                      doc)
+                                    doc)
+        doc)))
 
 
 
@@ -49,7 +37,7 @@
                              (call-with-input-file path
                                (lambda (p)
                                  (apply-change change-contents
-                                               (read-contents p)))))))
+                                               (read-document p)))))))
       ;; if range is not set (#f), the client will send the complete file.
       (let ((contents (change-contents-text change-contents)))
         ;; TODO is this according to the protocol possible?
@@ -73,15 +61,16 @@
 
 (define (get-word-under-cursor params)
   (define file-path (get-uri-path params))
-  (define contents (read-file! file-path))
-  (define contents-length (document-length contents))
+  (define doc (read-file! file-path))
+  (define contents (document-contents doc))
+  (define contents-length (document-length doc))
   (define line-number (alist-ref* '(position line) params))
   (define char-number (alist-ref* '(position character) params))
   (write-log 'debug
              "get-word-under-cursor: computing text-pos")
   (define text-pos
-    (min (line/char->pos contents line-number char-number)
-         (max (- (document-length contents) 1)
+    (min (line/char->pos doc line-number char-number)
+         (max (- (document-length doc) 1)
               0)))
   (write-log 'debug
              (format "contents-length: ~a; text-pos: ~a"
@@ -131,14 +120,14 @@
                  (else
                   (let ((word (substring
                                contents
-                               (line/char->pos contents line-number word-start)
-                               (line/char->pos contents line-number word-end))))
+                               (line/char->pos doc line-number word-start)
+                               (line/char->pos doc line-number word-end))))
                     (write-log 'debug
                                (format "word-start: ~a (~a), word-end: ~a ~a~%"
                                        word-start
-                                       (line/char->pos contents line-number word-start)
+                                       (line/char->pos doc line-number word-start)
                                        word-end
-                                       (line/char->pos contents line-number word-end)))
+                                       (line/char->pos doc line-number word-end)))
                     (write-log 'debug (string-append "selected word: "
                                                      word))
                     (make-editor-word word
@@ -198,7 +187,7 @@
                     (range-end-line normalized-range)
                     (range-end-char normalized-range)))
   (define old-len (- end-pos start-pos))
-  (define new-len (document-length text))
+  (define new-len (string-length text))
   (write-log
    'debug
    (format "apply-change text: ~a, start-line: ~a, start-char: ~a, end-line: ~a, end-char: ~a, start-pos: ~a end-pos: ~a~%"

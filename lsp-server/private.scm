@@ -31,7 +31,9 @@
         log-level
         satisfies-log-level?
 
-        $string-split)
+        $string-split
+
+        delete-lines)
 
 (import (scheme base)
         (scheme char)

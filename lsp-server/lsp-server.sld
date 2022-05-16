@@ -29,7 +29,8 @@
         (lsp-server private))
 
 (cond-expand
- (chicken (import (lsp-server chicken)))
+ (chicken (import (chicken format))
+          (import (lsp-server chicken)))
  (else))
 
 (include "file.scm")
