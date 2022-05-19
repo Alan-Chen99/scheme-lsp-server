@@ -48,27 +48,27 @@
                        "  (cond ((= x 0) 1)\n"
                        "        ((= x 1) 1)\n"
                        "        (else (* x (f (- x 1))))))\n")
-    (document-content (apply-change (make-change-contents
-                                     (make-range 0 9 0 10 1)
-                                     "g")
-                                    document)))
+    (document-contents (apply-change (make-change-contents
+                                      (make-range 0 9 0 10 1)
+                                      "g")
+                                     document)))
 
   (test (string-append "(define (f x)\n"
                        "  (cond ((= x 0) 1)\n"
                        "\n"
                        "        (else (* x (f (- x 1))))))\n")
-    (document-content (apply-change (make-change-contents
-                                     (make-range 2 0 2 19 19)
-                                     "")
-                                    document)))
+    (document-contents (apply-change (make-change-contents
+                                      (make-range 2 0 2 19 19)
+                                      "")
+                                     document)))
 
   (test (string-append "(define (f x)\n"
                        "  (cond ((= x 0) 1)\n"
                        "        (else (* x (f (- x 1))))))\n")
-    (document-content (apply-change (make-change-contents
-                                     (make-range 2 0 3 0 20)
-                                     "")
-                                    document)))
+    (document-contents (apply-change (make-change-contents
+                                      (make-range 2 0 3 0 20)
+                                      "")
+                                     document)))
 
   (test (string-append
          "(define (f x)\n"
@@ -76,10 +76,10 @@
          "        ((= x 1) 1)\n"
          "        ((= x 2) 2)\n"
          "        (else (* x (f (- x 1))))))\n")
-    (document-content (apply-change (make-change-contents
-                                     (make-range 2 19 2 19 0)
-                                     "\n        ((= x 2) 2)")
-                                    document)))
+    (document-contents (apply-change (make-change-contents
+                                      (make-range 2 19 2 19 0)
+                                      "\n        ((= x 2) 2)")
+                                     document)))
 
   (test (string-append
          "(define (f x)\n"
@@ -87,17 +87,17 @@
          "        ((= x 1) 1)\n"
          "\n"
          "        (else (* x (f (- x 1))))))\n")
-    (document-content (apply-change (make-change-contents
-                                     (make-range 2 19 2 19 0)
-                                     "\n")
-                                    document)))
+    (document-contents (apply-change (make-change-contents
+                                      (make-range 2 19 2 19 0)
+                                      "\n")
+                                     document)))
 
   (test (string-append "        ((= x 1) 1)\n"
                        "        (else (* x (f (- x 1))))))\n")
-    (document-content (apply-change (make-change-contents
-                                     (make-range 0 0 2 0 34)
-                                     "")
-                                    document)))
+    (document-contents (apply-change (make-change-contents
+                                      (make-range 0 0 2 0 34)
+                                      "")
+                                     document)))
 
   (test (string-append
          "(define (f x)\n"
@@ -105,75 +105,75 @@
          "        ((= x 1) 1)\n"
          "        (else (* x (f (- x 1))))))\n"
          "\n"          )
-    (document-content (apply-change (make-change-contents
-                                     (make-range 3 34 3 34 0)
-                                     "\n")
-                                    document)))
+    (document-contents (apply-change (make-change-contents
+                                      (make-range 3 34 3 34 0)
+                                      "\n")
+                                     document)))
 
   (test (string-append
          "i(define (f x)\n"
          "  (cond ((= x 0) 1)\n"
          "        ((= x 1) 1)\n"
          "        (else (* x (f (- x 1))))))\n")
-    (document-content (apply-change (make-change-contents
-                                     (make-range 0 0 0 0 0)
-                                     "i")
-                                    document)))
+    (document-contents (apply-change (make-change-contents
+                                      (make-range 0 0 0 0 0)
+                                      "i")
+                                     document)))
 
   (test (string-append "(define (f x)\n"
                        "blacond ((= x 0) 1)\n"
                        "        ((= x 1) 1)\n"
                        "        (else (* x (f (- x 1))))))\n")
-    (document-content (apply-change (make-change-contents
-                                     (make-range 1 0 1 3 3)
-                                     "bla")
-                                    document)))
+    (document-contents (apply-change (make-change-contents
+                                      (make-range 1 0 1 3 3)
+                                      "bla")
+                                     document)))
 
   (test (string-append "i\n" "bla\n")
-    (document-content (apply-change (make-change-contents
-                                     (make-range 0 0 0 0 0)
-                                     "i")
-                                    (string->document
-                                     (string-append "\n" "bla\n")))))
+    (document-contents (apply-change (make-change-contents
+                                      (make-range 0 0 0 0 0)
+                                      "i")
+                                     (string->document
+                                      (string-append "\n" "bla\n")))))
 
   (test (string-append
          "(define (f x)\n"
          "        ((= x 1) 1)\n"
          "        (else (* x (f (- x 1))))))\n")
-    (document-content (apply-change (make-change-contents
-                                     (make-range 1 0 2 0 20)
-                                     "")
-                                    document)))
+    (document-contents (apply-change (make-change-contents
+                                      (make-range 1 0 2 0 20)
+                                      "")
+                                     document)))
 
   (test (string-append
          "(define (f x)\n"
          "  (cond ((= x 0) 1)        ((= x 1) 1)\n"
          "        (else (* x (f (- x 1))))))\n")
-    (document-content (apply-change (make-change-contents
-                                     (make-range 2 0 1 19 1)
-                                     "")
-                                    document)))
+    (document-contents (apply-change (make-change-contents
+                                      (make-range 2 0 1 19 1)
+                                      "")
+                                     document)))
 
   #;
   (test '("(define (f x)\n"
-          "  (cond ((= x 0) 1)\n"
-          "(+ 2\n"
-          "   3)        ((= x 1) 1)\n"
-          "        (else (* x (f (- x 1))))))\n")
-    (apply-change (make-change-contents
-                   (make-range 2 0 2 5 10)
-                   '("(+ 2\n   3)"))
-                  document))
+  "  (cond ((= x 0) 1)\n"
+  "(+ 2\n"
+  "   3)        ((= x 1) 1)\n"
+  "        (else (* x (f (- x 1))))))\n")
+  (apply-change (make-change-contents
+  (make-range 2 0 2 5 10)
+  '("(+ 2\n   3)"))
+  document))
 
   (test (string-append
          "(define (f x)\n"
          "  (cond ((= x 0) 1)\n"
          "(+ 2\n"
          "   3)   (else (* x (f (- x 1))))))\n")
-    (document-content (apply-change (make-change-contents
-                                     (make-range 2 0 3 5 10)
-                                     (string-append "(+ 2\n" "   3)"))
-                                    document)))
+    (document-contents (apply-change (make-change-contents
+                                      (make-range 2 0 3 5 10)
+                                      (string-append "(+ 2\n" "   3)"))
+                                     document)))
 
   (test (string-append
          "(define (f x)\n"
@@ -181,48 +181,48 @@
          "        ((= x 1) 1)\n"
          "        (else (* x (f (- x 1))))))\n"
          "(")
-    (document-content (apply-change (make-change-contents
-                                     (make-range 4 0 4 0 0)
-                                     "(")
-                                    document)))
+    (document-contents (apply-change (make-change-contents
+                                      (make-range 4 0 4 0 0)
+                                      "(")
+                                     document)))
 
   (test ""
-    (document-content (apply-change (make-change-contents
-                                     (make-range 0 0 4 0 88)
-                                     "")
-                                    document))))
+    (document-contents (apply-change (make-change-contents
+                                      (make-range 0 0 4 0 88)
+                                      "")
+                                     document))))
 
 #;
 (test-group "range normalization"
-  (test 2
-    (normalize-range
-     (range-start-line (make-range 2 5 2 7)))))
+(test 2
+(normalize-range
+(range-start-line (make-range 2 5 2 7)))))
 
 (test-group "(lsp-server document: insertion/expansion/contraction"
   (test "     ab"
-    (document-content (document-expand (string->document "ab") 0 5)))
+    (document-contents (document-expand (string->document "ab") 0 5)))
   
   (test "a     b"
-    (document-content (document-expand (string->document "ab") 1 5)))
+    (document-contents (document-expand (string->document "ab") 1 5)))
 
   (test "ab     "
-    (document-content (document-expand (string->document "ab") 2 5)))
+    (document-contents (document-expand (string->document "ab") 2 5)))
 
   (test "a123   b"
-    (document-content (document-insert (string->document "a   b")
-                                       "123" 1)))
+    (document-contents (document-insert (string->document "a   b")
+                                        "123" 1)))
 
   (test "a12345   b"
-    (document-content (document-insert (string->document "a   b")
-                                       "12345" 1)))
+    (document-contents (document-insert (string->document "a   b")
+                                        "12345" 1)))
 
   (test "ab12345"
-    (document-content (document-insert (string->document "ab")
-                                       "12345" 2)))
+    (document-contents (document-insert (string->document "ab")
+                                        "12345" 2)))
 
   (test "abe"
-    (document-content (document-contract (string->document "abcde")
-                                         2 4))))
+    (document-contents (document-contract (string->document "abcde")
+                                          2 4))))
 
 (test-group "line/char->pos"
   (test 2
@@ -235,13 +235,13 @@
     (line/char->pos (string->document "0123\n56") 1 0))
 
   (test 6
-        (line/char->pos (string->document "0123\n56") 1 1))
+    (line/char->pos (string->document "0123\n56") 1 1))
 
   (test 7
-        (line/char->pos (string->document "0123\n56") 1 2))
+    (line/char->pos (string->document "0123\n56") 1 2))
 
   (test 4
-        (line/char->pos (string->document "0123\n56") 0 4)))
+    (line/char->pos (string->document "0123\n56") 0 4)))
 
 (test-group "(lsp-server tag): tag generation"
   (test "x"

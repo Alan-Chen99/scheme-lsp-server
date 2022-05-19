@@ -26,7 +26,9 @@
 
 #:use-module (lsp-server guile)
 #:use-module (lsp-server document)
-#:use-module (lsp-server private))
+#:use-module (lsp-server private)
+
+#:declarative? #f)
 
 (include "lsp-server/file.scm")
 (include "lsp-server/server.scm")

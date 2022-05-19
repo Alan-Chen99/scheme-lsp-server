@@ -14,8 +14,7 @@
         string->document
         compute-lines-offsets)
 
-(import (chicken port)
-        (scheme base)
+(import (scheme base)
         (scheme file)
         (scheme write)
         (lsp-server private))
@@ -24,7 +23,8 @@
  (guile (import (srfi srfi-13)
                 (srfi srfi-28)
                 (srfi srfi-69)))
- (else (import (srfi 28)
+ (else (import (only (chicken port) with-input-from-string)
+               (srfi 28)
                (srfi 69)
                (srfi 130))))
 

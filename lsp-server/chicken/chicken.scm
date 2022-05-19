@@ -92,12 +92,14 @@
     (generate-tags! chicken-source-path)
     (generate-tags! (root-path))
     (write-log 'debug "waiting for nrepl incoming request")
-    (thread-start! (make-thread (lambda ()
-                                  (guard (condition (#t (begin
-                                                          (write-log 'error
-                                                                     (format "port ~a already used. Trying spawning nrepl again"))
-                                                          (spawn-nrepl-on-random-port))))
-                                         (spawn-nrepl-on-random-port)))))
+    (thread-start!
+     (make-thread
+      (lambda ()
+        (guard (condition (#t (begin
+                                (write-log 'error
+                                           (format "port ~a already used. Trying spawning nrepl again"))
+                                (spawn-nrepl-on-random-port))))
+               (spawn-nrepl-on-random-port)))))
 
     ;;(tags-table (parse-tags-file (tags-path)))
     #t)

@@ -1,0 +1,16 @@
+#!/usr/bin/env sh
+exec guile --r7rs -e main -s "$0" "$@"
+!#
+
+(import (lsp-server)
+        (scheme process-context))
+
+(define (main args)
+  (define tcp-port (string->number (cadr args)))
+  (parameterize ((lsp-server-log-level 'debug))
+    (start-lsp-server tcp-port)))
+
+(display (command-line))
+(main (command-line))
+
+

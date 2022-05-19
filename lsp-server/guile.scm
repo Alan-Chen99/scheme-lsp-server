@@ -22,7 +22,9 @@
 #:use-module (ice-9 optargs)
 #:use-module (ice-9 session)
 #:use-module (system vm program)
-#:use-module (lsp-server private))
+#:use-module (lsp-server private)
+
+#:declarative? #f)
 
 (define $server-name
   "guile lsp server")
@@ -99,10 +101,10 @@
                      ;; TODO return all matches (see chicken.scm)
                      (list
                       `((uri . ,(string-append "file://" file-abs-path))
-                        (range . ((start . ((line . ,(- (source:line program) 1))
+                        (range . ((start . ((line . ,(+ (source:line program) 1))
                                             (character . ,(- (source:column program)
                                                              1))))
-                                  (end . ((line . ,(- (source:line program) 1))
+                                  (end . ((line . ,(+ (source:line program) 1))
                                           (character . ,(+ (source:column program)
                                                            (string-length identifier))))))))))
                    (begin
@@ -123,14 +125,9 @@
       #f))
 
 (define ($open-file file-path)
-  (load-protected file-path)
   #f)
 
 (define ($save-file file-path)
-  (load-protected file-path)
-
-
-  
   #f)
 
 (define (build-procedure-signature module name proc-obj)

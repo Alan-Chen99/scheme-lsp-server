@@ -1,13 +1,8 @@
-(import (scheme base)
-        (lsp-server)
-        (srfi-18))
+(import (lsp-server)
+        (scheme process-context))
 
 (define (main args)
-  (display "Scheme LSP server started")
-  (newline)
-  (flush-output-port)
-  ;;(thread-join! (start-lsp-server))
-  (start-lsp-loop)
-  )
-;(main '())
+  (parameterize ((lsp-server-log-level 'debug))
+    (start-lsp-server (string->number (cadr args)))))
 
+(main (command-line))
