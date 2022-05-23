@@ -13,9 +13,6 @@
  (component-options
   (csc-options "-d3" "-O0" "-f" "-X" "r7rs" "-R" "r7rs" "-f"))
  (components
-  (program lsp-chicken-start-server
-           (source "../main.scm")
-           (component-dependencies lsp-server))
   (extension lsp-server.private
              (source "../private.scm"))
   (extension lsp-server.chicken

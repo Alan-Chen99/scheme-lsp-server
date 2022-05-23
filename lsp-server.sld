@@ -1,9 +1,11 @@
 (define-module (lsp-server)
 
 #:export (lsp-server-log-level
+          last-condition
           start-lsp-server
           start-lsp-server/background
-          start-lsp-loop)
+          start-lsp-loop
+          start-lsp-server-full)
 
 #:use-module (scheme base)
 #:use-module (scheme file)

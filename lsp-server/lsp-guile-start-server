@@ -6,11 +6,11 @@ exec guile --r7rs -e main -s "$0" "$@"
         (scheme process-context))
 
 (define (main args)
-  (define tcp-port (string->number (cadr args)))
-  (parameterize ((lsp-server-log-level 'debug))
-    (start-lsp-server tcp-port)))
+  (define lsp-port-num (string->number (cadr args)))
+  (define command-port-num (string->number (caddr args)))
+  (define repl-port-num (string->number (cadddr args)))
 
-(display (command-line))
+  (start-lsp-server-full lsp-port-num command-port-num repl-port-num))
+
 (main (command-line))
-
 

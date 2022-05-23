@@ -9,8 +9,10 @@
           $initialize-lsp-server
           $server-capabilities
           $server-name
-          $tcp-listen
           $tcp-accept
+          $tcp-connect
+          $tcp-listen
+          $spawn-repl-server
           alist-ref)
 
 #:use-module (scheme base)
@@ -22,14 +24,22 @@
 #:use-module (ice-9 optargs)
 #:use-module (ice-9 session)
 #:use-module (system vm program)
+#:use-module (system repl server)
 #:use-module (lsp-server private)
 
 #:declarative? #f)
 
+(define root-path (make-parameter #f))
+(define current-path (make-parameter #f))
+
 (define $server-name
   "guile lsp server")
 
-(define ($initialize-lsp-server root-path)
+(define ($initialize-lsp-server root)
+  ;; (root-path
+  ;;  (if (and root (not (equal? root 'null)))
+  ;;      root
+  ;;      "."))
   #f)
 
 (define $server-capabilities
@@ -46,6 +56,13 @@
   (define res (accept listener))
   (define port (car res))
   (values port port))
+
+(define ($tcp-connect tcp-address tcp-port)
+  (define sock (socket PF_INET SOCK_STREAM 0))
+  (define addr (inet-pton AF_INET tcp-address))
+  (setsockopt sock SOL_SOCKET SO_REUSEADDR 1)
+  (connect sock (make-socket-address AF_INET addr tcp-port))
+  (values sock sock))
 
 (define ($apropos-list identifier)
   (apropos-fold (lambda (mod name obj acc)
@@ -88,35 +105,45 @@
   (if (procedure? obj)
       (begin
         (write-log 'debug "in")
-       (let ((program (program-source obj 0)))
-         (write-log 'debug
-                    (format "program: ~a" program))
-         (if program
-             (let ((file-path (source:file program)))
-               (write-log 'debug (format "file-path ~a" file-path))
-               (if file-path
-                   (let ((file-abs-path (if (absolute-file-name? file-path)
-                                            file-path
-                                            (find-absolute-path file-path))))
-                     ;; TODO return all matches (see chicken.scm)
-                     (list
-                      `((uri . ,(string-append "file://" file-abs-path))
-                        (range . ((start . ((line . ,(+ (source:line program) 1))
-                                            (character . ,(- (source:column program)
-                                                             1))))
-                                  (end . ((line . ,(+ (source:line program) 1))
-                                          (character . ,(+ (source:column program)
-                                                           (string-length identifier))))))))))
-                   (begin
-                     (write-log 'debug
-                                (format "definition does not have a source file: ~a"
-                                        file-path))
-                     '())))
-             '())))
+        (let ((program (program-source obj 0)))
+          (write-log 'debug
+                     (format "program: ~a" program))
+          (if program
+              (let ((file-path (source:file program)))
+
+                (write-log 'debug (format "file-path: ~a" file-path))
+                (if file-path
+                    (let ((file-abs-path (if (absolute-file-name? file-path)
+                                             file-path
+                                             (find-absolute-path file-path))))
+                      (write-log 'debug (format "file-abs-path: ~a" file-abs-path))
+                      (write-log 'debug (format "line: ~a" (source:line program)))
+                      (write-log 'debug (format "column: ~a" (source:column program)))
+                      ;; TODO return all matches (see chicken.scm)
+                      (let ((ans (list
+                                  `((uri . ,(string-append "file://" file-abs-path))
+                                    (range . ((start . ((line . ,(source:line program))
+                                                        (character . ,(source:column program))))
+                                              (end . ((line . ,(source:line program))
+                                                      (character . ,(+ (source:column program)
+                                                                       (string-length identifier)))))))))))
+                        (write-log 'debug (format "responding with: ~a" ans))
+                        ans))
+                    (begin
+                      (write-log 'debug
+                                 (format "definition does not have a source file: ~a"
+                                         file-path))
+                      '())))
+              '())))
       (begin
         (write-log 'debug
                    (format "definition not found: ~a" identifier))
         '())))
+
+(define ($spawn-repl-server port-num)
+  (define sock (make-tcp-server-socket #:host "127.0.0.1"
+                                       #:port port-num))
+  (spawn-server sock))
 
 (define (alist-ref key lst)
   (define res (assoc key lst))
@@ -125,9 +152,14 @@
       #f))
 
 (define ($open-file file-path)
+  (write-log 'debug (format "opening file in guile: ~a" file-path))
+  ;; (current-path (if file-path
+  ;;                        (dirname file-path)
+  ;;                        #f))
   #f)
 
 (define ($save-file file-path)
+  ;;(compile-file file-path)
   #f)
 
 (define (build-procedure-signature module name proc-obj)
@@ -160,10 +192,11 @@
   (define base-path
     (find (lambda (load-path)
             (file-exists? (string-append load-path "/" path)))
-          %load-path))
+          (append (filter values (list (root-path) (current-path)))
+                  %load-path)))
   (if base-path
       (canonicalize-path (string-append base-path "/" path))
-      #f))
+      path))
 
 (define (load-protected path)
   (guard (condition

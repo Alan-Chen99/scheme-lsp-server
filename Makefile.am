@@ -1,7 +1,7 @@
 include guile.am
 
 NOCOMP_SOURCES =       \
-  lsp-server/file.scm      \
+  lsp-server/file.scm   \
   lsp-server/server.scm
 
 SOURCES = \

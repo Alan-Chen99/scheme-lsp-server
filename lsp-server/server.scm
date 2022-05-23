@@ -1,6 +1,9 @@
 (define lsp-server-log-level (make-parameter 'debug))
 (define lsp-server-state 'off)
 
+(define listening-threads '())
+(define listening-threads-mutex (make-mutex))
+
 (define (shutting-down?)
   (eqv? lsp-server-state 'shutdown))
 
@@ -57,8 +60,10 @@
   (write-log 'debug (format "ignoring request. Params: ~a" params))
   #f)
 
+
 (define-handler (text-document/definition params)
   (define editor-word (get-word-under-cursor params))
+  (write-log 'debug (format "got word: ~a" editor-word))
   (if editor-word
       (let ((def-locs ($get-definition-locations (editor-word-text editor-word))))
         (if (not (null? def-locs))
@@ -82,7 +87,7 @@
                 (vector-ref (alist-ref 'contentChanges params) 0))
      "\r\n"
      'infix))
-  (cond ((and file-path (not (hash-table-ref/default (file-table) file-path #f)))
+  (cond ((and file-path (not (hash-table-ref/default file-table file-path #f)))
          ($open-file file-path)
          (read-file! file-path)
          (update-file! file-path
@@ -222,7 +227,7 @@
                             (format "Error resolving ~a ~a"
                                     mod
                                     id)))
-                    #f))))
+                    'null))))
          (begin
            (write-log 'debug
                       (format "Calling $fetch-documentation for mod ~a id ~a"
@@ -250,7 +255,7 @@
               (#t (begin (write-log 'warning
                                     (format "Unable to fetch signature of `~a`"
                                             cur-word))
-                         #f)))
+                         'null)))
              (let* ((ainfo (car matches))
                     (signature
                      ($fetch-signature (apropos-info-module ainfo)
@@ -271,7 +276,7 @@
              (not (equal? signature 'null)))
         `((contents . ((kind . "plaintext")
                        (value . ,signature))))
-        #f)))
+        'null)))
 
 (define-handler (custom/load-file params)
   (define file-path (get-uri-path params))
@@ -308,11 +313,7 @@
 (define (start-lsp-loop)
   (write-log 'info "LSP loop started")
   (parameterize-and-run
-   (lambda ()
-     (let ((thread (thread-start!
-                    (make-thread (lambda ()
-                                   (json-rpc-loop (current-input-port) (current-output-port)))))))
-       (thread-join! thread)))))
+   (lambda () (json-rpc-loop (current-input-port) (current-output-port)))))
 
 (define (start-lsp-server tcp-port)
   (parameterize-and-run
@@ -323,6 +324,92 @@
     (make-thread (lambda () (start-lsp-server tcp-port))))
   (thread-start! thread)
   thread)
+
+(define (lsp-spawn-server port-num)
+  (let ((th (thread-start!
+             (make-thread
+              (lambda ()
+                (guard
+                 (condition (#t (begin (write-log 'error
+                                                  (format "CRASH: ~a" condition))
+                                       (raise condition))))
+                 (parameterize ((lsp-server-log-level 'debug))
+                   (begin
+                     (start-lsp-server port-num)))))))))
+    (mutex-lock! listening-threads-mutex)
+    (set! listening-threads (cons th listening-threads))
+    (mutex-unlock! listening-threads-mutex)
+    (when th
+      (write-log 'debug
+                 (format "LSP server listening on port ~a" port-num)))))
+
+(define (dispatch-command cmd)
+  (if (string-prefix? "spawn-lsp-server" cmd)
+      (let ((cmd-lst (string-tokenize cmd)))
+        (cond ((not (= (length cmd-lst) 2))
+               ;;(write "missing port in command~%" out-port)
+               (write-log 'info (format "missing port in command~%")))
+              ((string->number (cadr cmd-lst))
+               => (lambda (port-num)
+                    (write-log 'debug (format "Spawning LSP server on port ~a"
+                                              port-num))
+                    (lsp-spawn-server port-num)))
+              (else
+               (write-log 'info (format "invalid command  ~a~%" cmd))
+               ;;(write (format #f "invalid command  ~a~%" cmd) out-port)
+               )))
+      (write-log 'info (format "ignoring unknown command: ~s" cmd))))
+
+(define (lsp-command-loop command-port-num)
+  (let ((listener ($tcp-listen command-port-num)))
+    (let loop ()
+      (let-values (((in-port out-port)
+                    (guard
+                     (condition
+                      (#t (begin
+                            (write-log 'error
+                                      (string-append
+                                       (format "Unable to open command listener of LSP server on port ~a.~%"
+                                               command-port-num)
+                                       "Is the server already running?"
+                                       "If not, try changing the LSP's command port of your LSP client."))
+                            (exit 1))))
+                     ($tcp-accept listener))))
+        (let ((cmd (read-line in-port)))
+          (dispatch-command cmd)
+          (loop))))))
+
+(define (start-lsp-server-full lsp-port-num command-port-num repl-port-num)
+  (log-level 'debug)
+
+  (when (= lsp-port-num 0)
+    (write-log 'info "ignoring port 0")
+    (exit 0))
+  (guard
+   (condition
+    (#t (let-values (((inp outp) ($tcp-connect "127.0.0.1"
+                                               command-port-num)))
+          (write-log 'info
+                     (format "requesting new LSP connection at port ~a"
+                             lsp-port-num))
+          (guard
+           (condition (#t (write-log 'error
+                                     (format "Connection request for LSP connection at port ~a failed" lsp-port-num))))
+           (display (format "spawn-lsp-server ~a" lsp-port-num)
+                    outp)
+           (flush-output-port outp)
+           (write-log 'info
+                      (format "LSP connection successfull. Idleing."))
+           (read-char)))))
+   (begin
+     ($spawn-repl-server repl-port-num)
+     (write-log 'debug (format "REPL server created on port ~a." repl-port-num))
+
+     (lsp-spawn-server lsp-port-num)
+
+     (write-log 'debug (format "LSP server created on port ~a." lsp-port-num))
+
+     (lsp-command-loop command-port-num))))
 
 (define (remove-slashes path)
   (define new-path (make-string (string-length path)))

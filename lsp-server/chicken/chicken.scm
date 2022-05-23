@@ -9,8 +9,10 @@
         $initialize-lsp-server
         $server-capabilities
         $server-name
+        $tcp-accept
+        $tcp-connect
         $tcp-listen
-        $tcp-accept)
+        $spawn-repl-server)
 
 (import (apropos)
         (chicken base)
@@ -91,15 +93,6 @@
     (generate-tags! eggs-path)
     (generate-tags! chicken-source-path)
     (generate-tags! (root-path))
-    (write-log 'debug "waiting for nrepl incoming request")
-    (thread-start!
-     (make-thread
-      (lambda ()
-        (guard (condition (#t (begin
-                                (write-log 'error
-                                           (format "port ~a already used. Trying spawning nrepl again"))
-                                (spawn-nrepl-on-random-port))))
-               (spawn-nrepl-on-random-port)))))
 
     ;;(tags-table (parse-tags-file (tags-path)))
     #t)
@@ -107,9 +100,17 @@
   (define $server-capabilities
     `((definitionProvider . ())))
 
+  (define $tcp-accept tcp-accept)
+
+  (define $tcp-connect tcp-connect)
+
   (define $tcp-listen tcp-listen)
 
-  (define $tcp-accept tcp-accept)
+  (define ($spawn-repl-server port-num)
+    (thread-start!
+     (make-thread
+      (lambda () (nrepl port-num)))))
+
 
   (define ($apropos-list identifier)
     (define suggestions
