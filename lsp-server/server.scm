@@ -379,6 +379,13 @@
           (dispatch-command cmd)
           (loop))))))
 
+(define (lsp-command-server-start port-num)
+  (write-log 'info
+             (format "LSP command server started on port ~a"
+                     port-num))
+  (thread-start!
+   (make-thread (lambda () (lsp-command-loop port-num)))))
+
 (define (start-lsp-server-full lsp-port-num command-port-num repl-port-num)
   (log-level 'debug)
 
@@ -387,14 +394,14 @@
     (exit 0))
   (guard
    (condition
-    (#t (let-values (((inp outp) ($tcp-connect "127.0.0.1"
-                                               command-port-num)))
-          (write-log 'info
-                     (format "requesting new LSP connection at port ~a"
-                             lsp-port-num))
-          (guard
-           (condition (#t (write-log 'error
-                                     (format "Connection request for LSP connection at port ~a failed" lsp-port-num))))
+    (#t (guard
+         (condition (#t (write-log 'error
+                                   (format "Connection request for LSP connection at port ~a failed" lsp-port-num))))
+         (let-values (((inp outp) ($tcp-connect "127.0.0.1"
+                                                command-port-num)))
+           (write-log 'info
+                      (format "requesting new LSP connection at port ~a"
+                              lsp-port-num))
            (display (format "spawn-lsp-server ~a" lsp-port-num)
                     outp)
            (flush-output-port outp)

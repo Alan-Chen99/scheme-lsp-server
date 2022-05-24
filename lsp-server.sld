@@ -1,7 +1,7 @@
 (define-module (lsp-server)
 
 #:export (lsp-server-log-level
-          last-condition
+          lsp-command-server-start
           start-lsp-server
           start-lsp-server/background
           start-lsp-loop
