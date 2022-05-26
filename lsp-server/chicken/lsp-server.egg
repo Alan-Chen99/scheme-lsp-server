@@ -1,4 +1,4 @@
-((author "Ricardo G. Herdt")
+((author "Ricardo Gabriel Herdt")
  (synopsis "A LSP Server for CHICKEN.")
  (dependencies apropos
                chicken-doc
