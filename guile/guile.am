@@ -25,8 +25,5 @@ PREFIX=$(AM_V_GEN)GUILE_LOAD_COMPILED_PATH="@abs_top_builddir@/:$(GUILE_LOAD_COM
 distclean-local:
 	rm -Rf src/
 
-.scm.go:
-	$(PREFIX) $(GUILE_TOOLS) compile $(GUILE_WARNINGS) -O0 --r7rs -o "$@" "$<"
-
 .sld.go:
 	$(PREFIX) $(GUILE_TOOLS) compile $(GUILE_WARNINGS) -O0 --r7rs -o "$@" "$<"

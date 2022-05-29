@@ -1,5 +1,7 @@
 ((author "Ricardo Gabriel Herdt")
  (synopsis "A LSP Server for CHICKEN.")
+ (license "MIT")
+ (category tools)
  (dependencies apropos
                chicken-doc
                json-rpc
@@ -14,21 +16,21 @@
   (csc-options "-d3" "-O0" "-f" "-X" "r7rs" "-R" "r7rs" "-f"))
  (components
   (extension lsp-server.private
-             (source "../src/private.sld")
-             (source-dependencies "../src/private.scm"))
+             (source "src/private.sld")
+             (source-dependencies "src/private.scm"))
   (extension lsp-server.chicken
-             (source "chicken.sld")
+             (source "chicken/chicken.sld")
              (component-dependencies lsp-server.private
                                      lsp-server.tags))
   (extension lsp-server.document
-             (source "../src/document.sld")
-             (source-dependencies "../src/document.scm"))
+             (source "src/document.sld")
+             (source-dependencies "src/document.scm"))
   (extension lsp-server.tags
-             (source "../src/tags.sld")
-             (source-dependencies "../src/tags.scm"))
+             (source "src/tags.sld")
+             (source-dependencies "src/tags.scm"))
   (extension lsp-server 
-             (source "../src/lsp-server.sld")
-             (source-dependencies "../src/file.scm"
-                                  "../src/server.scm")
+             (source "src/lsp-server.sld")
+             (source-dependencies "src/file.scm"
+                                  "src/server.scm")
              (component-dependencies lsp-server.chicken
                                      lsp-server.document))))

@@ -4,12 +4,12 @@
         (srfi 69)
         test)
 
-(import (lsp-server chicken)
+(import (lsp-server)
+        (lsp-server chicken)
         (lsp-server private)
         (lsp-server document)
         (lsp-server tags))
 
-(load "../file.scm")
 
 (test-group "(lsp-server document): document main functions"
   (define a-doc (string->document "abc\ndef\ng"))
@@ -48,8 +48,8 @@
                        "  (cond ((= x 0) 1)\n"
                        "        ((= x 1) 1)\n"
                        "        (else (* x (f (- x 1))))))\n")
-    (document-contents (apply-change (make-change-contents
-                                      (make-range 0 9 0 10 1)
+    (document-contents (lsp-server#apply-change (lsp-server#make-change-contents
+                                      (lsp-server#make-range 0 9 0 10 1)
                                       "g")
                                      document)))
 
@@ -57,16 +57,16 @@
                        "  (cond ((= x 0) 1)\n"
                        "\n"
                        "        (else (* x (f (- x 1))))))\n")
-    (document-contents (apply-change (make-change-contents
-                                      (make-range 2 0 2 19 19)
+    (document-contents (lsp-server#apply-change (lsp-server#make-change-contents
+                                      (lsp-server#make-range 2 0 2 19 19)
                                       "")
                                      document)))
 
   (test (string-append "(define (f x)\n"
                        "  (cond ((= x 0) 1)\n"
                        "        (else (* x (f (- x 1))))))\n")
-    (document-contents (apply-change (make-change-contents
-                                      (make-range 2 0 3 0 20)
+    (document-contents (lsp-server#apply-change (lsp-server#make-change-contents
+                                      (lsp-server#make-range 2 0 3 0 20)
                                       "")
                                      document)))
 
@@ -76,8 +76,8 @@
          "        ((= x 1) 1)\n"
          "        ((= x 2) 2)\n"
          "        (else (* x (f (- x 1))))))\n")
-    (document-contents (apply-change (make-change-contents
-                                      (make-range 2 19 2 19 0)
+    (document-contents (lsp-server#apply-change (lsp-server#make-change-contents
+                                      (lsp-server#make-range 2 19 2 19 0)
                                       "\n        ((= x 2) 2)")
                                      document)))
 
@@ -87,15 +87,15 @@
          "        ((= x 1) 1)\n"
          "\n"
          "        (else (* x (f (- x 1))))))\n")
-    (document-contents (apply-change (make-change-contents
-                                      (make-range 2 19 2 19 0)
+    (document-contents (lsp-server#apply-change (lsp-server#make-change-contents
+                                      (lsp-server#make-range 2 19 2 19 0)
                                       "\n")
                                      document)))
 
   (test (string-append "        ((= x 1) 1)\n"
                        "        (else (* x (f (- x 1))))))\n")
-    (document-contents (apply-change (make-change-contents
-                                      (make-range 0 0 2 0 34)
+    (document-contents (lsp-server#apply-change (lsp-server#make-change-contents
+                                      (lsp-server#make-range 0 0 2 0 34)
                                       "")
                                      document)))
 
@@ -105,8 +105,8 @@
          "        ((= x 1) 1)\n"
          "        (else (* x (f (- x 1))))))\n"
          "\n"          )
-    (document-contents (apply-change (make-change-contents
-                                      (make-range 3 34 3 34 0)
+    (document-contents (lsp-server#apply-change (lsp-server#make-change-contents
+                                      (lsp-server#make-range 3 34 3 34 0)
                                       "\n")
                                      document)))
 
@@ -115,8 +115,8 @@
          "  (cond ((= x 0) 1)\n"
          "        ((= x 1) 1)\n"
          "        (else (* x (f (- x 1))))))\n")
-    (document-contents (apply-change (make-change-contents
-                                      (make-range 0 0 0 0 0)
+    (document-contents (lsp-server#apply-change (lsp-server#make-change-contents
+                                      (lsp-server#make-range 0 0 0 0 0)
                                       "i")
                                      document)))
 
@@ -124,14 +124,14 @@
                        "blacond ((= x 0) 1)\n"
                        "        ((= x 1) 1)\n"
                        "        (else (* x (f (- x 1))))))\n")
-    (document-contents (apply-change (make-change-contents
-                                      (make-range 1 0 1 3 3)
+    (document-contents (lsp-server#apply-change (lsp-server#make-change-contents
+                                      (lsp-server#make-range 1 0 1 3 3)
                                       "bla")
                                      document)))
 
   (test (string-append "i\n" "bla\n")
-    (document-contents (apply-change (make-change-contents
-                                      (make-range 0 0 0 0 0)
+    (document-contents (lsp-server#apply-change (lsp-server#make-change-contents
+                                      (lsp-server#make-range 0 0 0 0 0)
                                       "i")
                                      (string->document
                                       (string-append "\n" "bla\n")))))
@@ -140,8 +140,8 @@
          "(define (f x)\n"
          "        ((= x 1) 1)\n"
          "        (else (* x (f (- x 1))))))\n")
-    (document-contents (apply-change (make-change-contents
-                                      (make-range 1 0 2 0 20)
+    (document-contents (lsp-server#apply-change (lsp-server#make-change-contents
+                                      (lsp-server#make-range 1 0 2 0 20)
                                       "")
                                      document)))
 
@@ -149,8 +149,8 @@
          "(define (f x)\n"
          "  (cond ((= x 0) 1)        ((= x 1) 1)\n"
          "        (else (* x (f (- x 1))))))\n")
-    (document-contents (apply-change (make-change-contents
-                                      (make-range 2 0 1 19 1)
+    (document-contents (lsp-server#apply-change (lsp-server#make-change-contents
+                                      (lsp-server#make-range 2 0 1 19 1)
                                       "")
                                      document)))
 
@@ -160,8 +160,8 @@
   "(+ 2\n"
   "   3)        ((= x 1) 1)\n"
   "        (else (* x (f (- x 1))))))\n")
-  (apply-change (make-change-contents
-  (make-range 2 0 2 5 10)
+  (lsp-server#apply-change (lsp-server#make-change-contents
+  (lsp-server#make-range 2 0 2 5 10)
   '("(+ 2\n   3)"))
   document))
 
@@ -170,8 +170,8 @@
          "  (cond ((= x 0) 1)\n"
          "(+ 2\n"
          "   3)   (else (* x (f (- x 1))))))\n")
-    (document-contents (apply-change (make-change-contents
-                                      (make-range 2 0 3 5 10)
+    (document-contents (lsp-server#apply-change (lsp-server#make-change-contents
+                                      (lsp-server#make-range 2 0 3 5 10)
                                       (string-append "(+ 2\n" "   3)"))
                                      document)))
 
@@ -181,14 +181,14 @@
          "        ((= x 1) 1)\n"
          "        (else (* x (f (- x 1))))))\n"
          "(")
-    (document-contents (apply-change (make-change-contents
-                                      (make-range 4 0 4 0 0)
+    (document-contents (lsp-server#apply-change (lsp-server#make-change-contents
+                                      (lsp-server#make-range 4 0 4 0 0)
                                       "(")
                                      document)))
 
   (test ""
-    (document-contents (apply-change (make-change-contents
-                                      (make-range 0 0 4 0 88)
+    (document-contents (lsp-server#apply-change (lsp-server#make-change-contents
+                                      (lsp-server#make-range 0 0 4 0 88)
                                       "")
                                      document))))
 
@@ -196,7 +196,7 @@
 (test-group "range normalization"
 (test 2
 (normalize-range
-(range-start-line (make-range 2 5 2 7)))))
+(range-start-line (lsp-server#make-range 2 5 2 7)))))
 
 (test-group "(lsp-server document: insertion/expansion/contraction"
   (test "     ab"
