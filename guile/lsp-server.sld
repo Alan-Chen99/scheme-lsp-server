@@ -13,7 +13,6 @@
 #:use-module (scheme write)
 #:use-module (srfi srfi-1)
 #:use-module (srfi srfi-8) ;; receive
-#:use-module (srfi srfi-9)
 #:use-module (srfi srfi-13)
 #:use-module (srfi srfi-18)
 #:use-module (srfi srfi-28) ;; simple-format

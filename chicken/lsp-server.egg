@@ -14,18 +14,21 @@
   (csc-options "-d3" "-O0" "-f" "-X" "r7rs" "-R" "r7rs" "-f"))
  (components
   (extension lsp-server.private
-             (source "../private.scm"))
+             (source "../src/private.sld")
+             (source-dependencies "../src/private.scm"))
   (extension lsp-server.chicken
-             (source "../chicken/chicken.scm")
+             (source "chicken.sld")
              (component-dependencies lsp-server.private
                                      lsp-server.tags))
   (extension lsp-server.document
-             (source "../document.scm"))
+             (source "../src/document.sld")
+             (source-dependencies "../src/document.scm"))
   (extension lsp-server.tags
-             (source "../tags.scm"))
+             (source "../src/tags.sld")
+             (source-dependencies "../src/tags.scm"))
   (extension lsp-server 
-             (source "../lsp-server.sld")
-             (source-dependencies "../file.scm"
-                                  "../server.scm")
+             (source "../src/lsp-server.sld")
+             (source-dependencies "../src/file.scm"
+                                  "../src/server.scm")
              (component-dependencies lsp-server.chicken
                                      lsp-server.document))))

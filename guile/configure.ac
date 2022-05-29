@@ -11,7 +11,16 @@ if test "x$GUILD" = "x"; then
 fi
 
 AC_CONFIG_FILES([Makefile])
-AC_CONFIG_FILES([pre-inst-env], [chmod +x pre-inst-env])
+
+AC_CONFIG_LINKS([lsp-server/private.scm:../src/private.scm
+                 lsp-server/private.sld:lsp-server/private.sld
+                 lsp-server/document.scm:../src/document.scm
+                 lsp-server/document.sld:lsp-server/document.sld
+                 lsp-server/guile.sld:lsp-server/guile.sld
+                 lsp-server/file.scm:../src/file.scm
+                 lsp-server/server.scm:../src/server.scm
+                 lsp-server.sld:lsp-server.sld
+                 README.md:../README.md])
 
 AC_OUTPUT
 

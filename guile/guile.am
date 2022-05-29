@@ -1,11 +1,11 @@
 moddir=$(datadir)/guile/site/$(GUILE_EFFECTIVE_VERSION)
 godir=$(libdir)/guile/$(GUILE_EFFECTIVE_VERSION)/site-ccache
 
-GOBJECTS =  $(SOURCES:%.scm=%.go) $(LIBRARY_DEFINITIONS:%.sld=%.go)
+GOBJECTS =  $(SOURCES:%.sld=%.go)
 
-nobase_dist_mod_DATA = $(SOURCES) $(LIBRARY_DEFINITIONS) $(NOCOMP_SOURCES)
+nobase_dist_mod_DATA = $(SOURCES) $(NOCOMP_SOURCES)
 nobase_go_DATA = $(GOBJECTS)
-dist_bin_SCRIPTS = scripts/lsp-guile-connect-to-server
+nobase_dist_bin_SCRIPTS = lsp-guile-connect-to-server
 
 # Make sure source files are installed first, so that the mtime of
 # installed compiled files is greater than that of installed source
@@ -15,12 +15,18 @@ dist_bin_SCRIPTS = scripts/lsp-guile-connect-to-server
 guile_install_go_files = install-nobase_goDATA
 $(guile_install_go_files): install-nobase_dist_modDATA
 
+
 CLEANFILES = $(GOBJECTS)
 GUILE_WARNINGS = -Wunbound-variable -Warity-mismatch -Wformat
-SUFFIXES = .sld .scm .go
+SUFFIXES = .scm .sld .go
+
+PREFIX=$(AM_V_GEN)GUILE_LOAD_COMPILED_PATH="@abs_top_builddir@/:$(GUILE_LOAD_COMPILED_PATH)"; GUILE_LOAD_PATH="@abs_top_builddir@/:@abs_top_srcdir@/:$(GUILE_LOAD_PATH)"
+
+distclean-local:
+	rm -Rf src/
 
 .scm.go:
-	$(AM_V_GEN)$(top_builddir)/pre-inst-env $(GUILE_TOOLS) compile $(GUILE_WARNINGS) --r7rs -o "$@" "$<"
+	$(PREFIX) $(GUILE_TOOLS) compile $(GUILE_WARNINGS) -O0 --r7rs -o "$@" "$<"
 
 .sld.go:
-	$(AM_V_GEN)$(top_builddir)/pre-inst-env $(GUILE_TOOLS) compile $(GUILE_WARNINGS) --r7rs -o "$@" "$<"
+	$(PREFIX) $(GUILE_TOOLS) compile $(GUILE_WARNINGS) -O0 --r7rs -o "$@" "$<"
