@@ -21,4 +21,6 @@
     (format "LSP connection successfull. Idleing.")
     (read-char)))
 
+(main (cdr (command-line)))
+
 

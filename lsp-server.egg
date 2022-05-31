@@ -15,8 +15,8 @@
  (component-options
   (csc-options "-d3" "-O0" "-f" "-X" "r7rs" "-R" "r7rs" "-f"))
  (components
-  (data lsp-chicken-connect-to-server
-        (source "chicken/lsp-chicken-connect-to-server"))
+  (program lsp-chicken-connect
+           (source "chicken/lsp-chicken-connect.scm"))
   (extension lsp-server.private
              (source "src/private.sld")
              (source-dependencies "src/private.scm"))

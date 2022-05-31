@@ -5,7 +5,7 @@ GOBJECTS =  $(SOURCES:%.sld=%.go)
 
 nobase_dist_mod_DATA = $(SOURCES) $(NOCOMP_SOURCES)
 nobase_go_DATA = $(GOBJECTS)
-nobase_dist_bin_SCRIPTS = lsp-guile-connect-to-server
+nobase_dist_bin_SCRIPTS = lsp-guile-connect
 
 # Make sure source files are installed first, so that the mtime of
 # installed compiled files is greater than that of installed source
