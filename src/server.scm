@@ -333,9 +333,7 @@
                  (condition (#t (begin (write-log 'error
                                                   (format "CRASH: ~a" condition))
                                        (raise condition))))
-                 (parameterize ((lsp-server-log-level 'debug))
-                   (begin
-                     (start-lsp-server port-num)))))))))
+                 (start-lsp-server port-num)))))))
     (mutex-lock! listening-threads-mutex)
     (set! listening-threads (cons th listening-threads))
     (mutex-unlock! listening-threads-mutex)
