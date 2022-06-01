@@ -153,13 +153,14 @@
 
 (define ($open-file file-path)
   (write-log 'debug (format "opening file in guile: ~a" file-path))
+  ;;(load-protected file-path)
   ;; (current-path (if file-path
   ;;                        (dirname file-path)
   ;;                        #f))
   #f)
 
 (define ($save-file file-path)
-  ;;(compile-file file-path)
+  ;;(load-protected file-path)
   #f)
 
 (define (build-procedure-signature module name proc-obj)

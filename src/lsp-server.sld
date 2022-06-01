@@ -13,7 +13,7 @@
         apropos
         medea
         r7rs
-        (scheme base)
+        scheme
         (scheme file)
         (scheme load)
         (only (scheme process-context)

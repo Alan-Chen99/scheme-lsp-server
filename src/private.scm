@@ -188,7 +188,7 @@
 (define (write-log target-level msg . args)
   (define error-port (current-error-port))
   (when (satisfies-log-level? target-level)
-    (display (format "[~a] ~a"
+    (display (format "[LSP-SERVER] ~a: ~a"
                      (string-upcase (symbol->string target-level))
                      msg)
              error-port)

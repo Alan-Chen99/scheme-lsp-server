@@ -1,25 +1,8 @@
 #! /usr/local/bin/csi -ss
 
-(import (lsp-server chicken)
-        (scheme base)
-        (scheme process-context)
-        (scheme write)
-        (srfi 28))
+(import (lsp-server chicken))
 
-(define (main args)
-  (define command-port-num (string->number (car args)))
-  (define lsp-port-num (string->number (cadr args)))
-
-  (let-values (((inp outp) ($tcp-connect "127.0.0.1"
-                                         command-port-num)))
-    (format "requesting new LSP connection at port ~a"
-            lsp-port-num)
-    (display (format "sending command: spawn-lsp-server ~a" lsp-port-num))
-    (display (format "spawn-lsp-server ~a~%" lsp-port-num)
-             outp)
-    (flush-output-port outp)
-    (format "LSP connection successfull. Idleing.")
-    (read-char)))
+(include "../src/lsp-connect.scm")
 
 (main (cdr (command-line)))
 

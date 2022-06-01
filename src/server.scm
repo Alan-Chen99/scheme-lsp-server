@@ -315,17 +315,18 @@
   (parameterize-and-run
    (lambda () (json-rpc-loop (current-input-port) (current-output-port)))))
 
-(define (start-lsp-server tcp-port)
+(define (start-lsp-server tcp-port-number tcp-error-port-number)
   (parameterize-and-run
-   (lambda () (json-rpc-start-server/tcp tcp-port))))
+   (lambda () (json-rpc-start-server/tcp tcp-port-number
+                                         tcp-error-port-number))))
 
-(define (start-lsp-server/background tcp-port)
+(define (start-lsp-server/background tcp-port-number tcp-error-port-number)
   (define thread
-    (make-thread (lambda () (start-lsp-server tcp-port))))
+    (make-thread (lambda () (start-lsp-server tcp-port-number tcp-error-port-number))))
   (thread-start! thread)
   thread)
 
-(define (lsp-spawn-server port-num)
+(define (lsp-spawn-server port-number error-port-number)
   (let ((th (thread-start!
              (make-thread
               (lambda ()
@@ -333,29 +334,31 @@
                  (condition (#t (begin (write-log 'error
                                                   (format "CRASH: ~a" condition))
                                        (raise condition))))
-                 (start-lsp-server port-num)))))))
+                 (start-lsp-server port-number error-port-number)))))))
     (mutex-lock! listening-threads-mutex)
     (set! listening-threads (cons th listening-threads))
     (mutex-unlock! listening-threads-mutex)
     (when th
       (write-log 'debug
-                 (format "LSP server listening on port ~a" port-num)))))
+                 (format "LSP server listening on port ~a with log level ~a"
+                         port-number
+                         (lsp-server-log-level))))))
 
 (define (dispatch-command cmd)
   (if (string-prefix? "spawn-lsp-server" cmd)
       (let ((cmd-lst (string-tokenize cmd)))
-        (cond ((not (= (length cmd-lst) 2))
+        (cond ((not (= (length cmd-lst) 3))
                ;;(write "missing port in command~%" out-port)
-               (write-log 'info (format "missing port in command~%")))
-              ((string->number (cadr cmd-lst))
-               => (lambda (port-num)
-                    (write-log 'debug (format "Spawning LSP server on port ~a"
-                                              port-num))
-                    (lsp-spawn-server port-num)))
+               (write-log 'info (format "missing ports in command: ~a~%" cmd)))
               (else
-               (write-log 'info (format "invalid command  ~a~%" cmd))
-               ;;(write (format #f "invalid command  ~a~%" cmd) out-port)
-               )))
+               (let ((port-num (string->number (list-ref cmd-lst 1)))
+                     (error-port-num (string->number (list-ref cmd-lst 2))))
+                 (if (and port-num error-port-num)
+                     (begin
+                       (write-log 'debug (format "Spawning LSP server on port ~a"
+                                                 port-num))
+                       (lsp-spawn-server port-num error-port-num))
+                     (write-log 'info (format "invalid command  ~a~%" cmd)))))))
       (write-log 'info (format "ignoring unknown command: ~s" cmd))))
 
 (define (lsp-command-loop command-port-num)
@@ -366,11 +369,11 @@
                      (condition
                       (#t (begin
                             (write-log 'error
-                                      (string-append
-                                       (format "Unable to open command listener of LSP server on port ~a.~%"
-                                               command-port-num)
-                                       "Is the server already running?"
-                                       "If not, try changing the LSP's command port of your LSP client."))
+                                       (string-append
+                                        (format "Unable to open command listener of LSP server on port ~a.~%"
+                                                command-port-num)
+                                        "Is the server already running?"
+                                        "If not, try changing the LSP's command port of your LSP client."))
                             (exit 1))))
                      ($tcp-accept listener))))
         (let ((cmd (read-line in-port)))
@@ -379,12 +382,16 @@
 
 (define (lsp-command-server-start port-num)
   (write-log 'info
-             (format "LSP command server started on port ~a"
-                     port-num))
+             (format "LSP command server started on port ~a with debug level ~a"
+                     port-num
+                     (lsp-server-log-level)))
   (thread-start!
    (make-thread (lambda () (lsp-command-loop port-num)))))
 
-(define (start-lsp-server-full lsp-port-num command-port-num repl-port-num)
+(define (start-lsp-server-full lsp-port-num
+                               lsp-error-port-num
+                               command-port-num
+                               repl-port-num)
   (log-level 'debug)
 
   (when (= lsp-port-num 0)
@@ -400,7 +407,7 @@
            (write-log 'info
                       (format "requesting new LSP connection at port ~a"
                               lsp-port-num))
-           (display (format "spawn-lsp-server ~a" lsp-port-num)
+           (display (format "spawn-lsp-server ~a ~a" lsp-port-num lsp-error-port-num)
                     outp)
            (flush-output-port outp)
            (write-log 'info
@@ -410,7 +417,7 @@
      ($spawn-repl-server repl-port-num)
      (write-log 'debug (format "REPL server created on port ~a." repl-port-num))
 
-     (lsp-spawn-server lsp-port-num)
+     (lsp-spawn-server lsp-port-num lsp-error-port-num)
 
      (write-log 'debug (format "LSP server created on port ~a." lsp-port-num))
 

@@ -1,19 +1,14 @@
-#!/usr/bin/env sh
-exec guile --r7rs -e main -s "$0" "$@"
-!#
-
-(import (lsp-server guile)
-        (scheme base)
+(import (scheme base)
         (scheme process-context)
         (scheme write)
-        (srfi srfi-18)
-        (srfi srfi-28))
+        (srfi 18)
+        (srfi 28))
 
 (define (main args)
-  (define command-port-num (string->number (cadr args)))
-  (define lsp-error-port-num (string->number (caddr args)))
-  (define lsp-port-num (string->number (cadddr args)))
-  (display (format "Started lsp-guile-connect on command port ~a, error port ~a and lsp port ~a~%"
+  (define command-port-num (string->number (list-ref args 0)))
+  (define lsp-error-port-num (string->number (list-ref args 1)))
+  (define lsp-port-num (string->number (list-ref args 2)))
+  (display (format "Started lsp-...-connect on command port ~a, error port ~a and lsp port ~a~%"
                    command-port-num
                    lsp-error-port-num
                    lsp-port-num)
