@@ -362,29 +362,29 @@
       (write-log 'info (format "ignoring unknown command: ~s" cmd))))
 
 (define (lsp-command-loop command-port-num)
-  (let ((listener ($tcp-listen command-port-num)))
-    (let loop ()
-      (let-values (((in-port out-port)
-                    (guard
-                     (condition
-                      (#t (begin
-                            (write-log 'error
-                                       (string-append
-                                        (format "Unable to open command listener of LSP server on port ~a.~%"
-                                                command-port-num)
-                                        "Is the server already running?"
-                                        "If not, try changing the LSP's command port of your LSP client."))
-                            (exit 1))))
-                     ($tcp-accept listener))))
-        (let ((cmd (read-line in-port)))
-          (dispatch-command cmd)
-          (loop))))))
+  (parameterize (($tcp-read-timeout #f))
+    (let ((listener ($tcp-listen command-port-num)))
+      (let loop ()
+        (let-values (((in-port out-port)
+                      (guard
+                       (condition
+                        (#t (begin
+                              (write-log 'error
+                                         (string-append
+                                          (format "Unable to open command listener of LSP server on port ~a.~%"
+                                                  command-port-num)
+                                          "Is the server already running?"
+                                          "If not, try changing the LSP's command port of your LSP client."))
+                              (exit 1))))
+                       ($tcp-accept listener))))
+          (let ((cmd (read-line in-port)))
+            (dispatch-command cmd)
+            (loop)))))))
 
 (define (lsp-command-server-start port-num)
   (write-log 'info
-             (format "LSP command server started on port ~a with debug level ~a"
-                     port-num
-                     (lsp-server-log-level)))
+             (format "LSP command server started on port ~a"
+                     port-num))
   (thread-start!
    (make-thread (lambda () (lsp-command-loop port-num)))))
 

@@ -12,6 +12,7 @@
         $tcp-accept
         $tcp-connect
         $tcp-listen
+        $tcp-read-timeout
         $spawn-repl-server)
 
 (import (apropos)
@@ -64,6 +65,8 @@
 
   (define root-path
     (make-parameter #f))
+
+  (define $tcp-read-timeout tcp-read-timeout)
 
   (define $server-name
     "chicken lsp server")

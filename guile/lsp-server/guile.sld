@@ -12,6 +12,7 @@
           $tcp-accept
           $tcp-connect
           $tcp-listen
+          $tcp-read-timeout
           $spawn-repl-server
           alist-ref)
 
@@ -31,6 +32,9 @@
 
 (define root-path (make-parameter #f))
 (define current-path (make-parameter #f))
+
+;;; Ignored for now
+(define $tcp-read-timeout (make-parameter #f))
 
 (define $server-name
   "guile lsp server")

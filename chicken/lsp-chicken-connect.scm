@@ -1,9 +1,13 @@
 #! /usr/local/bin/csi -ss
 
-(import (lsp-server chicken))
+(import (lsp-server chicken)
+        (chicken tcp))
 
-(include "../src/lsp-connect.scm")
+(parameterize ((tcp-read-timeout #f)
+               (tcp-write-timeout #f)
+               (tcp-accept-timeout #f))
+  (include "../src/lsp-connect.scm")
 
-(main (cdr (command-line)))
+  (main (cdr (command-line))))
 
 
