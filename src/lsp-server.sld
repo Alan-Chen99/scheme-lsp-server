@@ -1,6 +1,7 @@
 (define-library (lsp-server)
 
 (export lsp-server-log-level
+        lsp-server-request-connection
         lsp-command-server-start
         start-lsp-server
         start-lsp-server/background

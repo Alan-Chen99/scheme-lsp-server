@@ -17,7 +17,7 @@
  (components
   (program lsp-chicken-connect
            (source "chicken/lsp-chicken-connect.scm")
-           (source-dependencies "src/lsp-connect.scm"))
+           (component-dependencies lsp-server))
   (extension lsp-server.private
              (source "src/private.sld")
              (source-dependencies "src/private.scm"))

@@ -344,6 +344,43 @@
                          port-number
                          (lsp-server-log-level))))))
 
+(define (lsp-server-request-connection command-port-number
+                                       lsp-port-number
+                                       lsp-error-port-number)
+  (write-log 'debug
+             (format "Started lsp-server-request-connection on command port ~a,
+                      error port ~a and lsp port ~a~%"
+                     command-port-number
+                     lsp-error-port-number
+                     lsp-port-number))
+
+  (let-values (((inp outp) ($tcp-connect "127.0.0.1"
+                                         command-port-number)))
+    (write-log 'info (format "requesting new LSP connection at port ~a~%"
+                              lsp-port-number))
+    (write-log 'debug (format "sending command: spawn-lsp-server ~a ~a~%"
+                              lsp-port-number
+                              lsp-error-port-number))
+    (display (format "spawn-lsp-server ~a ~a~%"
+                     lsp-port-number
+                     lsp-error-port-number)
+             outp)
+    (flush-output-port outp)
+    (write-log 'info (format "LSP connection successfull.~%"))
+
+    (let ((listener ($tcp-listen lsp-error-port-number)))
+      (write-log 'info "Listening for incomming error messages\n")
+      (let-values (((in-err-port out-err-port)
+                    ($tcp-accept listener)))
+        (let loop ((msg (read-line in-err-port)))
+          (if (eof-object? msg)
+              #f
+              (begin
+                (write-log 'info (format "RECEIVED: ~a\n" msg))
+                (newline (current-error-port))
+                (flush-output-port (current-error-port))
+                (loop (read-line in-err-port)))))))))
+
 (define (dispatch-command cmd)
   (if (string-prefix? "spawn-lsp-server" cmd)
       (let ((cmd-lst (string-tokenize cmd)))
