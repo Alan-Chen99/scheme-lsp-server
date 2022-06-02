@@ -422,8 +422,7 @@
   (write-log 'info
              (format "LSP command server started on port ~a"
                      port-num))
-  (thread-start!
-   (make-thread (lambda () (lsp-command-loop port-num)))))
+  (lsp-command-loop port-num))
 
 (define (start-lsp-server-full lsp-port-num
                                lsp-error-port-num

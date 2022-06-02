@@ -16,5 +16,3 @@
       (lsp-server-request-connection command-port-number
                                      lsp-port-number
                                      lsp-error-port-number))))
-
-(main (cdr (command-line)))
