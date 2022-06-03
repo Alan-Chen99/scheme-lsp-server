@@ -105,11 +105,6 @@
          (write-log 'debug
                     (format "file-path not found: ~a"
                             file-path))))
-  #;
-  (with-output-to-file
-      (string-append "/tmp/" (remove-slashes file-path))
-    (lambda ()
-      (display (hash-table-ref (file-table) file-path))))
   #f)
 
 (define-handler (text-document/did-close params)
