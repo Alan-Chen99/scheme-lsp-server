@@ -2,7 +2,9 @@
 exec guile --r7rs -e main -s "$0" "$@"
 !#
 
-(import (lsp-server guile)
+(import (lsp-server)
+        (lsp-server guile)
+        (only (lsp-server private) write-log)
         (scheme base)
         (scheme process-context)
         (scheme write)
@@ -10,46 +12,18 @@ exec guile --r7rs -e main -s "$0" "$@"
         (srfi srfi-28))
 
 (define (main args)
-  (define command-port-num (string->number (cadr args)))
-  (define lsp-port-num (string->number (caddr args)))
-  (define lsp-error-port-num (string->number (cadddr args)))
+  (define command-port-number (string->number (list-ref args 1)))
+  (define lsp-port-number (string->number (list-ref args 2)))
+  (define lsp-error-port-number (string->number (list-ref args 3)))
+  (define log-level (string->symbol (list-ref args 4)))
 
-  (display
-   (format "Started lsp-guile-connect on command port ~a, error port ~a and lsp port ~a~%"
-           command-port-num
-           lsp-error-port-num
-           lsp-port-num)
-   (current-error-port))
-  (flush-output-port (current-error-port))
-
-  (let-values (((inp outp) ($tcp-connect "127.0.0.1"
-                                         command-port-num)))
-    (display (format "requesting new LSP connection at port ~a~%"
-                     lsp-port-num)
-             (current-error-port))
-    (display (format "sending command: spawn-lsp-server ~a ~a~%"
-                     lsp-port-num
-                     lsp-error-port-num)
-             (current-error-port)
-             (display (format "spawn-lsp-server ~a ~a~%"
-                              lsp-port-num
-                              lsp-error-port-num)
-                      outp)
-             (flush-output-port outp)
-             (display (format "LSP connection successfull.~%")
-                      (current-error-port))
-
-             (let ((listener ($tcp-listen lsp-error-port-num)))
-               (display "Listening for incomming error messages\n"
-                        (current-error-port))
-               (let-values (((in-err-port out-err-port)
-                             ($tcp-accept listener)))
-                 (let loop ((msg (read-line in-err-port)))
-                   (if (eof-object? msg)
-                       #f
-                       (begin
-                         (display (format "RECEIVED: ~a\n" msg)
-                                  (current-error-port))
-                         (newline (current-error-port))
-                         (flush-output-port (current-error-port))
-                         (loop (read-line in-err-port))))))))))
+  (write-log 'debug
+             (format
+              "Requesting through command port ~a main connection at ~a and error connection at ~a "
+              command-port-number
+              lsp-port-number
+              lsp-error-port-number))
+  (parameterize ((lsp-server-log-level log-level))
+    (lsp-server-request-connection command-port-number
+                                   lsp-port-number
+                                   lsp-error-port-number)))

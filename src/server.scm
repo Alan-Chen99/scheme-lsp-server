@@ -353,42 +353,49 @@
                          port-number
                          (lsp-server-log-level))))))
 
+(define (parameterize-log-levels thunk)
+  (parameterize ((log-level (lsp-server-log-level))
+                 (json-rpc-log-level (lsp-server-log-level)))
+    (thunk)))
+
 (define (lsp-server-request-connection command-port-number
                                        lsp-port-number
                                        lsp-error-port-number)
-  (write-log 'debug
-             (format "Started lsp-server-request-connection on command port ~a,
+  (parameterize-log-levels
+   (lambda ()
+     (write-log 'debug
+                         (format "Started lsp-server-request-connection on command port ~a,
                       error port ~a and lsp port ~a~%"
-                     command-port-number
-                     lsp-port-number
-                     lsp-error-port-number))
+                                 command-port-number
+                                 lsp-port-number
+                                 lsp-error-port-number))
 
-  (let-values (((inp outp) ($tcp-connect "127.0.0.1"
-                                         command-port-number)))
-    (write-log 'info (format "requesting new LSP connection at port ~a~%"
-                              lsp-port-number))
-    (write-log 'debug (format "sending command: spawn-lsp-server ~a ~a~%"
-                              lsp-port-number
-                              lsp-error-port-number))
-    (display (format "spawn-lsp-server ~a ~a~%"
-                     lsp-port-number
-                     lsp-error-port-number)
-             outp)
-    (flush-output-port outp)
-    (write-log 'info (format "LSP connection successfull.~%"))
+     (let-values (((inp outp) ($tcp-connect "127.0.0.1"
+                                            command-port-number)))
+       (write-log 'info (format "requesting new LSP connection at port ~a~%"
+                                lsp-port-number))
+       (write-log 'debug (format "sending command: spawn-lsp-server ~a ~a~%"
+                                 lsp-port-number
+                                 lsp-error-port-number))
+       (display (format "spawn-lsp-server ~a ~a~%"
+                        lsp-port-number
+                        lsp-error-port-number)
+                outp)
+       (flush-output-port outp)
+       (write-log 'info (format "LSP connection successfull.~%"))
 
-    (let ((listener ($tcp-listen lsp-error-port-number)))
-      (write-log 'info "Listening for incomming error messages\n")
-      (let-values (((in-err-port out-err-port)
-                    ($tcp-accept listener)))
-        (let loop ((msg (read-line in-err-port)))
-          (if (eof-object? msg)
-              #f
-              (begin
-                (write-log 'info (format "RECEIVED: ~a\n" msg))
-                (newline (current-error-port))
-                (flush-output-port (current-error-port))
-                (loop (read-line in-err-port)))))))))
+       (let ((listener ($tcp-listen lsp-error-port-number)))
+         (write-log 'info "Listening for incomming error messages\n")
+         (let-values (((in-err-port out-err-port)
+                       ($tcp-accept listener)))
+           (let loop ((msg (read-line in-err-port)))
+             (if (eof-object? msg)
+                 #f
+                 (begin
+                   (write-log 'info (format "RECEIVED: ~a\n" msg))
+                   (newline (current-error-port))
+                   (flush-output-port (current-error-port))
+                   (loop (read-line in-err-port)))))))))))
 
 (define (dispatch-command cmd)
   (if (string-prefix? "spawn-lsp-server" cmd)
@@ -408,6 +415,10 @@
       (write-log 'info (format "ignoring unknown command: ~s" cmd))))
 
 (define (lsp-command-loop command-port-num)
+  (write-log 'debug
+             (format "lsp-command-loop: ~a [log level: ~a]"
+                     command-port-num
+                     (lsp-server-log-level)))
   (parameterize (($tcp-read-timeout #f))
     (let ((listener ($tcp-listen command-port-num)))
       (let loop ()
@@ -428,11 +439,13 @@
             (loop)))))))
 
 (define (lsp-command-server-start port-num)
-  (write-log 'info
-             (format "LSP command server started on port ~a"
-                     port-num))
-  (thread-start!
-   (make-thread (lambda () (lsp-command-loop port-num)))))
+  (parameterize-log-levels
+   (lambda ()
+     (write-log 'info
+                         (format "LSP command server started on port ~a"
+                                 port-num))
+     (thread-start!
+      (make-thread (lambda () (lsp-command-loop port-num)))))))
 
 (define (remove-slashes path)
   (define new-path (make-string (string-length path)))

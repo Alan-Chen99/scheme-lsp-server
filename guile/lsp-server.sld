@@ -2,6 +2,7 @@
 
 #:export (lsp-server-log-level
           lsp-command-server-start
+          lsp-server-request-connection
           start-lsp-server
           start-lsp-server/background
           start-lsp-loop)
