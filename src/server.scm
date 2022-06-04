@@ -33,7 +33,7 @@
 
 (define-handler (initialize-handler params)
   (define root-path (get-root-path params))
-  (when ($initialize-lsp-server root-path)
+  (when ($initialize-lsp-server! root-path)
     (write-log 'info "LSP server initialized"))
   (set! lsp-server-state 'on)
   `((capabilities . ,(append mandatory-capabilities
@@ -88,7 +88,7 @@
      "\r\n"
      'infix))
   (cond ((and file-path (not (hash-table-ref/default file-table file-path #f)))
-         ($open-file file-path)
+         ($open-file! file-path)
          (read-file! file-path)
          (update-file! file-path
                        (alist-ref 'contentChanges params))
@@ -116,7 +116,7 @@
 (define-handler (text-document/did-open params)
   (define file-path (get-uri-path params))
   (if file-path
-      (begin ($open-file file-path)
+      (begin ($open-file! file-path)
              (read-file! file-path)
              (let ((tmp-file (string-append "/tmp/" (remove-slashes file-path))))
                (write-log 'debug
@@ -136,7 +136,7 @@
 (define-handler (text-document/did-save params)
   (define file-path (get-uri-path params))
   (write-log 'info "file saved.")
-  ($save-file file-path)
+  ($save-file! file-path)
   #f)
 
 (define-handler (text-document/completion params)
@@ -310,16 +310,30 @@
   (parameterize-and-run
    (lambda () (json-rpc-loop (current-input-port) (current-output-port)))))
 
-(define (start-lsp-server tcp-port-number tcp-error-port-number)
-  (parameterize-and-run
-   (lambda () (json-rpc-start-server/tcp tcp-port-number
-                                         tcp-error-port-number))))
+(define start-lsp-server
+  (case-lambda
+   ((tcp-port-number)
+    (parameterize-and-run
+     (lambda ()
+       (json-rpc-start-server/tcp tcp-port-number))))
+   ((tcp-port-number tcp-error-port-number)
+    (parameterize-and-run
+     (lambda ()
+       (json-rpc-start-server/tcp tcp-port-number
+                                  tcp-error-port-number))))))
 
-(define (start-lsp-server/background tcp-port-number tcp-error-port-number)
-  (define thread
-    (make-thread (lambda () (start-lsp-server tcp-port-number tcp-error-port-number))))
-  (thread-start! thread)
-  thread)
+(define start-lsp-server/background
+  (case-lambda
+   ((tcp-port-number)
+    (thread-start!
+     (make-thread
+      (lambda ()
+        (start-lsp-server tcp-port-number)))))
+   ((tcp-port-number tcp-error-port-number)
+    (thread-start!
+     (make-thread
+       (lambda ()
+         (start-lsp-server tcp-port-number tcp-error-port-number)))))))
 
 (define (lsp-spawn-server port-number error-port-number)
   (let ((th (thread-start!
@@ -346,8 +360,8 @@
              (format "Started lsp-server-request-connection on command port ~a,
                       error port ~a and lsp port ~a~%"
                      command-port-number
-                     lsp-error-port-number
-                     lsp-port-number))
+                     lsp-port-number
+                     lsp-error-port-number))
 
   (let-values (((inp outp) ($tcp-connect "127.0.0.1"
                                          command-port-number)))
@@ -419,41 +433,6 @@
                      port-num))
   (thread-start!
    (make-thread (lambda () (lsp-command-loop port-num)))))
-
-(define (start-lsp-server-full lsp-port-num
-                               lsp-error-port-num
-                               command-port-num
-                               repl-port-num)
-  (log-level 'debug)
-
-  (when (= lsp-port-num 0)
-    (write-log 'info "ignoring port 0")
-    (exit 0))
-  (guard
-   (condition
-    (#t (guard
-         (condition (#t (write-log 'error
-                                   (format "Connection request for LSP connection at port ~a failed" lsp-port-num))))
-         (let-values (((inp outp) ($tcp-connect "127.0.0.1"
-                                                command-port-num)))
-           (write-log 'info
-                      (format "requesting new LSP connection at port ~a"
-                              lsp-port-num))
-           (display (format "spawn-lsp-server ~a ~a" lsp-port-num lsp-error-port-num)
-                    outp)
-           (flush-output-port outp)
-           (write-log 'info
-                      (format "LSP connection successfull. Idleing."))
-           (read-char)))))
-   (begin
-     ($spawn-repl-server repl-port-num)
-     (write-log 'debug (format "REPL server created on port ~a." repl-port-num))
-
-     (lsp-spawn-server lsp-port-num lsp-error-port-num)
-
-     (write-log 'debug (format "LSP server created on port ~a." lsp-port-num))
-
-     (lsp-command-loop command-port-num))))
 
 (define (remove-slashes path)
   (define new-path (make-string (string-length path)))

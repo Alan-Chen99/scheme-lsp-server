@@ -4,8 +4,7 @@
           lsp-command-server-start
           start-lsp-server
           start-lsp-server/background
-          start-lsp-loop
-          start-lsp-server-full)
+          start-lsp-loop)
 
 #:use-module (scheme base)
 #:use-module (scheme file)

@@ -5,8 +5,7 @@
         lsp-command-server-start
         start-lsp-server
         start-lsp-server/background
-        start-lsp-loop
-        start-lsp-server-full)
+        start-lsp-loop)
 
 (import (except (chicken io) read-string)
         (only (chicken base) alist-ref)
@@ -37,7 +36,8 @@
 
 (cond-expand
  (chicken (import (chicken format)
-                  (lsp-server chicken)))
+                  (lsp-server chicken)
+                  (only (chicken base) case-lambda)))
  (else))
 
 (include "file.scm")

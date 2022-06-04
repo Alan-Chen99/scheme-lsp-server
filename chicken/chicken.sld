@@ -1,19 +1,18 @@
 (define-library (lsp-server chicken)
 
 (export $apropos-list
-        $open-file
-        $save-file
+        $open-file!
+        $save-file!
         $fetch-documentation
         $fetch-signature
         $get-definition-locations
-        $initialize-lsp-server
+        $initialize-lsp-server!
         $server-capabilities
         $server-name
         $tcp-accept
         $tcp-connect
         $tcp-listen
-        $tcp-read-timeout
-        $spawn-repl-server)
+        $tcp-read-timeout)
 
 (import (apropos)
         (chicken base)
@@ -69,7 +68,7 @@
   (define $tcp-read-timeout tcp-read-timeout)
 
   (define $server-name
-    "chicken lsp server")
+    "CHICKEN LSP server")
 
   (define (initialize-tags-path)
     (when (not (tags-path))
@@ -86,7 +85,9 @@
     (write-log 'info (format "open nrepl on port ~a" port))
     (nrepl port))
 
-  (define ($initialize-lsp-server root)
+  ;;; Initialize LSP server to manage project at ROOT (a string). Used
+  ;;; for implementation-specific side effects only.
+  (define ($initialize-lsp-server! root)
     (root-path (if (and root (not (equal? root 'null)))
                    root
                    "."))
@@ -100,6 +101,10 @@
     ;;(tags-table (parse-tags-file (tags-path)))
     #t)
 
+  ;;; An alist with implementation-specific server capabilities. See:
+  ;;; https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#serverCapabilities
+  ;;; Note: These capabilities are joined to the implementation independent
+  ;;; mandatory-capabilities (see server.scm).
   (define $server-capabilities
     `((definitionProvider . ())))
 
@@ -109,12 +114,7 @@
 
   (define $tcp-listen tcp-listen)
 
-  (define ($spawn-repl-server port-num)
-    (thread-start!
-     (make-thread
-      (lambda () (nrepl port-num)))))
-
-
+  ;;; Return apropos instances of all functions matching IDENTIFIER (a symbol).
   (define ($apropos-list identifier)
     (define suggestions
       (apropos-information-list identifier #:macros? #t #:imported? #f))
@@ -134,7 +134,9 @@
           '()
           suggestions))
 
-
+  ;;; Return the documentation (a string) found for IDENTIFIER (a symbol) in
+  ;;; MODULE (a symbol). Return #f if nothing found.
+  ;;; Example call: $fetch-documentation '(srfi-1) 'map
   (define ($fetch-documentation module identifier)
     (define egg (or (module-egg module)
                     module))
@@ -150,6 +152,9 @@
         (lambda ()
           (describe (lookup-node doc-path))))))
 
+  ;;; Return the signature (a string) for IDENTIFIER (a symbol) in MODULE (a
+  ;;; symbol). Return #f if nothing found.
+  ;;; Example call: $fetch-documentation '(srfi 1) 'map
   (define ($fetch-signature module identifier)
     (define egg (or (module-egg module)
                     (car module)))
@@ -158,10 +163,12 @@
         (node-signature
          (lookup-node (list egg identifier)))))
 
-  (define ($open-file file-path)
+  ;;; Action to execute when FILE-PATH is opened. Used for side effects only.
+  (define ($open-file! file-path)
     (generate-tags! file-path))
 
-  (define ($save-file file-path)
+  ;;; Action to execute when FILE-PATH is saved. Used for side effects only.
+  (define ($save-file! file-path)
     (generate-tags! file-path))
 
   (define (read-definitions src-path)
@@ -222,6 +229,14 @@
      (hash-table-keys right))
     left)
 
+  ;;; Return a list of locations found for IDENTIFIER (a symbol).
+  ;;; Each location is represented by an alist
+  ;;; '((url . "file:///<path>")
+  ;;;   (range . ((start . ((line  . <line number>)
+  ;;;                       (character . <character number))
+  ;;;             (end . ((line  . <line number>)
+  ;;;                     (character . <character number))))
+  ;;;
   (define ($get-definition-locations identifier)
     (get-definition-locations identifier))
 

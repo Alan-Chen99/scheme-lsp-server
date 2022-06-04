@@ -6,8 +6,8 @@
 
 (define (main args)
   (let ((command-port-number (string->number (list-ref args 0)))
-        (lsp-error-port-number (string->number (list-ref args 1)))
-        (lsp-port-number (string->number (list-ref args 2))))
+        (lsp-port-number (string->number (list-ref args 1)))
+        (lsp-error-port-number (string->number (list-ref args 2))))
 
     (parameterize ((tcp-read-timeout #f)
                    (tcp-write-timeout #f)

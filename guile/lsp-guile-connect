@@ -11,13 +11,15 @@ exec guile --r7rs -e main -s "$0" "$@"
 
 (define (main args)
   (define command-port-num (string->number (cadr args)))
-  (define lsp-error-port-num (string->number (caddr args)))
-  (define lsp-port-num (string->number (cadddr args)))
-  (display (format "Started lsp-guile-connect on command port ~a, error port ~a and lsp port ~a~%"
-                   command-port-num
-                   lsp-error-port-num
-                   lsp-port-num)
-           (current-error-port))
+  (define lsp-port-num (string->number (caddr args)))
+  (define lsp-error-port-num (string->number (cadddr args)))
+
+  (display
+   (format "Started lsp-guile-connect on command port ~a, error port ~a and lsp port ~a~%"
+           command-port-num
+           lsp-error-port-num
+           lsp-port-num)
+   (current-error-port))
   (flush-output-port (current-error-port))
 
   (let-values (((inp outp) ($tcp-connect "127.0.0.1"
@@ -29,24 +31,25 @@ exec guile --r7rs -e main -s "$0" "$@"
                      lsp-port-num
                      lsp-error-port-num)
              (current-error-port)
-    (display (format "spawn-lsp-server ~a ~a~%"
-                     lsp-port-num
-                     lsp-error-port-num)
-             outp)
-    (flush-output-port outp)
-    (display (format "LSP connection successfull.~%")
-             (current-error-port))
+             (display (format "spawn-lsp-server ~a ~a~%"
+                              lsp-port-num
+                              lsp-error-port-num)
+                      outp)
+             (flush-output-port outp)
+             (display (format "LSP connection successfull.~%")
+                      (current-error-port))
 
-    (let ((listener ($tcp-listen lsp-error-port-num)))
-      (display "Listening for incomming error messages\n"
-               (current-error-port))
-      (let-values (((in-err-port out-err-port)
-                    ($tcp-accept listener)))
-        (let loop ((msg (read-line in-err-port)))
-          (if (eof-object? msg)
-              #f
-              (begin
-                (display (format "RECEIVED: ~a\n" msg) (current-error-port))
-                (newline (current-error-port))
-                (flush-output-port (current-error-port))
-                (loop (read-line in-err-port))))))))))
+             (let ((listener ($tcp-listen lsp-error-port-num)))
+               (display "Listening for incomming error messages\n"
+                        (current-error-port))
+               (let-values (((in-err-port out-err-port)
+                             ($tcp-accept listener)))
+                 (let loop ((msg (read-line in-err-port)))
+                   (if (eof-object? msg)
+                       #f
+                       (begin
+                         (display (format "RECEIVED: ~a\n" msg)
+                                  (current-error-port))
+                         (newline (current-error-port))
+                         (flush-output-port (current-error-port))
+                         (loop (read-line in-err-port))))))))))

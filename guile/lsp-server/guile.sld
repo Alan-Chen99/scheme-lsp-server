@@ -1,19 +1,18 @@
 (define-module (lsp-server guile)
 
 #:export ($apropos-list
-          $open-file
-          $save-file
+          $open-file!
+          $save-file!
           $fetch-documentation
           $fetch-signature
           $get-definition-locations
-          $initialize-lsp-server
+          $initialize-lsp-server!
           $server-capabilities
           $server-name
           $tcp-accept
           $tcp-connect
           $tcp-listen
           $tcp-read-timeout
-          $spawn-repl-server
           alist-ref)
 
 #:use-module (scheme base)
@@ -37,30 +36,40 @@
 (define $tcp-read-timeout (make-parameter #f))
 
 (define $server-name
-  "guile lsp server")
+  "Guile LSP server")
 
-(define ($initialize-lsp-server root)
+;;; Initialize LSP server to manage project at ROOT (a string). Used
+;;; for implementation-specific side effects only. Empty for now.
+(define ($initialize-lsp-server! root)
   ;; (root-path
   ;;  (if (and root (not (equal? root 'null)))
   ;;      root
   ;;      "."))
   #f)
 
+;;; An alist with implementation-specific server capabilities. See:
+;;; https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#serverCapabilities
+;;; Note: These capabilities are joined to the implementation independent
+;;; mandatory-capabilities (see server.scm).
 (define $server-capabilities
   `((definitionProvider . ())))
 
-(define ($tcp-listen server-port)
+;;; Return a socket listening on PORT-NUMBER at the localhost.
+(define ($tcp-listen port-number)
   (define sock (socket PF_INET SOCK_STREAM 0))
   (setsockopt sock SOL_SOCKET SO_REUSEADDR 1)
-  (bind sock (make-socket-address AF_INET INADDR_LOOPBACK server-port))
+  (bind sock (make-socket-address AF_INET INADDR_LOOPBACK port-number))
   (listen sock 20)
   sock)
 
+;;; Waits for incoming connections on LISTENER and return two values to
+;;; communicate with the client: an input port and an output port.
 (define ($tcp-accept listener)
   (define res (accept listener))
   (define port (car res))
   (values port port))
 
+;;; Connects to a listening server on TCP-ADDRESS and TCP-PORT.
 (define ($tcp-connect tcp-address tcp-port)
   (define sock (socket PF_INET SOCK_STREAM 0))
   (define addr (inet-pton AF_INET tcp-address))
@@ -68,6 +77,7 @@
   (connect sock (make-socket-address AF_INET addr tcp-port))
   (values sock sock))
 
+;;; Return apropos instances of all functions matching IDENTIFIER (a symbol).
 (define ($apropos-list identifier)
   (apropos-fold (lambda (mod name obj acc)
                   (cons (make-apropos-info (module-name mod)
@@ -81,6 +91,9 @@
                     identifier)
                 (apropos-fold-accessible (current-module))))
 
+;;; Return the documentation (a string) found for IDENTIFIER (a symbol) in
+;;; MODULE (a symbol). Return #f if nothing found.
+;;; Example call: $fetch-documentation '(srfi-1) 'map
 (define ($fetch-documentation module-name identifier)
   (define mod (resolve-module module-name))
   (define obj (module-ref mod identifier))
@@ -93,6 +106,9 @@
                     "")))
       #f))
 
+;;; Return the signature (a string) for IDENTIFIER (a symbol) in MODULE (a
+;;; symbol). Return #f if nothing found.
+;;; Example call: $fetch-documentation '(srfi 1) 'map
 (define ($fetch-signature module-name identifier)
   (define mod (resolve-module module-name))
   (define obj (module-ref mod identifier))
@@ -101,6 +117,14 @@
               (build-procedure-signature module-name identifier obj))
       #f))
 
+;;; Return a list of locations found for IDENTIFIER (a symbol).
+;;; Each location is represented by an alist
+;;; '((url . "file:///<path>")
+;;;   (range . ((start . ((line  . <line number>)
+;;;                       (character . <character number))
+;;;             (end . ((line  . <line number>)
+;;;                     (character . <character number))))
+;;;
 (define ($get-definition-locations identifier)
   (write-log 'debug
              (format "$get-definition-locations ~a" identifier))
@@ -144,18 +168,13 @@
                    (format "definition not found: ~a" identifier))
         '())))
 
-(define ($spawn-repl-server port-num)
-  (define sock (make-tcp-server-socket #:host "127.0.0.1"
-                                       #:port port-num))
-  (spawn-server sock))
-
 (define (alist-ref key lst)
   (define res (assoc key lst))
   (if res
       (cdr res)
       #f))
 
-(define ($open-file file-path)
+(define ($open-file! file-path)
   (write-log 'debug (format "opening file in guile: ~a" file-path))
   ;;(load-protected file-path)
   ;; (current-path (if file-path
@@ -163,7 +182,7 @@
   ;;                        #f))
   #f)
 
-(define ($save-file file-path)
+(define ($save-file! file-path)
   ;;(load-protected file-path)
   #f)
 
