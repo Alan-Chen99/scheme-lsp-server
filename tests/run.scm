@@ -38,159 +38,190 @@
 
 
 (test-group "(lsp-server document): range update"
-  (define document
-    (string->document (string-append "(define (f x)\n"
-                                     "  (cond ((= x 0) 1)\n"
-                                     "        ((= x 1) 1)\n"
-                                     "        (else (* x (f (- x 1))))))\n")))
+            (define document
+              (string->document
+               (string-append "(define (f x)\n"
+                              "  (cond ((= x 0) 1)\n"
+                              "        ((= x 1) 1)\n"
+                              "        (else (* x (f (- x 1))))))\n")))
 
-  (test (string-append "(define (g x)\n"
-                       "  (cond ((= x 0) 1)\n"
-                       "        ((= x 1) 1)\n"
-                       "        (else (* x (f (- x 1))))))\n")
-    (document-contents (lsp-server#apply-change (lsp-server#make-change-contents
-                                      (lsp-server#make-range 0 9 0 10 1)
-                                      "g")
-                                     document)))
+            (test (string-append "(define (g x)\n"
+                                 "  (cond ((= x 0) 1)\n"
+                                 "        ((= x 1) 1)\n"
+                                 "        (else (* x (f (- x 1))))))\n")
+                  (document-contents
+                   (lsp-server#apply-change
+                    (lsp-server#make-change-contents
+                     (lsp-server#make-range 0 9 0 10 1)
+                     "g")
+                    document)))
 
-  (test (string-append "(define (f x)\n"
-                       "  (cond ((= x 0) 1)\n"
-                       "\n"
-                       "        (else (* x (f (- x 1))))))\n")
-    (document-contents (lsp-server#apply-change (lsp-server#make-change-contents
-                                      (lsp-server#make-range 2 0 2 19 19)
-                                      "")
-                                     document)))
+            (test (string-append "(define (f x)\n"
+                                 "  (cond ((= x 0) 1)\n"
+                                 "\n"
+                                 "        (else (* x (f (- x 1))))))\n")
+                  (document-contents
+                   (lsp-server#apply-change
+                    (lsp-server#make-change-contents
+                     (lsp-server#make-range 2 0 2 19 19)
+                     "")
+                    document)))
 
-  (test (string-append "(define (f x)\n"
-                       "  (cond ((= x 0) 1)\n"
-                       "        (else (* x (f (- x 1))))))\n")
-    (document-contents (lsp-server#apply-change (lsp-server#make-change-contents
-                                      (lsp-server#make-range 2 0 3 0 20)
-                                      "")
-                                     document)))
+            (test (string-append "(define (f x)\n"
+                                 "  (cond ((= x 0) 1)\n"
+                                 "        (else (* x (f (- x 1))))))\n")
+                  (document-contents
+                   (lsp-server#apply-change
+                    (lsp-server#make-change-contents
+                     (lsp-server#make-range 2 0 3 0 20)
+                     "")
+                    document)))
 
-  (test (string-append
-         "(define (f x)\n"
-         "  (cond ((= x 0) 1)\n"
-         "        ((= x 1) 1)\n"
-         "        ((= x 2) 2)\n"
-         "        (else (* x (f (- x 1))))))\n")
-    (document-contents (lsp-server#apply-change (lsp-server#make-change-contents
-                                      (lsp-server#make-range 2 19 2 19 0)
-                                      "\n        ((= x 2) 2)")
-                                     document)))
+            (test (string-append
+                   "(define (f x)\n"
+                   "  (cond ((= x 0) 1)\n"
+                   "        ((= x 1) 1)\n"
+                   "        ((= x 2) 2)\n"
+                   "        (else (* x (f (- x 1))))))\n")
+                  (document-contents
+                   (lsp-server#apply-change
+                    (lsp-server#make-change-contents
+                     (lsp-server#make-range 2 19 2 19 0)
+                     "\n        ((= x 2) 2)")
+                    document)))
 
-  (test (string-append
-         "(define (f x)\n"
-         "  (cond ((= x 0) 1)\n"
-         "        ((= x 1) 1)\n"
-         "\n"
-         "        (else (* x (f (- x 1))))))\n")
-    (document-contents (lsp-server#apply-change (lsp-server#make-change-contents
-                                      (lsp-server#make-range 2 19 2 19 0)
-                                      "\n")
-                                     document)))
+            (test (string-append
+                   "(define (f x)\n"
+                   "  (cond ((= x 0) 1)\n"
+                   "        ((= x 1) 1)\n"
+                   "\n"
+                   "        (else (* x (f (- x 1))))))\n")
+                  (document-contents
+                   (lsp-server#apply-change
+                    (lsp-server#make-change-contents
+                     (lsp-server#make-range 2 19 2 19 0)
+                     "\n")
+                    document)))
 
-  (test (string-append "        ((= x 1) 1)\n"
-                       "        (else (* x (f (- x 1))))))\n")
-    (document-contents (lsp-server#apply-change (lsp-server#make-change-contents
-                                      (lsp-server#make-range 0 0 2 0 34)
-                                      "")
-                                     document)))
+            (test (string-append "        ((= x 1) 1)\n"
+                                 "        (else (* x (f (- x 1))))))\n")
+                  (document-contents
+                   (lsp-server#apply-change
+                    (lsp-server#make-change-contents
+                     (lsp-server#make-range 0 0 2 0 34)
+                     "")
+                    document)))
 
-  (test (string-append
-         "(define (f x)\n"
-         "  (cond ((= x 0) 1)\n"
-         "        ((= x 1) 1)\n"
-         "        (else (* x (f (- x 1))))))\n"
-         "\n"          )
-    (document-contents (lsp-server#apply-change (lsp-server#make-change-contents
-                                      (lsp-server#make-range 3 34 3 34 0)
-                                      "\n")
-                                     document)))
+            (test (string-append
+                   "(define (f x)\n"
+                   "  (cond ((= x 0) 1)\n"
+                   "        ((= x 1) 1)\n"
+                   "        (else (* x (f (- x 1))))))\n"
+                   "\n"          )
+                  (document-contents
+                   (lsp-server#apply-change
+                    (lsp-server#make-change-contents
+                     (lsp-server#make-range 3 34 3 34 0)
+                     "\n")
+                    document)))
 
-  (test (string-append
-         "i(define (f x)\n"
-         "  (cond ((= x 0) 1)\n"
-         "        ((= x 1) 1)\n"
-         "        (else (* x (f (- x 1))))))\n")
-    (document-contents (lsp-server#apply-change (lsp-server#make-change-contents
-                                      (lsp-server#make-range 0 0 0 0 0)
-                                      "i")
-                                     document)))
+            (test (string-append
+                   "i(define (f x)\n"
+                   "  (cond ((= x 0) 1)\n"
+                   "        ((= x 1) 1)\n"
+                   "        (else (* x (f (- x 1))))))\n")
+                  (document-contents
+                   (lsp-server#apply-change
+                    (lsp-server#make-change-contents
+                     (lsp-server#make-range 0 0 0 0 0)
+                     "i")
+                    document)))
 
-  (test (string-append "(define (f x)\n"
-                       "blacond ((= x 0) 1)\n"
-                       "        ((= x 1) 1)\n"
-                       "        (else (* x (f (- x 1))))))\n")
-    (document-contents (lsp-server#apply-change (lsp-server#make-change-contents
-                                      (lsp-server#make-range 1 0 1 3 3)
-                                      "bla")
-                                     document)))
+            (test (string-append "(define (f x)\n"
+                                 "blacond ((= x 0) 1)\n"
+                                 "        ((= x 1) 1)\n"
+                                 "        (else (* x (f (- x 1))))))\n")
+                  (document-contents
+                   (lsp-server#apply-change
+                    (lsp-server#make-change-contents
+                     (lsp-server#make-range 1 0 1 3 3)
+                     "bla")
+                    document)))
 
-  (test (string-append "i\n" "bla\n")
-    (document-contents (lsp-server#apply-change (lsp-server#make-change-contents
-                                      (lsp-server#make-range 0 0 0 0 0)
-                                      "i")
-                                     (string->document
-                                      (string-append "\n" "bla\n")))))
+            (test (string-append "i\n" "bla\n")
+                  (document-contents
+                   (lsp-server#apply-change
+                    (lsp-server#make-change-contents
+                     (lsp-server#make-range 0 0 0 0 0)
+                     "i")
+                    (string->document
+                     (string-append "\n" "bla\n")))))
 
-  (test (string-append
-         "(define (f x)\n"
-         "        ((= x 1) 1)\n"
-         "        (else (* x (f (- x 1))))))\n")
-    (document-contents (lsp-server#apply-change (lsp-server#make-change-contents
-                                      (lsp-server#make-range 1 0 2 0 20)
-                                      "")
-                                     document)))
+            (test (string-append
+                   "(define (f x)\n"
+                   "        ((= x 1) 1)\n"
+                   "        (else (* x (f (- x 1))))))\n")
+                  (document-contents
+                   (lsp-server#apply-change
+                    (lsp-server#make-change-contents
+                     (lsp-server#make-range 1 0 2 0 20)
+                     "")
+                    document)))
 
-  (test (string-append
-         "(define (f x)\n"
-         "  (cond ((= x 0) 1)        ((= x 1) 1)\n"
-         "        (else (* x (f (- x 1))))))\n")
-    (document-contents (lsp-server#apply-change (lsp-server#make-change-contents
-                                      (lsp-server#make-range 2 0 1 19 1)
-                                      "")
-                                     document)))
+            (test (string-append
+                   "(define (f x)\n"
+                   "  (cond ((= x 0) 1)        ((= x 1) 1)\n"
+                   "        (else (* x (f (- x 1))))))\n")
+                  (document-contents
+                   (lsp-server#apply-change
+                    (lsp-server#make-change-contents
+                     (lsp-server#make-range 2 0 1 19 1)
+                     "")
+                    document)))
 
-  #;
-  (test '("(define (f x)\n"
-  "  (cond ((= x 0) 1)\n"
-  "(+ 2\n"
-  "   3)        ((= x 1) 1)\n"
-  "        (else (* x (f (- x 1))))))\n")
-  (lsp-server#apply-change (lsp-server#make-change-contents
-  (lsp-server#make-range 2 0 2 5 10)
-  '("(+ 2\n   3)"))
-  document))
+            #;
+            (test '("(define (f x)\n"
+            "  (cond ((= x 0) 1)\n"
+            "(+ 2\n"
+            "   3)        ((= x 1) 1)\n"
+            "        (else (* x (f (- x 1))))))\n")
+            (lsp-server#apply-change (lsp-server#make-change-contents
+            (lsp-server#make-range 2 0 2 5 10)
+            '("(+ 2\n   3)"))
+            document))
 
-  (test (string-append
-         "(define (f x)\n"
-         "  (cond ((= x 0) 1)\n"
-         "(+ 2\n"
-         "   3)   (else (* x (f (- x 1))))))\n")
-    (document-contents (lsp-server#apply-change (lsp-server#make-change-contents
-                                      (lsp-server#make-range 2 0 3 5 10)
-                                      (string-append "(+ 2\n" "   3)"))
-                                     document)))
+            (test (string-append
+                   "(define (f x)\n"
+                   "  (cond ((= x 0) 1)\n"
+                   "(+ 2\n"
+                   "   3)   (else (* x (f (- x 1))))))\n")
+                  (document-contents
+                   (lsp-server#apply-change
+                    (lsp-server#make-change-contents
+                     (lsp-server#make-range 2 0 3 5 10)
+                     (string-append "(+ 2\n" "   3)"))
+                    document)))
 
-  (test (string-append
-         "(define (f x)\n"
-         "  (cond ((= x 0) 1)\n"
-         "        ((= x 1) 1)\n"
-         "        (else (* x (f (- x 1))))))\n"
-         "(")
-    (document-contents (lsp-server#apply-change (lsp-server#make-change-contents
-                                      (lsp-server#make-range 4 0 4 0 0)
-                                      "(")
-                                     document)))
+            (test (string-append
+                   "(define (f x)\n"
+                   "  (cond ((= x 0) 1)\n"
+                   "        ((= x 1) 1)\n"
+                   "        (else (* x (f (- x 1))))))\n"
+                   "(")
+                  (document-contents
+                   (lsp-server#apply-change
+                    (lsp-server#make-change-contents
+                     (lsp-server#make-range 4 0 4 0 0)
+                     "(")
+                    document)))
 
-  (test ""
-    (document-contents (lsp-server#apply-change (lsp-server#make-change-contents
-                                      (lsp-server#make-range 0 0 4 0 88)
-                                      "")
-                                     document))))
+            (test ""
+                  (document-contents
+                   (lsp-server#apply-change
+                    (lsp-server#make-change-contents
+                     (lsp-server#make-range 0 0 4 0 88)
+                     "")
+                    document))))
 
 #;
 (test-group "range normalization"
@@ -201,7 +232,7 @@
 (test-group "(lsp-server document: insertion/expansion/contraction"
   (test "     ab"
     (document-contents (document-expand (string->document "ab") 0 5)))
-  
+
   (test "a     b"
     (document-contents (document-expand (string->document "ab") 1 5)))
 
@@ -219,6 +250,16 @@
   (test "ab12345"
     (document-contents (document-insert (string->document "ab")
                                         "12345" 2)))
+
+
+  (let* ((doc (document-insert (string->document "ab\n")
+                               "123\n45"
+                               3))
+         (offsets (lsp-server.document#document-lines-offsets doc)))
+    (test "ab\n123\n45" (document-contents doc))
+    (test 3 (vector-ref offsets 1))
+    (test 7 (vector-ref offsets 2)))
+
 
   (test "abe"
     (document-contents (document-contract (string->document "abcde")

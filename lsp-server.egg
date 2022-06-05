@@ -13,7 +13,7 @@
                utf8)
  (test-dependencies test)
  (component-options
-  (csc-options "-d3" "-O0" "-X" "r7rs" "-R" "r7rs"))
+  (csc-options "-O3" "-X" "r7rs" "-R" "r7rs"))
  (components
   (program lsp-chicken-connect
            (source "chicken/lsp-chicken-connect.scm")

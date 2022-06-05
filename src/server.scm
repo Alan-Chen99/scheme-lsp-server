@@ -398,7 +398,8 @@
                    (loop (read-line in-err-port)))))))))))
 
 (define (dispatch-command cmd)
-  (if (string-prefix? "spawn-lsp-server" cmd)
+  (if (and (string? cmd)
+           (string-prefix? "spawn-lsp-server" cmd))
       (let ((cmd-lst (string-tokenize cmd)))
         (cond ((not (= (length cmd-lst) 3))
                ;;(write "missing port in command~%" out-port)
