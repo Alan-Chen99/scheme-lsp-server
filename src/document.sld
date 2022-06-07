@@ -7,9 +7,6 @@
         document-insert
         document-contract
         document-num-lines
-        document-take
-        document-take-right
-        document-expand
         line/char->pos
         string->document
         compute-lines-offsets)
@@ -24,6 +21,7 @@
                 (srfi srfi-28)
                 (srfi srfi-69)))
  (else (import (only (chicken port) with-input-from-string)
+               (only (chicken base) case-lambda)
                (srfi 28)
                (srfi 69)
                (srfi 130))))

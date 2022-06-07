@@ -209,12 +209,12 @@
            (range-end-char normalized-range)
            start-pos
            end-pos))
-  
-  (let ((tmp-str
+
+  (let ((contracted-doc
          (document-contract doc
                             (min start-pos end-pos)
                             (max start-pos end-pos))))
-    (document-insert tmp-str
+    (document-insert contracted-doc
                      text
                      (min start-pos end-pos))))
 
