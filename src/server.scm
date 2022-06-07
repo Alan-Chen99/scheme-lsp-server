@@ -305,12 +305,12 @@
           ("custom/loadFile" . ,custom/load-file))))
     (thunk)))
 
-(define (start-lsp-loop)
+(define (lsp-server-start/stdio)
   (write-log 'info "LSP loop started")
   (parameterize-and-run
    (lambda () (json-rpc-loop (current-input-port) (current-output-port)))))
 
-(define start-lsp-server
+(define lsp-server-start
   (case-lambda
    ((tcp-port-number)
     (parameterize-and-run
@@ -322,18 +322,18 @@
        (json-rpc-start-server/tcp tcp-port-number
                                   tcp-error-port-number))))))
 
-(define start-lsp-server/background
+(define lsp-server-start/background
   (case-lambda
    ((tcp-port-number)
     (thread-start!
      (make-thread
       (lambda ()
-        (start-lsp-server tcp-port-number)))))
+        (lsp-server-start tcp-port-number)))))
    ((tcp-port-number tcp-error-port-number)
     (thread-start!
      (make-thread
        (lambda ()
-         (start-lsp-server tcp-port-number tcp-error-port-number)))))))
+         (lsp-server-start tcp-port-number tcp-error-port-number)))))))
 
 (define (lsp-spawn-server port-number error-port-number)
   (let ((th (thread-start!
@@ -343,7 +343,7 @@
                  (condition (#t (begin (write-log 'error
                                                   (format "CRASH: ~a" condition))
                                        (raise condition))))
-                 (start-lsp-server port-number error-port-number)))))))
+                 (lsp-server-start port-number error-port-number)))))))
     (mutex-lock! listening-threads-mutex)
     (set! listening-threads (cons th listening-threads))
     (mutex-unlock! listening-threads-mutex)

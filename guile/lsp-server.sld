@@ -3,9 +3,9 @@
 #:export (lsp-server-log-level
           lsp-command-server-start
           lsp-server-request-connection
-          start-lsp-server
-          start-lsp-server/background
-          start-lsp-loop)
+          lsp-server-start
+          lsp-server-start/background
+          lsp-server-start/stdio)
 
 #:use-module (scheme base)
 #:use-module (scheme file)

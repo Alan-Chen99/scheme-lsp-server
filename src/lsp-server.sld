@@ -3,9 +3,9 @@
 (export lsp-server-log-level
         lsp-server-request-connection
         lsp-command-server-start
-        start-lsp-server
-        start-lsp-server/background
-        start-lsp-loop)
+        lsp-server-start
+        lsp-server-start/background
+        lsp-server-start/stdio)
 
 (import (except (chicken io) read-string)
         (only (chicken base) alist-ref)
