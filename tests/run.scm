@@ -21,11 +21,11 @@
     (line/char->pos a-doc 0 2))
   (test 8
     (line/char->pos a-doc 2 0))
-  (let ((offsets (compute-lines-offsets "abc\ndef\ng")))
+  (let ((newlines (compute-newline-positions "abc\ndef\ng")))
     (test 2
-      (vector-length offsets))
-    (test 3 (vector-ref offsets 0))
-    (test 7 (vector-ref offsets 1)))
+      (vector-length newlines))
+    (test 3 (vector-ref newlines 0))
+    (test 7 (vector-ref newlines 1)))
 
   (test 2 (line/char->pos (string->document "1\n\n3\n") 1 0)))
 
@@ -34,24 +34,24 @@
   (let ((doc (lsp-server.document#document-copy
               (string->document "abc\ndef\n12\n34") 0 4)))
     (test "abc\n" (document-contents doc))
-    (test #(3) (lsp-server.document#document-lines-offsets doc)))
+    (test #(3) (lsp-server.document#document-newline-positions doc)))
 
   (let ((doc (lsp-server.document#document-copy
               (string->document "") 0 0)))
     (test "" (document-contents doc))
-    (test #() (lsp-server.document#document-lines-offsets doc)))
+    (test #() (lsp-server.document#document-newline-positions doc)))
 
   (let ((doc (lsp-server.document#document-copy
               (string->document "1\n\n3\n")
               0 2)))
     (test "1\n" (document-contents doc))
-    (test #(1) (lsp-server.document#document-lines-offsets doc)))
+    (test #(1) (lsp-server.document#document-newline-positions doc)))
 
   (let ((doc (lsp-server.document#document-copy
               (string->document "1\n\n3\n")
               2)))
     (test "\n3\n" (document-contents doc))
-    (test #(0 2) (lsp-server.document#document-lines-offsets doc))))
+    (test #(0 2) (lsp-server.document#document-newline-positions doc))))
 
 (test-group "(lsp-server document): document-append"
   (let ((doc (lsp-server.document#document-append
@@ -60,7 +60,7 @@
     (test "abc\ndef\n12\n34"
       (document-contents doc))
     (test #(3 7 10)
-      (lsp-server.document#document-lines-offsets doc)))
+      (lsp-server.document#document-newline-positions doc)))
 
   (let ((doc (lsp-server.document#document-append
               (string->document "abc\ndef\n")
@@ -68,7 +68,7 @@
     (test "abc\ndef\n12"
       (document-contents doc))
     (test #(3 7)
-      (lsp-server.document#document-lines-offsets doc)))
+      (lsp-server.document#document-newline-positions doc)))
 
   (let ((doc (lsp-server.document#document-append
               (string->document "abc")
@@ -76,7 +76,7 @@
     (test "abcdef"
       (document-contents doc))
     (test #()
-      (lsp-server.document#document-lines-offsets doc)))
+      (lsp-server.document#document-newline-positions doc)))
 
   (let ((doc (lsp-server.document#document-append
               (string->document "abc\n")
@@ -84,7 +84,7 @@
     (test "abc\ndef"
       (document-contents doc))
     (test #(3)
-      (lsp-server.document#document-lines-offsets doc)))
+      (lsp-server.document#document-newline-positions doc)))
 
   (let ((doc (lsp-server.document#document-append
               (string->document "abc\n")
@@ -92,57 +92,57 @@
     (test "abc\n\ndef\n"
       (document-contents doc))
     (test #(3 4 8)
-      (lsp-server.document#document-lines-offsets doc))))
+      (lsp-server.document#document-newline-positions doc))))
 
 (test-group "(lsp-server document): document-contract"
   (let ((doc (document-contract (string->document "ab\nde")
                                 2 4)))
     (test "abe" (document-contents doc))
-    (test #() (lsp-server.document#document-lines-offsets doc)))
+    (test #() (lsp-server.document#document-newline-positions doc)))
 
   (let ((doc (document-contract (string->document "a\nb")
                                 1 2)))
     (test "ab" (document-contents doc))
-    (test #() (lsp-server.document#document-lines-offsets doc)))
+    (test #() (lsp-server.document#document-newline-positions doc)))
 
   (let ((doc (document-contract (string->document "abcde")
                                 2 4)))
     (test "abe" (document-contents doc))
-    (test #() (lsp-server.document#document-lines-offsets doc)))
+    (test #() (lsp-server.document#document-newline-positions doc)))
 
   (let ((doc (document-contract (string->document "abcde")
                                 3 4)))
     (test "abce" (document-contents doc))
-    (test #() (lsp-server.document#document-lines-offsets doc))))
+    (test #() (lsp-server.document#document-newline-positions doc))))
 
 (test-group "(lsp-server document): document-insert"
   (let* ((doc (document-insert (string->document "ab\n")
                                "123\n45"
                                3)))
     (test "ab\n123\n45" (document-contents doc))
-    (test #(2 6) (lsp-server.document#document-lines-offsets doc)))
+    (test #(2 6) (lsp-server.document#document-newline-positions doc)))
 
   (let* ((doc (document-insert (string->document "ab\ncd")
                                "\n\n"
                                3)))
     (test "ab\n\n\ncd" (document-contents doc))
-    (test #(2 3 4) (lsp-server.document#document-lines-offsets doc)))
+    (test #(2 3 4) (lsp-server.document#document-newline-positions doc)))
 
   (let* ((doc (document-insert (string->document "ab\ncd\ne")
                                "12"
                                4)))
     (test "ab\nc12d\ne" (document-contents doc))
-    (test #(2 7) (lsp-server.document#document-lines-offsets doc)))
+    (test #(2 7) (lsp-server.document#document-newline-positions doc)))
 
   (let ((doc (document-insert (string->document "a   b")
                               "123" 1)))
     (test "a123   b" (document-contents doc))
-    (test #() (lsp-server.document#document-lines-offsets doc)))
+    (test #() (lsp-server.document#document-newline-positions doc)))
 
   (let ((doc (document-insert (string->document "a   b")
                               "12345" 1)))
     (test "a12345   b" (document-contents doc))
-    (test #() (lsp-server.document#document-lines-offsets doc)))
+    (test #() (lsp-server.document#document-newline-positions doc)))
 
   (test "ab12345"
     (document-contents (document-insert (string->document "ab")
@@ -153,7 +153,7 @@
 (test-group "(lsp-server document): string->document"
   (test
       #(1 2 4)
-    (lsp-server.document#document-lines-offsets (string->document "1\n\n3\n"))))
+    (lsp-server.document#document-newline-positions (string->document "1\n\n3\n"))))
 
 
 (test-group "line/char->pos"
@@ -395,7 +395,7 @@
                "")
               (string->document "1\n\n3\n"))))
     (test "1\n3\n" (document-contents doc))
-    (test #(1 3) (lsp-server.document#document-lines-offsets doc)))
+    (test #(1 3) (lsp-server.document#document-newline-positions doc)))
 
   (let ((doc (lsp-server#apply-change
               (lsp-server#make-change-contents
@@ -403,7 +403,7 @@
                "\n")
               (string->document "1\n3\n"))))
     (test "1\n\n3\n" (document-contents doc))
-    (test #(1 2 4) (lsp-server.document#document-lines-offsets doc)))
+    (test #(1 2 4) (lsp-server.document#document-newline-positions doc)))
 
   (let ((doc (lsp-server#apply-change
               (lsp-server#make-change-contents
@@ -411,7 +411,7 @@
                "\n")
               (string->document "1\n\n3\n"))))
     (test "1\n\n\n3\n" (document-contents doc))
-    (test #(1 2 3 5) (lsp-server.document#document-lines-offsets doc)))
+    (test #(1 2 3 5) (lsp-server.document#document-newline-positions doc)))
 
   (let ((doc (lsp-server#apply-change
               (lsp-server#make-change-contents
@@ -419,7 +419,7 @@
                "")
               (string->document "1\n\n\n3\n"))))
     (test "1\n\n3\n" (document-contents doc))
-    (test #(1 2 4) (lsp-server.document#document-lines-offsets doc))))
+    (test #(1 2 4) (lsp-server.document#document-newline-positions doc))))
 
 (test-group "(lsp-server document): line manipulation"
   (test '()

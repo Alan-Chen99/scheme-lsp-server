@@ -9,7 +9,7 @@
         document-num-lines
         line/char->pos
         string->document
-        compute-lines-offsets)
+        compute-newline-positions)
 
 (import (scheme base)
         (scheme file)

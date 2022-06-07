@@ -1,8 +1,8 @@
 (define-record-type <document>
-  (make-document contents lines-offsets)
+  (make-document contents newline-positions)
   document?
   (contents document-contents)
-  (lines-offsets document-lines-offsets))
+  (newline-positions document-newline-positions))
 
 (define (read-document port)
   (let loop ((c (read-char port))
@@ -33,7 +33,7 @@
 (define (document-length doc)
   (string-length (document-contents doc)))
 
-(define (compute-lines-offsets str)
+(define (compute-newline-positions str)
   (define len (string-length str))
   (let loop ((char-number 0)
              (line-number 0)
@@ -78,32 +78,32 @@
           (else
            (loop (+ idx 1))))))
 
-(define (shift-offsets offsets amount)
+(define (shift-newlines newlines amount)
   (vector-map (lambda (v) (+ v amount))
-              offsets))
+              newlines))
 
-(define (document-shift-offsets doc amount)
+(define (document-shift-newlines doc amount)
   (make-document (document-contents doc)
-                 (shift-offsets (document-lines-offsets doc) amount)))
+                 (shift-newlines (document-newline-positions doc) amount)))
 
 (define (document-append doc1 doc2)
   (define len1 (document-length doc1))
-  (define offsets1 (document-lines-offsets doc1))
-  (define offsets2 (shift-offsets (document-lines-offsets doc2) len1))
+  (define newlines1 (document-newline-positions doc1))
+  (define newlines2 (shift-newlines (document-newline-positions doc2) len1))
   (make-document
    (string-append (document-contents doc1)
                   (document-contents doc2))
-   (vector-append offsets1
-                  offsets2)))
+   (vector-append newlines1
+                  newlines2)))
 
 (define (document-concat doc1 doc2)
-  (define offsets1 (document-lines-offsets doc1))
-  (define offsets2 (document-lines-offsets doc2))
+  (define newlines1 (document-newline-positions doc1))
+  (define newlines2 (document-newline-positions doc2))
   (make-document
    (string-append (document-contents doc1)
                   (document-contents doc2))
-   (vector-append (document-lines-offsets doc1)
-                  (document-lines-offsets doc2))))
+   (vector-append (document-newline-positions doc1)
+                  (document-newline-positions doc2))))
 
 (define document-copy
   (case-lambda
@@ -112,7 +112,7 @@
    ((doc start)
     (document-copy doc start (document-length doc)))
    ((doc start end)
-    (let ((offsets (document-lines-offsets doc))
+    (let ((newlines (document-newline-positions doc))
           (len (document-length doc)))
       (when (> end len)
         (error "document-copy: end bigger than document length."))
@@ -124,17 +124,17 @@
         (error "document-copy: start bigger than document length."))
       (when (> start end)
         (error "document-copy: start bigger than end."))
-      (let* ((offsets-after-start
+      (let* ((newlines-after-start
               (vector-drop-until (lambda (x)
                                    (>= x start))
-                                 offsets))
-             (offsets-between-start-end
+                                 newlines))
+             (newlines-between-start-end
               (vector-take-until (lambda (x)
                                    (>= x end))
-                                 offsets-after-start)))
+                                 newlines-after-start)))
         (make-document (string-copy (document-contents doc) start end)
-                       (shift-offsets offsets-between-start-end
-                                      (- start))))))))
+                       (shift-newlines newlines-between-start-end
+                                       (- start))))))))
 
 (define (document-insert doc text start-pos)
   (unless (<= start-pos
@@ -156,28 +156,28 @@
                                       ""
                                       (min start-pos end-pos)
                                       (max start-pos end-pos)))
-        (offsets (document-lines-offsets doc)))
-    (let* ((offsets-before-start (vector-take-until (lambda (x)
-                                                      (>= x start-pos))
-                                                    offsets))
-           (offsets-after-end (vector-drop-until (lambda (x)
-                                                   (>= x end-pos))
-                                                 offsets)))
+        (newlines (document-newline-positions doc)))
+    (let* ((newlines-before-start (vector-take-until (lambda (x)
+                                                       (>= x start-pos))
+                                                     newlines))
+           (newlines-after-end (vector-drop-until (lambda (x)
+                                                    (>= x end-pos))
+                                                  newlines)))
       (make-document new-contents
-                     (vector-append offsets-before-start
+                     (vector-append newlines-before-start
                                     ;;; substract reduced length from
                                     ;;; after block
-                                    (shift-offsets offsets-after-end
-                                                   (- start-pos end-pos)))))))
+                                    (shift-newlines newlines-after-end
+                                                    (- start-pos end-pos)))))))
 
 (define (document-num-lines doc)
-  (vector-length (document-lines-offsets doc)))
+  (vector-length (document-newline-positions doc)))
 
 (define (line/char->pos doc line char)
-  (define offsets (document-lines-offsets doc))
-  (cond ((or (= line 0) (= (vector-length offsets) 0))
+  (define newlines (document-newline-positions doc))
+  (cond ((or (= line 0) (= (vector-length newlines) 0))
          char)
         (else
          (+ char
-            (+ (vector-ref offsets (- line 1)) 1)))))
+            (+ (vector-ref newlines (- line 1)) 1)))))
 
