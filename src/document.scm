@@ -1,3 +1,5 @@
+;;; For efficiency reasons, we represent documents by a string containing the
+;;; text and a vector with indices of all #\newline's found in it.
 (define-record-type <document>
   (make-document contents newline-positions)
   document?
@@ -33,23 +35,6 @@
 (define (document-length doc)
   (string-length (document-contents doc)))
 
-(define (compute-newline-positions str)
-  (define len (string-length str))
-  (let loop ((char-number 0)
-             (line-number 0)
-             (lines '()))
-    (if (>= char-number len)
-        (list->vector (reverse lines))
-        (let ((c (string-ref str char-number)))
-          (if (char=? c #\newline)
-              (loop (+ char-number 1)
-                    (+ line-number 1)
-                    (cons char-number
-                          lines))
-              (loop (+ char-number 1)
-                    line-number
-                    lines))))))
-
 (define (vector-drop-until pred vec)
   (define len (vector-length vec))
   (let loop ((idx 0))
@@ -58,15 +43,6 @@
           ((pred (vector-ref vec idx))
            (vector-copy vec idx))
           (else (loop (+ idx 1))))))
-
-(define (vector-drop-while pred vec)
-  (define len (vector-length vec))
-  (let loop ((idx 0))
-    (cond ((>= idx len)
-           #())
-          ((pred (vector-ref vec idx))
-           (loop (+ idx 1)))
-          (else (vector-copy vec idx)))))
 
 (define (vector-take-until pred vec)
   (define len (vector-length vec))
@@ -82,10 +58,6 @@
   (vector-map (lambda (v) (+ v amount))
               newlines))
 
-(define (document-shift-newlines doc amount)
-  (make-document (document-contents doc)
-                 (shift-newlines (document-newline-positions doc) amount)))
-
 (define (document-append doc1 doc2)
   (define len1 (document-length doc1))
   (define newlines1 (document-newline-positions doc1))
@@ -95,15 +67,6 @@
                   (document-contents doc2))
    (vector-append newlines1
                   newlines2)))
-
-(define (document-concat doc1 doc2)
-  (define newlines1 (document-newline-positions doc1))
-  (define newlines2 (document-newline-positions doc2))
-  (make-document
-   (string-append (document-contents doc1)
-                  (document-contents doc2))
-   (vector-append (document-newline-positions doc1)
-                  (document-newline-positions doc2))))
 
 (define document-copy
   (case-lambda

@@ -180,7 +180,7 @@
                      (alist-ref 'line range-end)
                      (alist-ref 'character range-end)
                      range-len)))
-  
+
   (make-change-contents range text))
 
 (define (apply-change change doc)

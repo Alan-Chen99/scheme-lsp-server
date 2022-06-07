@@ -8,8 +8,7 @@
         document-contract
         document-num-lines
         line/char->pos
-        string->document
-        compute-newline-positions)
+        string->document)
 
 (import (scheme base)
         (scheme file)

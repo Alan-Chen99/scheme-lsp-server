@@ -21,12 +21,6 @@
     (line/char->pos a-doc 0 2))
   (test 8
     (line/char->pos a-doc 2 0))
-  (let ((newlines (compute-newline-positions "abc\ndef\ng")))
-    (test 2
-      (vector-length newlines))
-    (test 3 (vector-ref newlines 0))
-    (test 7 (vector-ref newlines 1)))
-
   (test 2 (line/char->pos (string->document "1\n\n3\n") 1 0)))
 
 
