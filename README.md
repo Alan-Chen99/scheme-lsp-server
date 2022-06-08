@@ -37,8 +37,6 @@ Optionally one can provide a `tcp-error-port-number` to receive logging messages
 from the server. If not provided, all error messages are directed to
 `(current-error-port)`.
 
-
-
 ## Supported Features
 
 
@@ -93,7 +91,25 @@ from the server. If not provided, all error messages are directed to
 </tbody>
 </table>
 
+## Notes to specific implementations
 
+### CHICKEN
+
+The implementation for "jump to definition" is for now quite limited. I wrote
+a ctags-inspired code for CHICKEN that scans the project files for definitions.
+Additionally, the user can set the environment variable `CHICKEN_SOURCE_PATH`
+to a directory containing the installer's source, so that the server can
+provide information to internally defined functions.
+
+In the future we can refine this solution to be more "project-aware". Ideas
+are welcome.
+
+### GUILE
+
+We rely on Guile's runtime to get information such as function definition
+location. This allows fetching symbols restricted to the user's project.
+On the other hand, an LSP client has to load the corresponding
+files in the runtime so that this information becomes available.
 
 ## Ideas on extending support to other Schemes
 

@@ -57,7 +57,7 @@
     (make-pathname (system-cache-directory) "chicken-install"))
 
   (define chicken-source-path
-    (or (get-environment-variable "CHICKEN_SRC") ""))
+    (or (get-environment-variable "CHICKEN_SOURCE_PATH") ""))
 
   (define tags-path
     (make-parameter #f))
