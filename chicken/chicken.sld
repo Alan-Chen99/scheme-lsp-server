@@ -37,7 +37,6 @@
         srfi-69
         srfi-130
 
-        nrepl
         (srfi 18)
         (lsp-server private)
         (lsp-server tags))
@@ -79,11 +78,6 @@
   (define (pick-port)
     (+ (pseudo-random-integer 2000)
        8001))
-
-  (define (spawn-nrepl-on-random-port)
-    (define port (pick-port))
-    (write-log 'info (format "open nrepl on port ~a" port))
-    (nrepl port))
 
   ;;; Initialize LSP server to manage project at ROOT (a string). Used
   ;;; for implementation-specific side effects only.
