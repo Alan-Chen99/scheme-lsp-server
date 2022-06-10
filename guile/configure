@@ -2737,6 +2737,22 @@ ac_config_files="$ac_config_files Makefile"
 ac_config_links="$ac_config_links lsp-server/private.scm:../src/private.scm lsp-server/private.sld:lsp-server/private.sld lsp-server/document.scm:../src/document.scm lsp-server/document.sld:lsp-server/document.sld lsp-server/guile.sld:lsp-server/guile.sld lsp-server/file.scm:../src/file.scm lsp-server/server.scm:../src/server.scm lsp-server.sld:lsp-server.sld README.md:../README.md"
 
 
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking if (json-rpc) is available" >&5
+$as_echo_n "checking if (json-rpc) is available... " >&6; }
+
+  $GUILE -c "(use-modules (json-rpc)) (exit ((lambda () 0)))" > /dev/null 2>&1
+  ac_guile_module_required=$?
+
+	  if test "$ac_guile_module_required" = "0" ; then ac_guile_module_required=yes ; else ac_guile_module_required=no ; fi
+          { $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_guile_module_required" >&5
+$as_echo "$ac_guile_module_required" >&6; }
+
+
+          if test "$ac_guile_module_required" = "no" ; then
+              as_fn_error $? "required guile module not found: (json-rpc)" "$LINENO" 5
+          fi
+
+
 cat >confcache <<\_ACEOF
 # This file is a shell script that caches the results of configure
 # tests run on this system so they can be shared between configure

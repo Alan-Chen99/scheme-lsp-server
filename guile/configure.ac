@@ -22,6 +22,8 @@ AC_CONFIG_LINKS([lsp-server/private.scm:../src/private.scm
                  lsp-server.sld:lsp-server.sld
                  README.md:../README.md])
 
+GUILE_MODULE_REQUIRED(json-rpc)
+
 AC_OUTPUT
 
 echo
