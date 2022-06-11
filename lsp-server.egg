@@ -1,5 +1,6 @@
 ((author "Ricardo Gabriel Herdt")
  (synopsis "A LSP Server for CHICKEN.")
+ (version "0.0.1")
  (license "MIT")
  (category tools)
  (dependencies apropos

@@ -10,6 +10,7 @@
         (lsp-server document)
         (lsp-server tags))
 
+(test-begin "lsp-server tests")
 
 (test-group "(lsp-server document): document main functions"
   (define a-doc (string->document "abc\ndef\ng"))
@@ -422,3 +423,6 @@
     (delete-lines '("a" "b" "c" "d") 2 2))
   (test '()
     (delete-lines '("a") 0 0)))
+
+(test-end)
+(test-exit)
