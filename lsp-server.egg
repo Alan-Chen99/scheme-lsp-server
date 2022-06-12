@@ -1,5 +1,5 @@
 ((author "Ricardo Gabriel Herdt")
- (synopsis "A LSP Server for CHICKEN.")
+ (synopsis "LSP Server for CHICKEN.")
  (version "0.0.1")
  (license "MIT")
  (category tools)
@@ -12,10 +12,14 @@
                srfi-18
                srfi-69
                utf8)
- (test-dependencies test)
+ (test-dependencies srfi-1
+                    srfi-69
+                    test)
  (component-options
   (csc-options "-O3" "-X" "r7rs" "-R" "r7rs"))
  (components
+  (generated-source-file lsp-dummy-chicken-doc
+                         (custom-build "chicken/setup-chicken-doc-for-test.sh"))
   (extension lsp-server.private
              (source "src/private.sld")
              (source-dependencies "src/private.scm"))
