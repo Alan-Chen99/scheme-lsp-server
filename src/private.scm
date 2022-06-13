@@ -175,6 +175,8 @@
 
 (define log-level (make-parameter 'info))
 
+(define lsp-server-log-file (make-parameter #f))
+
 (define (get-log-level symb)
   (cond ((eqv? symb 'error) 0)
         ((eqv? symb 'warning) 1)
@@ -186,17 +188,25 @@
   (>= (get-log-level (log-level)) (get-log-level target-level)))
 
 (define (write-log target-level msg . args)
-  (define error-port (current-error-port))
-  (when (satisfies-log-level? target-level)
-    (display (format "[LSP-SERVER] ~a: ~a"
-                     (string-upcase (symbol->string target-level))
-                     msg)
-             error-port)
-    (when (not (null? args))
-      (display ": " error-port)
-      (map (lambda (s)
-             (display (format "~a    " s) error-port))
-           args))
-    (newline error-port)))
+  (define (print-log port)
+    (when (satisfies-log-level? target-level)
+      (display (format "[LSP-SERVER] ~a: ~a"
+                       (string-upcase (symbol->string target-level))
+                       msg)
+               port)
+      (when (not (null? args))
+        (display ": " port)
+        (map (lambda (s)
+               (display (format "~a    " s) port))
+             args))
+      (newline port)
+      (flush-output-port port)))
+  (cond ((lsp-server-log-file)
+         => (lambda (fname)
+              (call-with-output-file fname
+                (lambda (port)
+                  (print-log port))
+                #:append)))
+        (else (print-log (current-error-port)))))
 
 

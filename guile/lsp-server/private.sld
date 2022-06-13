@@ -14,7 +14,6 @@
           editor-word-start-line
 
           intersperse
-          
           join-module-name
           split-module-name
 
@@ -28,6 +27,7 @@
           hash-table-merge-updating!
 
           write-log
+          lsp-server-log-file
           log-level
           satisfies-log-level?
 

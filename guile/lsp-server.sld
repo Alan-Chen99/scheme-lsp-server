@@ -7,6 +7,8 @@
           lsp-server-start/background
           lsp-server-start/stdio)
 
+#:re-export (lsp-server-log-file)
+
 #:use-module (scheme base)
 #:use-module (scheme file)
 #:use-module (scheme load)

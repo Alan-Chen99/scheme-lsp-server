@@ -283,7 +283,8 @@
 
 (define (parameterize-and-run thunk)
   (parameterize
-      ((json-rpc-log-level (lsp-server-log-level))
+      ((json-rpc-log-file (lsp-server-log-file))
+       (json-rpc-log-level (lsp-server-log-level))
        (log-level (lsp-server-log-level))
        (custom-error-codes '((definition-not-found-error . -32000)))
        (json-rpc-handler-table
