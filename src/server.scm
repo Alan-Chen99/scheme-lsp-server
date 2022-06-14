@@ -1,5 +1,6 @@
 (define lsp-server-log-level (make-parameter 'debug))
 (define lsp-server-state 'off)
+(define lsp-server-version "0.0.1")
 
 (define listening-threads '())
 (define listening-threads-mutex (make-mutex))
@@ -39,7 +40,7 @@
   `((capabilities . ,(append mandatory-capabilities
                              $server-capabilities))
     (serverInfo . ((name . ,$server-name)
-                   (version . "0.1.0")))))
+                   (version . ,lsp-server-version)))))
 
 (define-handler (initialized-handler params)
   (write-log 'info

@@ -203,10 +203,14 @@
       (flush-output-port port)))
   (cond ((lsp-server-log-file)
          => (lambda (fname)
-              (call-with-output-file fname
-                (lambda (port)
-                  (print-log port))
-                #:append)))
+              (cond-expand
+               (chicken (call-with-output-file fname
+                          (lambda (port)
+                            (print-log port))
+                          #:append)) ;; TODO find a portable solution
+               (else (call-with-output-file fname
+                          (lambda (port)
+                            (print-log port)))))))
         (else (print-log (current-error-port)))))
 
 
