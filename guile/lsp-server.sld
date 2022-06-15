@@ -1,10 +1,7 @@
 (define-module (lsp-server)
 
 #:export (lsp-server-log-level
-          lsp-command-server-start
-          lsp-server-request-connection
-          lsp-server-start
-          lsp-server-start/background
+          lsp-spawner-start
           lsp-server-start/stdio)
 
 #:re-export (lsp-server-log-file)

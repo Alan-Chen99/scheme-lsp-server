@@ -207,7 +207,10 @@
                (chicken (call-with-output-file fname
                           (lambda (port)
                             (print-log port))
-                          #:append)) ;; TODO find a portable solution
+                          #:append))
+               (guile (call-with-port (open-file fname "a")
+                                      (lambda (port)
+                                        (print-log port))))
                (else (call-with-output-file fname
                           (lambda (port)
                             (print-log port)))))))

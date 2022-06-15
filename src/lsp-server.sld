@@ -2,10 +2,7 @@
 
 (export lsp-server-log-file
         lsp-server-log-level
-        lsp-server-request-connection
-        lsp-command-server-start
-        lsp-server-start
-        lsp-server-start/background
+        lsp-spawner-start
         lsp-server-start/stdio)
 
 (import (except (chicken io) read-string)

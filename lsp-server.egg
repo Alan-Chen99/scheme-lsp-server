@@ -1,6 +1,6 @@
 ((author "Ricardo Gabriel Herdt")
  (synopsis "LSP Server for CHICKEN.")
- (version "0.0.1")
+ (version "0.0.4")
  (license "MIT")
  (category tools)
  (dependencies apropos
@@ -18,6 +18,9 @@
  (component-options
   (csc-options "-O3" "-X" "r7rs" "-R" "r7rs"))
  (components
+  (program chicken-lsp-server
+           (source "src/main.scm")
+           (component-dependencies lsp-server))
   (generated-source-file lsp-dummy-chicken-doc
                          (custom-build "chicken/setup-chicken-doc-for-test.sh"))
   (extension lsp-server.private
