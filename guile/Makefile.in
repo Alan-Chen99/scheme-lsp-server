@@ -100,7 +100,8 @@ am__CONFIG_DISTCLEAN_FILES = config.status config.cache config.log \
  configure.lineno config.status.lineno
 mkinstalldirs = $(install_sh) -d
 CONFIG_CLEAN_FILES = lsp-server/private.scm lsp-server/document.scm \
-	lsp-server/file.scm lsp-server/server.scm README.md
+	lsp-server/file.scm lsp-server/main.scm lsp-server/server.scm \
+	README.md
 CONFIG_CLEAN_VPATH_FILES = lsp-server/private.sld \
 	lsp-server/document.sld lsp-server/guile.sld lsp-server.sld
 am__vpath_adj_setup = srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`;
@@ -176,7 +177,8 @@ AM_RECURSIVE_TARGETS = cscope
 am__DIST_COMMON = $(srcdir)/Makefile.in $(srcdir)/guile.am \
 	$(srcdir)/lsp-server.sld $(top_srcdir)/../README.md \
 	$(top_srcdir)/../src/document.scm \
-	$(top_srcdir)/../src/file.scm $(top_srcdir)/../src/private.scm \
+	$(top_srcdir)/../src/file.scm $(top_srcdir)/../src/main.scm \
+	$(top_srcdir)/../src/private.scm \
 	$(top_srcdir)/../src/server.scm \
 	$(top_srcdir)/build-aux/install-sh \
 	$(top_srcdir)/build-aux/missing \
@@ -288,9 +290,10 @@ top_srcdir = @top_srcdir@
 moddir = $(datadir)/guile/site/$(GUILE_EFFECTIVE_VERSION)
 godir = $(libdir)/guile/$(GUILE_EFFECTIVE_VERSION)/site-ccache
 GOBJECTS = $(SOURCES:%.sld=%.go)
+EXECUTABLE = lsp-server/guile-lsp-server
 nobase_dist_mod_DATA = $(SOURCES) $(NOCOMP_SOURCES)
 nobase_go_DATA = $(GOBJECTS)
-bin_SCRIPTS = lsp-server/guile-lsp-server
+bin_SCRIPTS = $(EXECUTABLE)
 
 # Make sure source files are installed first, so that the mtime of
 # installed compiled files is greater than that of installed source
@@ -298,7 +301,7 @@ bin_SCRIPTS = lsp-server/guile-lsp-server
 # <http://lists.gnu.org/archive/html/guile-devel/2010-07/msg00125.html>
 # for details.
 guile_install_go_files = install-nobase_goDATA
-CLEANFILES = $(GOBJECTS)
+CLEANFILES = $(GOBJECTS) $(EXECUTABLE)
 GUILE_WARNINGS = -Wunbound-variable -Warity-mismatch -Wformat
 SUFFIXES = .scm .sld .go
 PREFIX = $(AM_V_GEN)GUILE_LOAD_COMPILED_PATH="@abs_top_builddir@/:$(GUILE_LOAD_COMPILED_PATH)"; \
@@ -804,6 +807,12 @@ uninstall-am: uninstall-binSCRIPTS uninstall-nobase_dist_modDATA \
 
 .PRECIOUS: Makefile
 
+$(EXECUTABLE): lsp-server/main.scm
+	echo '#!/usr/bin/env sh' > $(EXECUTABLE)
+	echo 'exec guile -e  main -s "$$0" "$$@"' >> $(EXECUTABLE)
+	echo '!#' >> $(EXECUTABLE)
+	echo >> $(EXECUTABLE)
+	cat lsp-server/main.scm >> $(EXECUTABLE)
 $(guile_install_go_files): install-nobase_dist_modDATA
 
 distclean-local:

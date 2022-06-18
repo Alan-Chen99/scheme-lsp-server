@@ -1,4 +1,4 @@
-AC_INIT([guile-lsp-server], [0.0.4])
+AC_INIT([guile-lsp-server], [0.0.5])
 AC_CONFIG_SRCDIR([lsp-server.sld])
 AC_CONFIG_AUX_DIR([build-aux])
 AC_CONFIG_MACRO_DIR([m4])
@@ -18,6 +18,7 @@ AC_CONFIG_LINKS([lsp-server/private.scm:../src/private.scm
                  lsp-server/document.sld:lsp-server/document.sld
                  lsp-server/guile.sld:lsp-server/guile.sld
                  lsp-server/file.scm:../src/file.scm
+                 lsp-server/main.scm:../src/main.scm
                  lsp-server/server.scm:../src/server.scm
                  lsp-server.sld:lsp-server.sld
                  README.md:../README.md])

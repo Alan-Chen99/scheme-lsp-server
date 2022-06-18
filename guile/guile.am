@@ -2,10 +2,17 @@ moddir=$(datadir)/guile/site/$(GUILE_EFFECTIVE_VERSION)
 godir=$(libdir)/guile/$(GUILE_EFFECTIVE_VERSION)/site-ccache
 
 GOBJECTS =  $(SOURCES:%.sld=%.go)
+EXECUTABLE = lsp-server/guile-lsp-server
 
 nobase_dist_mod_DATA = $(SOURCES) $(NOCOMP_SOURCES)
 nobase_go_DATA = $(GOBJECTS)
-bin_SCRIPTS = lsp-server/guile-lsp-server
+bin_SCRIPTS = $(EXECUTABLE)
+$(EXECUTABLE): lsp-server/main.scm
+	echo '#!/usr/bin/env sh' > $(EXECUTABLE)
+	echo 'exec guile -e  main -s "$$0" "$$@"' >> $(EXECUTABLE)
+	echo '!#' >> $(EXECUTABLE)
+	echo >> $(EXECUTABLE)
+	cat lsp-server/main.scm >> $(EXECUTABLE)
 
 # Make sure source files are installed first, so that the mtime of
 # installed compiled files is greater than that of installed source
@@ -16,7 +23,7 @@ guile_install_go_files = install-nobase_goDATA
 $(guile_install_go_files): install-nobase_dist_modDATA
 
 
-CLEANFILES = $(GOBJECTS)
+CLEANFILES = $(GOBJECTS) $(EXECUTABLE)
 GUILE_WARNINGS = -Wunbound-variable -Warity-mismatch -Wformat
 SUFFIXES = .scm .sld .go
 
