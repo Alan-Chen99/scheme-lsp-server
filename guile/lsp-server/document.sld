@@ -14,7 +14,10 @@
           string->document
           compute-lines-offsets)
 
-#:use-module (scheme base)
+#:use-module ((scheme base)
+              #:select (define-record-type
+                        vector-append
+                        vector-map))
 #:use-module (scheme file)
 #:use-module (scheme write)
 #:use-module (lsp-server private)

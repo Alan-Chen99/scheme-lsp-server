@@ -2,13 +2,16 @@
 
 #:export (lsp-server-log-level
           lsp-spawner-start
-          lsp-server-start/stdio)
+          lsp-server-start/stdio
+          lsp-server-version)
 
 #:re-export (lsp-server-log-file)
 
-#:use-module (scheme base)
+#:use-module ((scheme base)
+              #:select (define-record-type
+                        guard
+                        let-values))
 #:use-module (scheme file)
-#:use-module (scheme load)
 #:use-module (scheme write)
 #:use-module (srfi srfi-1)
 #:use-module (srfi srfi-8) ;; receive

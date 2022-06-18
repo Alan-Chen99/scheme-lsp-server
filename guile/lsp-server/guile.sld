@@ -15,7 +15,8 @@
           $tcp-read-timeout
           alist-ref)
 
-#:use-module (scheme base)
+#:use-module ((scheme base)
+              #:select (read-line guard))
 #:use-module (scheme write)
 #:use-module (srfi srfi-1)
 #:use-module (srfi srfi-28)

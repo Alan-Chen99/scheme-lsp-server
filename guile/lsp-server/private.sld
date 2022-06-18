@@ -35,13 +35,14 @@
 
           delete-lines)
 
-#:use-module (scheme base)
-#:use-module (scheme char)
+#:use-module ((scheme base)
+              #:select (define-record-type
+                        flush-output-port))
 #:use-module (scheme write)
 #:use-module (srfi srfi-1)
 #:use-module (srfi srfi-28)
 #:use-module (srfi srfi-69)
-#:use-module (srfi srfi-13)
+
 
 #:declarative? #f)
 
