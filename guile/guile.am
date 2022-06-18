@@ -22,6 +22,9 @@ $(EXECUTABLE): lsp-server/main.scm
 guile_install_go_files = install-nobase_goDATA
 $(guile_install_go_files): install-nobase_dist_modDATA
 
+uninstall-hook:
+	rm -f  $(DESTDIR)$(godir)/$(GOBJECTS)
+	rm -f $(DESTDIR)$(bindir)/$(EXECUTABLE)
 
 CLEANFILES = $(GOBJECTS) $(EXECUTABLE)
 GUILE_WARNINGS = -Wunbound-variable -Warity-mismatch -Wformat

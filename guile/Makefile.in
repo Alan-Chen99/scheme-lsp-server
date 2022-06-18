@@ -784,8 +784,9 @@ ps-am:
 
 uninstall-am: uninstall-binSCRIPTS uninstall-nobase_dist_modDATA \
 	uninstall-nobase_goDATA
-
-.MAKE: install-am install-strip
+	@$(NORMAL_INSTALL)
+	$(MAKE) $(AM_MAKEFLAGS) uninstall-hook
+.MAKE: install-am install-strip uninstall-am
 
 .PHONY: CTAGS GTAGS TAGS all all-am am--refresh check check-am clean \
 	clean-cscope clean-generic cscope cscopelist-am ctags ctags-am \
@@ -802,8 +803,8 @@ uninstall-am: uninstall-binSCRIPTS uninstall-nobase_dist_modDATA \
 	installcheck installcheck-am installdirs maintainer-clean \
 	maintainer-clean-generic mostlyclean mostlyclean-generic pdf \
 	pdf-am ps ps-am tags tags-am uninstall uninstall-am \
-	uninstall-binSCRIPTS uninstall-nobase_dist_modDATA \
-	uninstall-nobase_goDATA
+	uninstall-binSCRIPTS uninstall-hook \
+	uninstall-nobase_dist_modDATA uninstall-nobase_goDATA
 
 .PRECIOUS: Makefile
 
@@ -814,6 +815,10 @@ $(EXECUTABLE): lsp-server/main.scm
 	echo >> $(EXECUTABLE)
 	cat lsp-server/main.scm >> $(EXECUTABLE)
 $(guile_install_go_files): install-nobase_dist_modDATA
+
+uninstall-hook:
+	rm -f  $(DESTDIR)$(godir)/$(GOBJECTS)
+	rm -f $(DESTDIR)$(bindir)/$(EXECUTABLE)
 
 distclean-local:
 	rm -Rf src/
