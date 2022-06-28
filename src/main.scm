@@ -25,13 +25,13 @@
 
   (display (string-append "usage: "
                           program-name
-                          " [log-level] [--version]."))
+                          " [--log-level <log-level>] [--version]."))
   (newline)
   (display (string-append "Example: " program-name " debug"))
   (newline)
   (display "Arguments: ")
   (newline)
-  (display "    log-level: one of [error, warning, info, debug]. Default: error.")
+  (display "    --log-level <level>: one of [error, warning, info, debug]. Default: error.")
   (newline)
   (display "    --help (or -h):    display this help and exit.")
   (newline)
@@ -51,6 +51,7 @@
          (string=? log-level str))
        '("error" "warning" "info" "debug")))
 
+
 (define (process-args args)
   (define len (length args))
   (cond ((or (member "-v" args)
@@ -61,13 +62,15 @@
              (member "--help" args))
          (print-usage)
          (exit))
+        ((and (= len 2)
+              (string=? (car args) "--log-level")
+              (valid-log-level? (cadr args)))
+         `((log-level . ,(string->symbol (cadr args)))))
         ((or (> len 1)
              (and (= len 1)
                   (not (valid-log-level? (car args)))))
          (print-usage)
          (exit))
-        ((= len 1)
-         `((log-level . ,(string->symbol (car args)))))
         (else '((log-level . error)))))
 
 (define (main args)
