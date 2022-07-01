@@ -14,7 +14,7 @@
                utf8)
  (test-dependencies srfi-1
                     srfi-69
-                    test)
+                    srfi-64)
  (component-options
   (csc-options "-O3" "-X" "r7rs" "-R" "r7rs"))
  (components
