@@ -1,10 +1,11 @@
 (define-library (lsp-server parse)
 
-(export collect-imports-from-expression
-        collect-imports-from-file)
+(export collect-meta-data-from-file)
 
 (import (srfi 1)
-        (scheme base))
+        (scheme base)
+        (only (scheme file) with-input-from-file)
+        (scheme read))
 
 (cond-expand
  (guile (import (lsp-server guile)

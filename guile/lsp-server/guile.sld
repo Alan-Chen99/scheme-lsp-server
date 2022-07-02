@@ -232,3 +232,4 @@
 
 (define (library-available? library-name)
   (resolve-module library-name #f #f #:ensure #f))
+
