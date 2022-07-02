@@ -1,0 +1,71 @@
+(define (tagged-expression? expr tag)
+  (and (list? expr)
+       (not (null? expr))
+       (eq? (car expr) tag)))
+
+(define (import-form? expr)
+  (tagged-expression? expr 'import))
+
+(define (cond-expand-form? expr)
+  (tagged-expression? expr 'cond-expand))
+
+(define (collect-imports-from-clause expr)
+  (let loop ((rem (cdr expr))
+             (imports '()))
+    (if (null? rem)
+        imports
+        (loop (cdr rem)
+              (cons (car rem) imports)))))
+
+(define (collect-import-clauses expr)
+  (filter import-form? expr))
+
+(define (collect-imports-from-expression expr)
+  (fold (lambda (clause acc)
+          (append (collect-imports-from-clause clause) acc))
+        '()
+        (collect-import-clauses expr)))
+
+(define (cond-expand-clause-satisfied? clause)
+  (if (or (not (list? clause))
+          (null? clause))
+      #f
+      (let ((predicate (car clause)))
+        (cond ((and (symbol? predicate)
+                    (eq? predicate 'else))
+               #t)
+              ((symbol? predicate)
+               (memq predicate (features)))
+              ((and (list? predicate)
+                    (not (null? predicate)))
+               (case (car predicate)
+                 ((and) (every (compose cond-expand-clause-satisfied? list) (cdr predicate)))
+                 ((or) (any (compose cond-expand-clause-satisfied? list) (cdr predicate)))
+                 ((library) (and (not (null? (cdr predicate)))
+                                 (library-available? (cadr predicate))))
+                 ((not) (not (cond-expand-clause-satisfied? (cdr predicate))))
+                 ((else) #t)
+                 (else (memq (car predicate) (features)))))
+              (else (error "unknown predicate " predicate))))))
+
+(define (cond-expand-find-satisfied-clause expr)
+  (cons 'begin (cdr (find cond-expand-clause-satisfied?
+                          (cdr expr)))))
+
+(define (collect-imports-from-file filename)
+  (with-input-from-file filename
+    (lambda ()
+      (let loop ((expr (read))
+                 (imports '()))
+        (cond ((eof-object? expr)
+               (reverse imports))
+              ((import-form? expr)
+               (loop (read)
+                     (append (collect-imports-from-clause expr)
+                             imports)))
+              ((cond-expand-form? expr)
+               (loop (read)
+                     (append (collect-imports-from-expression
+                              (cond-expand-find-satisfied-clause expr))
+                             imports)))
+              (else (loop (read) imports)))))))

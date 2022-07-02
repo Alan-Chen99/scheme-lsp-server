@@ -20,6 +20,8 @@ AC_CONFIG_LINKS([lsp-server/private.scm:../src/private.scm
                  lsp-server/file.scm:../src/file.scm
                  lsp-server/main.scm:../src/main.scm
                  lsp-server/server.scm:../src/server.scm
+                 lsp-server/parse.scm:../src/parse.scm
+                 lsp-server/parse.sld:../src/parse.sld
                  lsp-server.sld:lsp-server.sld
                  README.md:../README.md])
 

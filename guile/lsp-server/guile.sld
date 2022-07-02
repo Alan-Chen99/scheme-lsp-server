@@ -13,6 +13,7 @@
           $tcp-connect
           $tcp-listen
           $tcp-read-timeout
+          library-available?
           alist-ref)
 
 #:use-module ((scheme base)
@@ -228,3 +229,6 @@
           (#t (write-log 'warning
                          (format "error loading file ~a" path))))
          (load path)))
+
+(define (library-available? library-name)
+  (resolve-module library-name #f #f #:ensure #f))
