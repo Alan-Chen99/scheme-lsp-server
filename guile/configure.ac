@@ -13,16 +13,18 @@ fi
 AC_CONFIG_FILES([Makefile])
 
 AC_CONFIG_LINKS([lsp-server/private.scm:../src/private.scm
-                 lsp-server/private.sld:lsp-server/private.sld
                  lsp-server/document.scm:../src/document.scm
-                 lsp-server/document.sld:lsp-server/document.sld
-                 lsp-server/guile.sld:lsp-server/guile.sld
                  lsp-server/file.scm:../src/file.scm
                  lsp-server/main.scm:../src/main.scm
                  lsp-server/server.scm:../src/server.scm
                  lsp-server/parse.scm:../src/parse.scm
-                 lsp-server/parse.sld:../src/parse.sld
+
+                 lsp-server/guile.sld:lsp-server/guile.sld
+                 lsp-server/document.sld:lsp-server/document.sld
+                 lsp-server/private.sld:lsp-server/private.sld
+                 lsp-server/parse.sld:lsp-server/parse.sld
                  lsp-server.sld:lsp-server.sld
+
                  README.md:../README.md])
 
 GUILE_MODULE_REQUIRED(json-rpc)

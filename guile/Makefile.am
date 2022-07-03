@@ -5,7 +5,8 @@ NOCOMP_SOURCES =          \
   lsp-server/document.scm \
   lsp-server/file.scm     \
   lsp-server/parse.scm    \
-  lsp-server/server.scm
+  lsp-server/server.scm   \
+  irregex.scm
 
 SOURCES = \
   lsp-server/private.sld  \

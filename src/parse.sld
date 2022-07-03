@@ -7,9 +7,5 @@
         (only (scheme file) with-input-from-file)
         (scheme read))
 
-(cond-expand
- (guile (import (lsp-server guile)
-                (system vm program)))
- (chicken))
-
-(include "parse.scm"))
+(begin
+  (include "parse.scm")))

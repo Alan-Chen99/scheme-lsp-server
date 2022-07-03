@@ -1,11 +1,17 @@
-(import (scheme base)
-        (srfi 1)
-        (srfi 64)
-
-        (lsp-server parse))
 (cond-expand
- (guile (import (lsp-server guile)))
- (chicken (import (lsp-server chicken))))
+ (guile (import (except (scheme base)
+                        cond-expand
+                        include
+                        map
+                        error)
+                (srfi srfi-1)
+                (srfi srfi-64)
+                (lsp-server guile)))
+ (chicken (import (lsp-server chicken)
+                  (srfi 64)
+                  (srfi 1))))
+
+(import (lsp-server parse))
 
 (include "../src/parse.scm")
 
