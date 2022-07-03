@@ -6,12 +6,14 @@
                         error)
                 (srfi srfi-1)
                 (srfi srfi-64)
+                (except (srfi srfi-69) hash-table-merge!)
                 (lsp-server guile)))
  (chicken (import (lsp-server chicken)
                   (srfi 64)
                   (srfi 1))))
 
 (import (lsp-server parse))
+(include "../src/irregex.scm")
 
 (include "../src/parse.scm")
 
@@ -79,7 +81,7 @@
                     (define (f x) x)
                     (define g (lambda (x y) (+ x y)))))))
   (test-equal '((srfi 1) (srfi 69)) (source-meta-data-imports res))
-  (test-equal 2 (length (source-meta-data-procedure-infos res))))
+  (test-equal 2 (hash-table-size (source-meta-data-procedure-infos res))))
 
 (let ((res (collect-meta-data-from-expression
             '(define-library (my lib)
@@ -88,7 +90,7 @@
                 (begin (define (f x) x))
                        (define g (lambda (x y) (+ x y)))))))
   (test-equal '((srfi 1) (srfi 69)) (source-meta-data-imports res))
-  (test-equal 2 (length (source-meta-data-procedure-infos res))))
+  (test-equal 2 (hash-table-size (source-meta-data-procedure-infos res))))
 
 (let ((res (collect-meta-data-from-expression
             '(cond-expand (guile (import (system vm program))
@@ -99,12 +101,23 @@
                           (else)))))
   (cond-expand
    (chicken (test-equal '((apropos-api)) (source-meta-data-imports res))
-            (test-equal 2 (length (source-meta-data-procedure-infos res))))
+            (test-equal 2 (hash-table-size (source-meta-data-procedure-infos res))))
    (guile (test-equal '((system vm program)) (source-meta-data-imports res))
-          (test-equal 1 (length (source-meta-data-procedure-infos res))))))
+          (test-equal 1 (hash-table-size (source-meta-data-procedure-infos res))))))
 
 (let ((res (collect-meta-data-from-file "resources/sample-1.scm")))
   (test-equal 2 (length (source-meta-data-imports res)))
-  (test-equal 2 (length (source-meta-data-procedure-infos res))))
+  (test-equal 2 (hash-table-size
+                 (source-meta-data-procedure-infos res)))
+  (test-equal 3 (procedure-info-line
+                 (hash-table-ref (source-meta-data-procedure-infos res) 'f)))
+  (test-equal '(x)
+              (procedure-info-arguments
+               (hash-table-ref (source-meta-data-procedure-infos res) 'f)))
+  (test-equal 6 (procedure-info-line
+                 (hash-table-ref (source-meta-data-procedure-infos res) 'g)))
+  (test-equal '(x y)
+              (procedure-info-arguments
+               (hash-table-ref (source-meta-data-procedure-infos res) 'g))))
 
 (test-end "Collecting meta-data")

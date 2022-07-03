@@ -14,7 +14,8 @@
           $tcp-listen
           $tcp-read-timeout
           library-available?
-          alist-ref)
+          alist-ref
+          hash-table-join!)
 
 #:use-module ((scheme base)
               #:select (read-line guard))
@@ -233,3 +234,11 @@
 (define (library-available? library-name)
   (resolve-module library-name #f #f #:ensure #f))
 
+;;; hash-table-merge! had a bug and was only fixed on a recent Guile
+;;; version, we want to support older versions too though.
+(define (hash-table-join! ht other-ht)
+  "Add all key/value pairs from OTHER-HT to HT, overriding HT's
+mappings where present.  Return HT."
+  (hash-table-fold
+   other-ht (lambda (k v ign) (hash-table-set! ht k v)) #f)
+  ht)
