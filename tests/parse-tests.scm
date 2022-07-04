@@ -7,13 +7,31 @@
                 (srfi srfi-1)
                 (srfi srfi-64)
                 (except (srfi srfi-69) hash-table-merge!)
+                (ice-9 ftw)
+                (lsp-server private)
                 (lsp-server guile)))
- (chicken (import (lsp-server chicken)
+ (chicken (import (srfi 1)
+                  (srfi 28)
                   (srfi 64)
-                  (srfi 1))))
-
+                  (srfi 69)
+                  (scheme base)
+                  (only (scheme file) with-input-from-file)
+                  (scheme read)
+                  (scheme)
+                  (chicken irregex)
+                  (chicken file)
+                  (chicken file posix)
+                  (lsp-server chicken)
+                  (lsp-server private))))
+(cond-expand
+ (chicken
+  (define hash-table-join! hash-table-merge!)
+  (define (library-available? x) #t))
+ (else))
 (import (lsp-server parse))
-(include "../src/irregex.scm")
+(cond-expand
+ (guile (include "../src/irregex.scm"))
+ (else))
 
 (include "../src/parse.scm")
 
@@ -50,7 +68,7 @@
                            (else))))
 
 (test-equal (cond-expand ((or gambit guile) '(begin "gambit or guile"))
-                         ((or chibi chicken) '(begin "chicken or chibi"))
+                         ((or chibi chicken) '(begin "chibi or chicken"))
                          (else))
             (cond-expand-find-satisfied-clause
              '(cond-expand ((or gambit guile) "gambit or guile")
@@ -119,5 +137,16 @@
   (test-equal '(x y)
               (procedure-info-arguments
                (hash-table-ref (source-meta-data-procedure-infos res) 'g))))
+
+(parameterize ((identifier-to-source-meta-data-table (make-hash-table)))
+  (parse-and-update-table! "resources/sample-1.scm")
+  (test-equal 2 (hash-table-size (identifier-to-source-meta-data-table)))
+  (test-equal '("resources/sample-1.scm")
+              (hash-table-keys
+               (hash-table-ref (identifier-to-source-meta-data-table) 'f))))
+
+(parameterize ((identifier-to-source-meta-data-table (make-hash-table)))
+  (generate-meta-data! "resources")
+  )
 
 (test-end "Collecting meta-data")

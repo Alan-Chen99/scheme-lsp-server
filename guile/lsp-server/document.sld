@@ -16,8 +16,9 @@
 
 #:use-module ((scheme base)
               #:select (define-record-type
-                        vector-append
-                        vector-map))
+                         vector-append
+                         vector-copy
+                         vector-map))
 #:use-module (scheme file)
 #:use-module (scheme write)
 #:use-module (lsp-server private)

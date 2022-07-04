@@ -66,7 +66,7 @@
   (define editor-word (get-word-under-cursor params))
   (write-log 'debug (format "got word: ~a" editor-word))
   (if editor-word
-      (let ((def-locs ($get-definition-locations (editor-word-text editor-word))))
+      (let ((def-locs (get-definition-locations (editor-word-text editor-word))))
         (if (not (null? def-locs))
             (let ((v (list->vector def-locs)))
               (write-log 'debug
@@ -89,7 +89,7 @@
      "\r\n"
      'infix))
   (cond ((and file-path (not (hash-table-ref/default file-table file-path #f)))
-         ($open-file! file-path)
+         ;;(generate-meta-data! file-path)
          (read-file! file-path)
          (update-file! file-path
                        (alist-ref 'contentChanges params))
@@ -137,7 +137,7 @@
 (define-handler (text-document/did-save params)
   (define file-path (get-uri-path params))
   (write-log 'info "file saved.")
-  ($save-file! file-path)
+  (generate-meta-data! file-path)
   #f)
 
 (define-handler (text-document/completion params)

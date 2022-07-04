@@ -29,6 +29,7 @@
 
 #:use-module (lsp-server guile)
 #:use-module (lsp-server document)
+#:use-module (lsp-server parse)
 #:use-module (lsp-server private)
 
 #:declarative? #f)

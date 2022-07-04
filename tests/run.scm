@@ -31,6 +31,8 @@
 (include "../src/file.scm")
 (include "../src/server.scm")
 
+(include "parse-tests.scm")
+
 (test-begin "lsp-server tests")
 
 (test-group "(lsp-server document): document main functions"

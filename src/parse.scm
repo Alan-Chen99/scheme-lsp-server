@@ -14,7 +14,7 @@
 
 ;;;; Parameters
 
-(define identifier-to-source-meta-data-map
+(define identifier-to-source-meta-data-table
   (make-parameter (make-hash-table)))
 
 ;;;; Predicates
@@ -243,23 +243,96 @@
     filename)
    (source-meta-data-imports meta-data-without-location)))
 
-(define (insert-meta-data! source-path list-of-meta-data)
-  (fold (lambda (pinfos acc)
-          (let ((identifier (tag-info-name tag)))
-            (begin
-              (hash-table-update!/default
-               acc
-               identifier
-               (lambda (v)
-                 (begin (hash-table-set! v
-                                         source-path
-                                         tag)
-                        v))
-               (alist->hash-table
-                `((,source-path . ,tag))))
-              acc)))
-        (identifier-to-source-tag-map)
-        (map source-meta-data-procedure-infos list-of-meta-data)))
+(define (update-identifier-to-source-meta-data-table! source-path meta-data)
+  (hash-table-walk
+   (source-meta-data-procedure-infos meta-data)
+   (lambda (identifier pinfo)
+     (hash-table-update!/default (identifier-to-source-meta-data-table)
+                                 identifier
+                                 (lambda (v)
+                                   (begin (hash-table-set! v
+                                                           source-path
+                                                           pinfo)
+                                          v))
+                                 (alist->hash-table
+                                  `((,source-path . ,pinfo)))))))
+
+(define (parse-and-update-table! source-path)
+  (update-identifier-to-source-meta-data-table!
+   source-path
+   (collect-meta-data-from-file source-path)))
+
+(cond-expand
+ (guile (define (generate-meta-data! . files)
+    ;; (write-log 'debug
+    ;;            (format "generate-tags! for files ~a" files))
+    (for-each
+     (lambda (f)
+       (ftw f
+            (lambda (filename statinfo flag)
+              (when (eq? flag 'regular)
+                (parse-and-update-table! filename))
+              #t)))
+     (filter (lambda (f)
+               (not (string=? f "")))
+             files))))
+ (chicken
+  (define (generate-meta-data! . files)
+    ;; (write-log 'debug
+    ;;            (format "generate-tags! for files ~a" files))
+    (for-each
+     (lambda (f)
+       (guard
+        (condition
+         (#t (write-log 'warning
+                        (format "generate-tags: can't read file ~a"
+                                f))))
+        (if (directory? f)
+            (let ((files (find-files f
+                                     #:test (irregex
+                                             '(: (* any)
+                                                 (or ".scm"
+                                                     ".sld"
+                                                     ".ss"))))))
+              (for-each (lambda (file)
+                          (parse-and-update-table! file))
+                        files))
+            (parse-and-update-table! f))))
+     (filter (lambda (f)
+               (not (string=? f "")))
+             files)))))
+
+(define (get-definition-locations identifier)
+  (define locations
+    (hash-table->alist
+     (hash-table-ref/default (identifier-to-source-meta-data-table)
+                             identifier
+                             (make-hash-table))))
+  (if (not (null? locations))
+      (begin
+        #;
+        (write-log 'debug
+                   (format "locations for identifier ~a found: ~a"
+                           identifier
+                           locations))
+        (map (lambda (loc)
+               (let* ((path (car loc))
+                      (pinfo (cdr loc))
+                      (line-number (procedure-info-line pinfo))
+                      (char-number (procedure-info-character pinfo)))
+                 #;
+                 (write-log 'debug (format "identifier ~a found: path ~a, line ~a, char ~a "
+                                           identifier
+                                           path
+                                           line-number
+                                           char-number))
+                 `((uri . ,(string-append "file://" path))
+                   (range . ((start . ((line . ,line-number)
+                                       (character . ,char-number)))
+                             (end . ((line . ,line-number)
+                                     (character . ,char-number))))))))
+             locations))
+      '()))
 
 (define (compose f g)
   (lambda args

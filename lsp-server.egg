@@ -36,6 +36,9 @@
   (extension lsp-server.tags
              (source "src/tags.sld")
              (source-dependencies "src/tags.scm"))
+  (extension lsp-server.parse
+             (source "src/parse.sld")
+             (source-dependencies "src/parse.scm"))
   (extension lsp-server
              (source "src/lsp-server.sld")
              (source-dependencies "src/file.scm"
