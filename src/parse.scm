@@ -17,6 +17,9 @@
 (define identifier-to-source-meta-data-table
   (make-parameter (make-hash-table)))
 
+(define source-path-timestamps
+  (make-parameter (make-hash-table)))
+
 ;;;; Predicates
 
 (define (tagged-expression? expr procedure)
@@ -169,6 +172,26 @@
         (make-source-meta-data (make-hash-table) '())
         lst))
 
+(define (print-meta-data meta-data)
+  (write-log 'debug (format "imports: ~s" (source-meta-data-imports meta-data)))
+  (write-log 'debug "procedure-infos: ")
+  (let ((pinfos (source-meta-data-procedure-infos meta-data)))
+    (hash-table-walk pinfos
+                     (lambda (pname pinfo)
+                       (write-log 'debug (format "\t~s" pname))))))
+
+(define (print-source-meta-data-table)
+  (hash-table-walk
+   (identifier-to-source-meta-data-table)
+   (lambda (identifier source-meta-data-table)
+     (write-log 'debug
+                (format "~s: " identifier))
+     (hash-table-walk
+      source-meta-data-table
+      (lambda (source-path identifier-pinfo-table)
+        (write-log 'debug
+                   (format "\t~s: " source-path)))))))
+
 (define (parse-definition-line line)
   (define regex
     (irregex '(: (* whitespace)
@@ -258,28 +281,41 @@
                                   `((,source-path . ,pinfo)))))))
 
 (define (parse-and-update-table! source-path)
-  (update-identifier-to-source-meta-data-table!
-   source-path
-   (collect-meta-data-from-file source-path)))
+  (write-log 'debug
+             (format "parse-and-update-table!: ~s~%" source-path))
+  (define meta-data (collect-meta-data-from-file source-path))
+  (write-log 'debug
+             "parse-and-update-table!: collected meta data:\n")
+  (print-meta-data meta-data)
+  (update-identifier-to-source-meta-data-table! source-path meta-data)
+  (write-log 'debug "parse-and-update-table!: current meta data table state:\n")
+  (print-source-meta-data-table))
 
 (cond-expand
  (guile (define (generate-meta-data! . files)
-    ;; (write-log 'debug
-    ;;            (format "generate-tags! for files ~a" files))
-    (for-each
-     (lambda (f)
-       (ftw f
-            (lambda (filename statinfo flag)
-              (when (eq? flag 'regular)
-                (parse-and-update-table! filename))
-              #t)))
-     (filter (lambda (f)
-               (not (string=? f "")))
-             files))))
+          (write-log 'debug
+                     (format "generate-meta-data! for files ~a" files))
+          (for-each
+           (lambda (f)
+             (ftw f
+                  (lambda (filename statinfo flag)
+                    (when (eq? flag 'regular)
+                      (let ((old-time-stamp (hash-table-ref/default (source-path-timestamps) filename #f)))
+                        (when (and old-time-stamp (< old-time-stamp
+                                                     (stat:mtime statinfo)))
+                          (begin
+                            (hash-table-set! (source-path-timestamps)
+                                             filename
+                                             (stat:mtime statinfo))
+                            (parse-and-update-table! filename)))))
+                    #t)))
+           (filter (lambda (f)
+                     (not (string=? f "")))
+                   files))))
  (chicken
   (define (generate-meta-data! . files)
-    ;; (write-log 'debug
-    ;;            (format "generate-tags! for files ~a" files))
+    (write-log 'debug
+               (format "generate-meta-data! for files ~a" files))
     (for-each
      (lambda (f)
        (guard
@@ -294,23 +330,38 @@
                                                  (or ".scm"
                                                      ".sld"
                                                      ".ss"))))))
-              (for-each (lambda (file)
-                          (parse-and-update-table! file))
-                        files))
+              (for-each
+               (lambda (filename)
+                 (let* ((stats (file-stat filename))
+                        (mtime (vector-ref stats 8))
+                        (old-time-stamp (hash-table-ref/default
+                                         (source-path-timestamps) filename #f)))
+                   (when (and old-time-stamp (> mtime old-time-stamp))
+                     (begin
+                       (hash-table-set! (source-path-timestamps)
+                                        filename
+                                        mtime)
+                       (parse-and-update-table! filename)))))
+               files))
             (parse-and-update-table! f))))
      (filter (lambda (f)
                (not (string=? f "")))
              files)))))
 
 (define (get-definition-locations identifier)
+  (write-log 'debug
+             (format "get-definition-locations: ~a (~a)"
+                     identifier
+                     (if (symbol? identifier)
+                         'symbol
+                         'string)))
   (define locations
     (hash-table->alist
      (hash-table-ref/default (identifier-to-source-meta-data-table)
-                             identifier
+                             (string->symbol identifier)
                              (make-hash-table))))
   (if (not (null? locations))
       (begin
-        #;
         (write-log 'debug
                    (format "locations for identifier ~a found: ~a"
                            identifier
@@ -320,7 +371,6 @@
                       (pinfo (cdr loc))
                       (line-number (procedure-info-line pinfo))
                       (char-number (procedure-info-character pinfo)))
-                 #;
                  (write-log 'debug (format "identifier ~a found: path ~a, line ~a, char ~a "
                                            identifier
                                            path

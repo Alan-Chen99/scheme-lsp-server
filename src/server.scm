@@ -117,7 +117,7 @@
 (define-handler (text-document/did-open params)
   (define file-path (get-uri-path params))
   (if file-path
-      (begin ($open-file! file-path)
+      (begin (generate-meta-data! file-path)
              (read-file! file-path)
              (let ((tmp-file (string-append "/tmp/" (remove-slashes file-path))))
                (write-log 'debug

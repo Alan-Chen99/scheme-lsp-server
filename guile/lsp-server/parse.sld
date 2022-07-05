@@ -5,11 +5,13 @@
           get-definition-locations)
 
 #:use-module (srfi srfi-1)
+#:use-module (srfi srfi-28)
 #:use-module (srfi srfi-69)
 #:use-module (scheme base)
 #:use-module ((scheme file) #:select (with-input-from-file))
 #:use-module (scheme read)
 #:use-module (lsp-server guile)
+#:use-module (lsp-server private)
 #:use-module (system vm program)
 #:use-module (ice-9 ftw)
 

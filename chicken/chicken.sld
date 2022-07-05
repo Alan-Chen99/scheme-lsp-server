@@ -9,6 +9,7 @@
         $initialize-lsp-server!
         $server-capabilities
         $server-name
+        spawn-repl-server
         $tcp-accept
         $tcp-connect
         $tcp-listen
@@ -29,11 +30,13 @@
         (chicken random)
         (only (chicken string) string-intersperse)
         (chicken tcp)
+        nrepl
         chicken-doc
         medea
         r7rs
         scheme
         srfi-1
+        srfi-18
         srfi-69
         srfi-130
 
@@ -278,5 +281,8 @@
   (define (chicken-status)
     (make-pathname
      (foreign-value "C_TARGET_BIN_HOME" c-string)
-     (foreign-value "C_CHICKEN_STATUS_PROGRAM" c-string))))
+     (foreign-value "C_CHICKEN_STATUS_PROGRAM" c-string)))
+
+  (define (spawn-repl-server port-num)
+    (nrepl port-num)))
 )

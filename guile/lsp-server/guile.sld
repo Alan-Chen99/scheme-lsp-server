@@ -13,6 +13,7 @@
           $tcp-connect
           $tcp-listen
           $tcp-read-timeout
+          spawn-repl-server
           library-available?
           alist-ref
           hash-table-join!)
@@ -21,6 +22,8 @@
               #:select (read-line guard))
 #:use-module (scheme write)
 #:use-module (srfi srfi-1)
+#:use-module ((srfi srfi-13)
+              #:select (string-join string-concatenate))
 #:use-module (srfi srfi-28)
 #:use-module (srfi srfi-69)
 #:use-module (ice-9 documentation)
@@ -230,6 +233,52 @@
           (#t (write-log 'warning
                          (format "error loading file ~a" path))))
          (load path)))
+
+(define (pathname-join dir-name file-name)
+  (string-concatenate (list dir-name
+                            file-name-separator-string
+                            file-name)))
+
+(define (get-module-file-path module-name)
+  (define num-parts (length module-name))
+  (define file-path-without-extension
+    (cond ((> num-parts 1)
+          (let* ((dir-part (drop-right module-name 1))
+                 (dir-path
+                  (string-join (map symbol->string dir-part)
+                               file-name-separator-string)))
+            (pathname-join dir-path
+                           (symbol->string
+                            (last module-name)))))
+          ((= num-parts 1)
+           (car module-name))
+          (else (write-log 'error
+                           (format "invalid module name ~a"
+                                   module-name))
+                #f)))
+  (if (not file-path-without-extension)
+      #f
+      (let loop ((dirs %load-path))
+        (if (null? dirs)
+            #f
+            (let* ((dir (car dirs))
+                   (full-path-without-extension
+                    (pathname-join dir file-path-without-extension))
+                   (scm-file (string-append full-path-without-extension
+                                            ".scm"))
+                   (sld-file (string-append full-path-without-extension
+                                            ".sld"))
+                   (ss-file (string-append full-path-without-extension
+                                           ".ss"))
+                   (file-found
+                    (find file-exists? (list sld-file scm-file ss-file))))
+              (if file-found
+                  file-found
+                  (loop (cdr dirs))))))))
+
+(define (spawn-repl-server port-num)
+  (define sock (make-tcp-server-socket #:port port-num))
+  (run-server sock))
 
 (define (library-available? library-name)
   (resolve-module library-name #f #f #:ensure #f))
