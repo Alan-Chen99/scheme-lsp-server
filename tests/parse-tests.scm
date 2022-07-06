@@ -5,6 +5,7 @@
                         map
                         error)
                 (srfi srfi-1)
+                (srfi srfi-28)
                 (srfi srfi-64)
                 (except (srfi srfi-69) hash-table-merge!)
                 (ice-9 ftw)
@@ -94,14 +95,14 @@
 
 (test-equal '(x y) (procedure-definition-arguments '(define f (lambda (x y) x))))
 
-(let ((res (collect-meta-data-from-expression
+(let ((res (parse-expression
             '(begin (import (srfi 1) (srfi 69))
                     (define (f x) x)
                     (define g (lambda (x y) (+ x y)))))))
   (test-equal '((srfi 1) (srfi 69)) (source-meta-data-imports res))
   (test-equal 2 (hash-table-size (source-meta-data-procedure-infos res))))
 
-(let ((res (collect-meta-data-from-expression
+(let ((res (parse-expression
             '(define-library (my lib)
                 (export f g)
                 (import (srfi 1) (srfi 69))
@@ -110,7 +111,7 @@
   (test-equal '((srfi 1) (srfi 69)) (source-meta-data-imports res))
   (test-equal 2 (hash-table-size (source-meta-data-procedure-infos res))))
 
-(let ((res (collect-meta-data-from-expression
+(let ((res (parse-expression
             '(cond-expand (guile (import (system vm program))
                                  (define (f x) x))
                           (chicken (import (apropos-api))

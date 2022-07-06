@@ -113,7 +113,7 @@
 
 ;;;; Main procedures
 
-(define (collect-meta-data-from-expression expression)
+(define (parse-expression expression)
   (let loop ((expr expression)
              (procedure-infos (make-hash-table))
              (imports '()))
@@ -123,7 +123,7 @@
           ((or (library-definition-form? expr)
                (begin-form? expr))
            (let ((subforms-meta-data
-                  (map collect-meta-data-from-expression (cdr expr))))
+                  (map parse-expression (cdr expr))))
              (loop (cdr expr)
                    (fold (lambda (sub-ht acc)
                            (hash-table-join! acc sub-ht))
@@ -136,7 +136,7 @@
           ((cond-expand-form? expr)
            (let* ((matching-clause (cond-expand-find-satisfied-clause expr))
                   (subform-meta-data
-                   (collect-meta-data-from-expression matching-clause)))
+                   (parse-expression matching-clause)))
              (loop (cdr expr)
                    (source-meta-data-procedure-infos subform-meta-data)
                    (source-meta-data-imports subform-meta-data))))
@@ -259,7 +259,7 @@
           (if (eof-object? expr)
               (merge-meta-data meta-data)
               (loop (read)
-                    (cons (collect-meta-data-from-expression expr)
+                    (cons (parse-expression expr)
                           meta-data)))))))
   (make-source-meta-data
    (collect-procedure-locations
