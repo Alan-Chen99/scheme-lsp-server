@@ -218,3 +218,10 @@
 
 (define (stringify elem)
   (format "~a" elem))
+
+(define (compose f g)
+  (lambda args
+    (f (apply g args))))
+
+(define (flatmap proc lst)
+  (fold append '() (map proc lst)))

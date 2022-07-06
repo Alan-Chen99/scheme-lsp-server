@@ -35,7 +35,10 @@
 
         $string-split
 
-        delete-lines)
+        delete-lines
+
+        compose
+        flatmap)
 
 (import scheme
         (scheme base)

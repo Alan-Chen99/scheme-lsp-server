@@ -29,7 +29,7 @@
   '((textDocumentSync . ((save . #t)
                          (change . 2)))
     (hoverProvider . #t)
-    (completionProvider . ((resolveProvider . #t)))
+    (completionProvider . ((resolveProvider . #f)))
     (signatureHelpProvider . ())))
 
 (define-handler (initialize-handler params)
@@ -154,7 +154,7 @@
              3))
       'null
       (let* ((word (editor-word-text editor-word))
-             (suggestions ($apropos-list word)))
+             (suggestions (apropos-list word)))
         (write-log 'debug "getting completion suggestions for word "
                    word)
 
@@ -176,7 +176,7 @@
                                       (join-module-name ainfo-module)
                                       ""))
                                  (id-name
-                                  (symbol->string
+                                  (stringify
                                    (apropos-info-name ainfo)))
                                  (label (if ainfo-module
                                             (format "~a ~a"

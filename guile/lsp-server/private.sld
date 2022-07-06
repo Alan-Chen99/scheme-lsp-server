@@ -34,7 +34,10 @@
 
           $string-split
 
-          delete-lines)
+          delete-lines
+
+          compose
+          flatmap)
 
 #:use-module ((scheme base)
               #:select (define-record-type

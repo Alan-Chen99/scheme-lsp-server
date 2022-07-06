@@ -2734,7 +2734,7 @@ fi
 ac_config_files="$ac_config_files Makefile"
 
 
-ac_config_links="$ac_config_links lsp-server/private.scm:../src/private.scm lsp-server/document.scm:../src/document.scm lsp-server/file.scm:../src/file.scm lsp-server/main.scm:../src/main.scm lsp-server/server.scm:../src/server.scm lsp-server/parse.scm:../src/parse.scm lsp-server/guile.sld:lsp-server/guile.sld lsp-server/document.sld:lsp-server/document.sld lsp-server/private.sld:lsp-server/private.sld lsp-server/parse.sld:lsp-server/parse.sld lsp-server.sld:lsp-server.sld README.md:../README.md"
+ac_config_links="$ac_config_links lsp-server/private.scm:../src/private.scm lsp-server/document.scm:../src/document.scm lsp-server/file.scm:../src/file.scm lsp-server/main.scm:../src/main.scm lsp-server/server.scm:../src/server.scm lsp-server/trie.scm:../src/trie.scm lsp-server/parse.scm:../src/parse.scm lsp-server/guile.sld:lsp-server/guile.sld lsp-server/document.sld:lsp-server/document.sld lsp-server/private.sld:lsp-server/private.sld lsp-server/trie.sld:lsp-server/trie.sld lsp-server/parse.sld:lsp-server/parse.sld lsp-server.sld:lsp-server.sld README.md:../README.md"
 
 
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking if (json-rpc) is available" >&5
@@ -3480,10 +3480,12 @@ do
     "lsp-server/file.scm") CONFIG_LINKS="$CONFIG_LINKS lsp-server/file.scm:../src/file.scm" ;;
     "lsp-server/main.scm") CONFIG_LINKS="$CONFIG_LINKS lsp-server/main.scm:../src/main.scm" ;;
     "lsp-server/server.scm") CONFIG_LINKS="$CONFIG_LINKS lsp-server/server.scm:../src/server.scm" ;;
+    "lsp-server/trie.scm") CONFIG_LINKS="$CONFIG_LINKS lsp-server/trie.scm:../src/trie.scm" ;;
     "lsp-server/parse.scm") CONFIG_LINKS="$CONFIG_LINKS lsp-server/parse.scm:../src/parse.scm" ;;
     "lsp-server/guile.sld") CONFIG_LINKS="$CONFIG_LINKS lsp-server/guile.sld:lsp-server/guile.sld" ;;
     "lsp-server/document.sld") CONFIG_LINKS="$CONFIG_LINKS lsp-server/document.sld:lsp-server/document.sld" ;;
     "lsp-server/private.sld") CONFIG_LINKS="$CONFIG_LINKS lsp-server/private.sld:lsp-server/private.sld" ;;
+    "lsp-server/trie.sld") CONFIG_LINKS="$CONFIG_LINKS lsp-server/trie.sld:lsp-server/trie.sld" ;;
     "lsp-server/parse.sld") CONFIG_LINKS="$CONFIG_LINKS lsp-server/parse.sld:lsp-server/parse.sld" ;;
     "lsp-server.sld") CONFIG_LINKS="$CONFIG_LINKS lsp-server.sld:lsp-server.sld" ;;
     "README.md") CONFIG_LINKS="$CONFIG_LINKS README.md:../README.md" ;;

@@ -25,6 +25,8 @@
 (define source-path-timestamps
   (make-parameter (make-hash-table)))
 
+(define all-identifiers (make-parameter (make-trie)))
+
 ;;;; Predicates
 
 (define (tagged-expression? expr procedure)
@@ -370,7 +372,8 @@
                                                            pinfo)
                                           v))
                                  (alist->hash-table
-                                  `((,source-path . ,pinfo)))))))
+                                  `((,source-path . ,pinfo))))
+     (trie-insert! (all-identifiers) (stringify identifier) #f))))
 
 (define (parse-and-update-table! source-path)
   (write-log 'debug
@@ -522,9 +525,8 @@
       (pinfo-signature pinfo)
       #f))
 
-(define (compose f g)
-  (lambda args
-    (f (apply g args))))
-
-(define (flatmap proc lst)
-  (fold append '() (map proc lst)))
+(define (apropos-list word)
+  (map (lambda (name)
+         (make-apropos-info #f name #f #f))
+       (trie-words-with-prefix (all-identifiers)
+                               (stringify word))))
