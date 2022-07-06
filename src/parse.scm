@@ -113,13 +113,49 @@
 
 ;;;; Main procedures
 
+(define (parse-guile-module expression)
+  (let loop ((expr (cddr expression)) ;; skip module name for now
+             (previous-keyword #f)
+             (imports '()))
+    (cond ((null? expr)
+           (make-source-meta-data (make-hash-table)
+                                  (reverse imports)))
+          ((keyword? (car expr))
+           (loop (cdr expr)
+                 (car expr)
+                 imports))
+          ((eq? previous-keyword #:use-module)
+           (loop (cdr expr)
+                 #f
+                 (if (and (not (null? expr))
+                          (list? (car expr))
+                          (not (null? (car expr)))
+                          (list? (caar expr)))
+                     ;; handle clauses of the form (ignore #:select for now):
+                     ;; #:use-module ((scheme file) #:select (with-input-from-file))
+                     (cons (caar expr) imports)
+                     (cons (car expr) imports))))
+          (else
+           (loop (cdr expr)
+                 #f
+                 imports)))))
+
 (define (parse-expression expression)
   (let loop ((expr expression)
              (procedure-infos (make-hash-table))
              (imports '()))
-    (cond ((null? expr)
+    (cond ((not (list? expr))
            (make-source-meta-data procedure-infos
                                   (reverse imports)))
+          ((null? expr)
+           (make-source-meta-data procedure-infos
+                                  (reverse imports)))
+          ((guile-library-definition-form? expr)
+           (let ((subform-meta-data (parse-guile-module expr)))
+             (loop (cdr expr)
+                   procedure-infos
+                   (append (source-meta-data-imports subform-meta-data)
+                           imports))))
           ((or (library-definition-form? expr)
                (begin-form? expr))
            (let ((subforms-meta-data
@@ -193,17 +229,18 @@
         (write-log 'debug
                    (format "\t~s: " source-path)))))))
 
+(define definition-regex
+  (irregex '(: (* whitespace)
+               (* #\()
+               (: (or "define" "define-syntax" "set!")
+                  (+ whitespace)
+                  (? #\()
+                  (submatch (+ (~ (or whitespace
+                                      #\))))))
+               (* any))))
+
 (define (parse-definition-line line)
-  (define regex
-    (irregex '(: (* whitespace)
-                 (* #\()
-                 (: (or "define" "define-syntax" "set!")
-                    (+ whitespace)
-                    (? #\()
-                    (submatch (+ (~ (or whitespace
-                                        #\))))))
-                 (* any))))
-  (let ((submatches (irregex-match regex line)))
+  (let ((submatches (irregex-match definition-regex line)))
     (if submatches
         (cons (irregex-match-substring submatches 1)
               (irregex-match-start-index submatches 1))

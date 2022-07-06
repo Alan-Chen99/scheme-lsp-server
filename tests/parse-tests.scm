@@ -112,6 +112,15 @@
   (test-equal 2 (hash-table-size (source-meta-data-procedure-infos res))))
 
 (let ((res (parse-expression
+            '(define-module (my lib)
+                #:export (f g)
+                #:use-module (srfi 1)
+                #:use-module ((srfi 69) #:select (hash-table-walk))))))
+  (let ((imports (source-meta-data-imports res)))
+    (test-assert (member '(srfi 1) imports))
+    (test-assert (member '(srfi 69) imports))))
+
+(let ((res (parse-expression
             '(cond-expand (guile (import (system vm program))
                                  (define (f x) x))
                           (chicken (import (apropos-api))
@@ -141,13 +150,30 @@
 
 (parameterize ((identifier-to-source-meta-data-table (make-hash-table)))
   (parse-and-update-table! "resources/sample-1.scm")
-  (test-equal 2 (hash-table-size (identifier-to-source-meta-data-table)))
-  (test-equal '("resources/sample-1.scm")
-              (hash-table-keys
-               (hash-table-ref (identifier-to-source-meta-data-table) 'f))))
+  (test-assert (lset-intersection equal?
+                                  (hash-table-keys (identifier-to-source-meta-data-table))
+                                  '(f g)))
+  (test-assert (member "resources/sample-1.scm"
+                       (hash-table-keys
+                        (hash-table-ref
+                         (identifier-to-source-meta-data-table) 'f)))))
 
-(parameterize ((identifier-to-source-meta-data-table (make-hash-table)))
+(parameterize ((identifier-to-source-meta-data-table (make-hash-table))
+               (source-path-timestamps (make-hash-table)))
   (generate-meta-data! "resources")
-  )
+  (test-assert (hash-table-exists? (identifier-to-source-meta-data-table)
+                                   'f))
+  (test-assert (hash-table-exists? (identifier-to-source-meta-data-table)
+                                   'g))
+  (test-assert (hash-table-exists? (identifier-to-source-meta-data-table)
+                                   'func)))
+
+(let ((meta-data (collect-meta-data-from-file "../guile/lsp-server/parse.sld")))
+  (test-assert (member '(srfi srfi-1)
+                       (source-meta-data-imports meta-data)))
+  (test-assert (member '(ice-9 ftw)
+                       (source-meta-data-imports meta-data)))
+  (test-assert (member '(scheme file)
+                       (source-meta-data-imports meta-data))))
 
 (test-end "Collecting meta-data")
