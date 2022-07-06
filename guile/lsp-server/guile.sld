@@ -16,6 +16,7 @@
           spawn-repl-server
           library-available?
           alist-ref
+          get-module-path
           hash-table-join!)
 
 #:use-module ((scheme base)
@@ -239,7 +240,7 @@
                             file-name-separator-string
                             file-name)))
 
-(define (get-module-file-path module-name)
+(define (get-module-path module-name)
   (define num-parts (length module-name))
   (define file-path-without-extension
     (cond ((> num-parts 1)

@@ -103,15 +103,11 @@
           (cdr listen-option)
           #f)))
 
-  (define repl-thread
-    (if listen-port-num
-        (thread-start!
-         (make-thread
-          (lambda () (spawn-repl-server listen-port-num))))
-        #f))
-
-  (when repl-thread
-    (thread-join! repl-thread))
+  (if listen-port-num
+      (thread-start!
+       (make-thread
+        (lambda () (spawn-repl-server listen-port-num))))
+      #f)
 
   (parameterize ((lsp-server-log-level log-level))
     (lsp-server-start/stdio)))

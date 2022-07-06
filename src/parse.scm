@@ -44,7 +44,8 @@
               (guile-library-definition-form? expr)))))
 
 (define (import-form? expr)
-  (tagged-expression? expr 'import))
+  (or (tagged-expression? expr 'import)
+      (tagged-expression? expr 'use-modules)))
 
 (define (begin-form? expr)
   (tagged-expression? expr 'begin))
@@ -289,7 +290,12 @@
   (print-meta-data meta-data)
   (update-identifier-to-source-meta-data-table! source-path meta-data)
   (write-log 'debug "parse-and-update-table!: current meta data table state:\n")
-  (print-source-meta-data-table))
+  (print-source-meta-data-table)
+  (for-each (lambda (path)
+              (let ((module-path (get-module-path path)))
+                (when module-path
+                  (generate-meta-data! module-path))))
+            (source-meta-data-imports meta-data)))
 
 (cond-expand
  (guile (define (generate-meta-data! . files)
@@ -300,9 +306,13 @@
              (ftw f
                   (lambda (filename statinfo flag)
                     (when (eq? flag 'regular)
-                      (let ((old-time-stamp (hash-table-ref/default (source-path-timestamps) filename #f)))
-                        (when (and old-time-stamp (< old-time-stamp
-                                                     (stat:mtime statinfo)))
+                      (let ((old-time-stamp (hash-table-ref/default
+                                             (source-path-timestamps)
+                                             filename
+                                             #f)))
+                        (when (or (not old-time-stamp)
+                                  (< old-time-stamp
+                                     (stat:mtime statinfo)))
                           (begin
                             (hash-table-set! (source-path-timestamps)
                                              filename
@@ -336,7 +346,8 @@
                         (mtime (vector-ref stats 8))
                         (old-time-stamp (hash-table-ref/default
                                          (source-path-timestamps) filename #f)))
-                   (when (and old-time-stamp (> mtime old-time-stamp))
+                   (when (or (not old-time-stamp)
+                             (> mtime old-time-stamp))
                      (begin
                        (hash-table-set! (source-path-timestamps)
                                         filename
