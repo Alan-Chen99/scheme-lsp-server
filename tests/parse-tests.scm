@@ -95,6 +95,11 @@
 
 (test-equal '(x y) (procedure-definition-arguments '(define f (lambda (x y) x))))
 
+(test-equal '(() (x y))
+            (procedure-definition-arguments
+             '(define f (case-lambda (() (f 1 2))
+                                     ((x y) x)))))
+
 (test-equal '(= . rest)
             (procedure-definition-arguments
              '(define (lset-union = . rest)

@@ -64,6 +64,14 @@
 (define (lambda-form? expr)
   (tagged-expression? expr 'lambda))
 
+(define (case-lambda-form? expr)
+  (tagged-expression? expr 'case-lambda))
+
+(define (procedure-definition-with-case-lambda? expr)
+  (and (symbol? (cadr expr))
+       (not (null? (cddr expr)))
+       (case-lambda-form? (caddr expr))))
+
 (define (procedure-definition-with-lambda? expr)
   (and (symbol? (cadr expr))
        (not (null? (cddr expr)))
@@ -73,12 +81,13 @@
   (and (pair? (cadr expr))
        (not (null? (cddr expr)))))
 
-;; TODO implement case-lambda and set!
+;; TODO support set!
 (define (procedure-definition-form? expr)
   (and (or (tagged-expression? expr 'define)
            (tagged-expression? expr 'define*))
        (not (null? (cdr expr)))
-       (or (procedure-definition-with-lambda? expr)
+       (or (procedure-definition-with-case-lambda? expr)
+           (procedure-definition-with-lambda? expr)
            (procedure-definition-with-parenthesis? expr))))
 
 (define (cond-expand-form? expr)
@@ -108,6 +117,16 @@
 
 ;;;; Syntax accessors
 
+(define (case-lambda-arguments expr)
+  (reverse (fold (lambda (clause acc)
+                   (if (and (pair? clause)
+                            (not (null? clause)))
+                       (cons (car clause)
+                             acc)
+                       acc))
+                 '()
+                 (cdr expr))))
+
 (define (lambda-arguments expr)
   (cadr expr))
 
@@ -120,6 +139,8 @@
 (define (procedure-definition-arguments expr)
   (cond ((procedure-definition-with-parenthesis? expr)
          (cdr (cadr expr)))
+        ((procedure-definition-with-case-lambda? expr)
+         (case-lambda-arguments (caddr expr)))
         ((procedure-definition-with-lambda? expr)
          (lambda-arguments (caddr expr)))))
 
