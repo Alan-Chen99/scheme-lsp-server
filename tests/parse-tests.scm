@@ -95,19 +95,27 @@
 
 (test-equal '(x y) (procedure-definition-arguments '(define f (lambda (x y) x))))
 
+(test-equal '(= . rest)
+            (procedure-definition-arguments
+             '(define (lset-union = . rest)
+                ;; Likewise, allow memq / memv to be used if possible.
+                #t)))
+
 (let ((res (parse-expression
-            '(begin (import (srfi 1) (srfi 69))
+            '(begin (import (srfi 1) (srfi 69) utf-8)
                     (define (f x) x)
-                    (define g (lambda (x y) (+ x y)))))))
-  (test-equal '((srfi 1) (srfi 69)) (source-meta-data-imports res))
+                    (define g (lambda (x y) (+ x y))))
+            (make-parse-context #f))))
+  (test-equal '((srfi 1) (srfi 69) utf-8) (source-meta-data-imports res))
   (test-equal 2 (hash-table-size (source-meta-data-procedure-infos res))))
 
 (let ((res (parse-expression
             '(define-library (my lib)
                 (export f g)
-                (import (srfi 1) (srfi 69))
+                (import (srfi 1) (except (srfi 69) make-hash-table))
                 (begin (define (f x) x))
-                       (define g (lambda (x y) (+ x y)))))))
+                (define g (lambda (x y) (+ x y))))
+             (make-parse-context #f))))
   (test-equal '((srfi 1) (srfi 69)) (source-meta-data-imports res))
   (test-equal 2 (hash-table-size (source-meta-data-procedure-infos res))))
 
@@ -115,7 +123,8 @@
             '(define-module (my lib)
                 #:export (f g)
                 #:use-module (srfi 1)
-                #:use-module ((srfi 69) #:select (hash-table-walk))))))
+                #:use-module ((srfi 69) #:select (hash-table-walk)))
+            (make-parse-context #f))))
   (let ((imports (source-meta-data-imports res)))
     (test-assert (member '(srfi 1) imports))
     (test-assert (member '(srfi 69) imports))))
@@ -126,7 +135,8 @@
                           (chicken (import (apropos-api))
                                    (define (f x) x)
                                    (define (g x y) x))
-                          (else)))))
+                          (else))
+            (make-parse-context #f))))
   (cond-expand
    (chicken (test-equal '((apropos-api)) (source-meta-data-imports res))
             (test-equal 2 (hash-table-size (source-meta-data-procedure-infos res))))
@@ -157,6 +167,25 @@
                        (hash-table-keys
                         (hash-table-ref
                          (identifier-to-source-meta-data-table) 'f)))))
+
+(parameterize ((identifier-to-source-meta-data-table (make-hash-table))
+               (source-path-timestamps (make-hash-table)))
+  (parse-and-update-table! "resources/sample-2.scm")
+  (test-assert (lset-intersection equal?
+                                  (hash-table-keys (identifier-to-source-meta-data-table))
+                                  '(func included-func)))
+  (test-assert (member "resources/sample-2.scm"
+                       (hash-table-keys
+                        (hash-table-ref
+                         (identifier-to-source-meta-data-table) 'func))))
+  (test-assert (member "resources/sample-3-included.scm"
+                       (hash-table-keys
+                        (hash-table-ref
+                         (identifier-to-source-meta-data-table) 'included-func))))
+  (test-assert (hash-table-exists? (source-path-timestamps)
+                                   "resources/sample-2.scm")
+               (hash-table-exists? (source-path-timestamps)
+                                   "resources/sample-3-included.scm")))
 
 (parameterize ((identifier-to-source-meta-data-table (make-hash-table))
                (source-path-timestamps (make-hash-table)))

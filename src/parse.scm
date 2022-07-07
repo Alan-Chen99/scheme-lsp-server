@@ -12,6 +12,11 @@
   (procedure-infos source-meta-data-procedure-infos)
   (imports source-meta-data-imports))
 
+(define-record-type <parse-context>
+  (make-parse-context directory)
+  parse-context?
+  (directory parse-context-directory))
+
 ;;;; Parameters
 
 (define identifier-to-source-meta-data-table
@@ -47,6 +52,12 @@
   (or (tagged-expression? expr 'import)
       (tagged-expression? expr 'use-modules)))
 
+(define (include-form? expr)
+  (tagged-expression? expr 'include))
+
+(define (load-form? expr)
+  (tagged-expression? expr 'load))
+
 (define (begin-form? expr)
   (tagged-expression? expr 'begin))
 
@@ -59,12 +70,13 @@
        (lambda-form? (caddr expr))))
 
 (define (procedure-definition-with-parenthesis? expr)
-  (and (list? (cadr expr))
+  (and (pair? (cadr expr))
        (not (null? (cddr expr)))))
 
 ;; TODO implement case-lambda and set!
 (define (procedure-definition-form? expr)
-  (and (tagged-expression? expr 'define)
+  (and (or (tagged-expression? expr 'define)
+           (tagged-expression? expr 'define*))
        (not (null? (cdr expr)))
        (or (procedure-definition-with-lambda? expr)
            (procedure-definition-with-parenthesis? expr))))
@@ -140,7 +152,15 @@
                  #f
                  imports)))))
 
-(define (parse-expression expression)
+(define (parse-r7rs-import-set expr)
+  (cond ((symbol? expr) expr)
+        ((null? expr) '())
+        ((member (car expr)
+                 '(only except prefix rename))
+         (parse-r7rs-import-set (cadr expr)))
+        (else expr)))
+
+(define (parse-expression expression context)
   (let loop ((expr expression)
              (procedure-infos (make-hash-table))
              (imports '()))
@@ -159,7 +179,9 @@
           ((or (library-definition-form? expr)
                (begin-form? expr))
            (let ((subforms-meta-data
-                  (map parse-expression (cdr expr))))
+                  (map (lambda (e)
+                         (parse-expression e context))
+                       (cdr expr))))
              (loop (cdr expr)
                    (fold (lambda (sub-ht acc)
                            (hash-table-join! acc sub-ht))
@@ -172,14 +194,15 @@
           ((cond-expand-form? expr)
            (let* ((matching-clause (cond-expand-find-satisfied-clause expr))
                   (subform-meta-data
-                   (parse-expression matching-clause)))
+                   (parse-expression matching-clause context)))
              (loop (cdr expr)
                    (source-meta-data-procedure-infos subform-meta-data)
                    (source-meta-data-imports subform-meta-data))))
           ((import-form? expr)
            (loop (cdr expr)
                  procedure-infos
-                 (append (cdr expr) imports)))
+                 (append (map parse-r7rs-import-set (cdr expr))
+                         imports)))
           ((procedure-definition-form? expr)
            (loop (cdr expr)
                  (let ((proc-name (procedure-definition-name expr)))
@@ -191,6 +214,15 @@
                                                          #f))
                    procedure-infos)
                  imports))
+          ((or (include-form? expr)
+               (load-form? expr))
+           (when (and (not (null? (cdr expr)))
+                      (string? (cadr expr)))
+             (generate-meta-data!
+              (pathname-join (parse-context-directory context)
+                             (cadr expr))))
+           (make-source-meta-data procedure-infos
+                                  imports))
           (else (loop (cdr expr)
                       procedure-infos
                       imports)))))
@@ -296,7 +328,8 @@
           (if (eof-object? expr)
               (merge-meta-data meta-data)
               (loop (read)
-                    (cons (parse-expression expr)
+                    (cons (parse-expression expr (make-parse-context
+                                                  (pathname-directory filename)))
                           meta-data)))))))
   (make-source-meta-data
    (collect-procedure-locations

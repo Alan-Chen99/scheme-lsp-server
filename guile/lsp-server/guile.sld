@@ -17,7 +17,9 @@
           library-available?
           alist-ref
           get-module-path
-          hash-table-join!)
+          hash-table-join!
+          pathname-directory
+          pathname-join)
 
 #:use-module ((scheme base)
               #:select (read-line guard))
@@ -240,19 +242,29 @@
                             file-name-separator-string
                             file-name)))
 
+(define (pathname-directory path)
+  (dirname path))
+
+(define (stringify elem)
+  (format "~a" elem))
+
 (define (get-module-path module-name)
-  (define num-parts (length module-name))
+  (define num-parts (if (list? module-name)
+                        (length module-name)
+                        1))
   (define file-path-without-extension
     (cond ((> num-parts 1)
           (let* ((dir-part (drop-right module-name 1))
                  (dir-path
-                  (string-join (map symbol->string dir-part)
+                  (string-join (map stringify dir-part)
                                file-name-separator-string)))
             (pathname-join dir-path
-                           (symbol->string
+                           (stringify
                             (last module-name)))))
           ((= num-parts 1)
-           (car module-name))
+           (stringify (if (list? module-name)
+                          (car module-name)
+                          module-name)))
           (else (write-log 'error
                            (format "invalid module name ~a"
                                    module-name))
