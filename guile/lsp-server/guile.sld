@@ -4,7 +4,6 @@
           $open-file!
           $save-file!
           $fetch-documentation
-          $fetch-signature
           $get-definition-locations
           $initialize-lsp-server!
           $server-capabilities
@@ -115,97 +114,14 @@
                     "")))
       #f))
 
-;;; Return the signature (a string) for IDENTIFIER (a symbol) in MODULE (a
-;;; symbol). Return #f if nothing found.
-;;; Example call: $fetch-documentation '(srfi 1) 'map
-(define ($fetch-signature module-name identifier)
-  (define mod (resolve-module module-name))
-  (define obj (module-ref mod identifier))
-  (if (and obj (procedure? obj))
-      (format "~a~%"
-              (build-procedure-signature module-name identifier obj))
-      #f))
-
-;;; Return a list of locations found for IDENTIFIER (a symbol).
-;;; Each location is represented by an alist
-;;; '((url . "file:///<path>")
-;;;   (range . ((start . ((line  . <line number>)
-;;;                       (character . <character number))
-;;;             (end . ((line  . <line number>)
-;;;                     (character . <character number))))
-;;;
 (define ($get-definition-locations identifier)
-  (write-log 'debug
-             (format "$get-definition-locations ~a" identifier))
-  (define obj (symbol->object (string->symbol identifier)))
-  (write-log 'debug (format "obj: ~a" obj))
-  (if (procedure? obj)
-      (begin
-        (write-log 'debug "in")
-        (let ((program (program-source obj 0)))
-          (write-log 'debug
-                     (format "program: ~a" program))
-          (if program
-              (let ((file-path (source:file program)))
-
-                (write-log 'debug (format "file-path: ~a" file-path))
-                (if file-path
-                    (let ((file-abs-path (if (absolute-file-name? file-path)
-                                             file-path
-                                             (find-absolute-path file-path))))
-                      (write-log 'debug (format "file-abs-path: ~a" file-abs-path))
-                      (write-log 'debug (format "line: ~a" (source:line program)))
-                      (write-log 'debug (format "column: ~a" (source:column program)))
-                      ;; TODO return all matches (see chicken.scm)
-                      (let ((ans (list
-                                  `((uri . ,(string-append "file://" file-abs-path))
-                                    (range . ((start . ((line . ,(source:line program))
-                                                        (character . ,(source:column program))))
-                                              (end . ((line . ,(source:line program))
-                                                      (character . ,(+ (source:column program)
-                                                                       (string-length identifier)))))))))))
-                        (write-log 'debug (format "responding with: ~a" ans))
-                        ans))
-                    (begin
-                      (write-log 'debug
-                                 (format "definition does not have a source file: ~a"
-                                         file-path))
-                      '())))
-              '())))
-      (begin
-        (write-log 'debug
-                   (format "definition not found: ~a" identifier))
-        '())))
+  #f)
 
 (define (alist-ref key lst)
   (define res (assoc key lst))
   (if res
       (cdr res)
       #f))
-
-(define ($open-file! file-path)
-  (write-log 'debug (format "opening file in guile: ~a" file-path))
-  ;;(load-protected file-path)
-  ;; (current-path (if file-path
-  ;;                        (dirname file-path)
-  ;;                        #f))
-  #f)
-
-(define ($save-file! file-path)
-  ;;(load-protected file-path)
-  #f)
-
-(define (build-procedure-signature module name proc-obj)
-  (define args (procedure-arguments proc-obj))
-  (define required (alist-ref 'required args))
-  (define optional (alist-ref 'optional args))
-  (define keyword (alist-ref 'keyword args))
-  (define rest (alist-ref 'rest args))
-
-  (format "~a" `(,name
-                 ,@required
-                 ,@(if optional (map list optional) '())
-                 ,@(map car keyword))))
 
 (define* (read-lines #:optional (port #f))
   (define p (or port (current-input-port)))
@@ -230,12 +146,6 @@
   (if base-path
       (canonicalize-path (string-append base-path "/" path))
       path))
-
-(define (load-protected path)
-  (guard (condition
-          (#t (write-log 'warning
-                         (format "error loading file ~a" path))))
-         (load path)))
 
 (define (pathname-join dir-name file-name)
   (string-concatenate (list dir-name

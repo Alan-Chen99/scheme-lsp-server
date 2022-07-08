@@ -450,6 +450,14 @@
                (not (string=? f "")))
              files)))))
 
+;;; Return a list of locations found for IDENTIFIER (a symbol).
+;;; Each location is represented by an alist
+;;; '((url . "file:///<path>")
+;;;   (range . ((start . ((line  . <line number>)
+;;;                       (character . <character number))
+;;;             (end . ((line  . <line number>)
+;;;                     (character . <character number))))
+;;;
 (define (fetch-definition-locations identifier)
   (write-log 'debug
              (format "fetch-definition-locations: ~a (~a)"
