@@ -66,11 +66,11 @@
   (define editor-word (get-word-under-cursor params))
   (write-log 'debug (format "got word: ~a" editor-word))
   (if editor-word
-      (let ((def-locs (get-definition-locations (editor-word-text editor-word))))
+      (let ((def-locs (fetch-definition-locations (editor-word-text editor-word))))
         (if (not (null? def-locs))
             (let ((v (list->vector def-locs)))
               (write-log 'debug
-                         (format "$get-definition-locations resulted in ~a"
+                         (format "$fetch-definition-locations resulted in ~a"
                                  v))
               v)
             (begin
@@ -232,6 +232,21 @@
              (cons `(documentation . ,doc)
                    params)))))
 
+(define (fetch-signature-under-cursor params)
+  (define editor-word
+    (get-word-under-cursor params))
+  (if editor-word
+      (let* ((cur-word (editor-word-text editor-word))
+             (signature (fetch-signature cur-word)))
+        (if (not signature)
+            (begin
+              (write-log 'warning
+                         (format "no signature found for: ~a" cur-word))
+              'null)
+            signature))
+      #f))
+
+#;
 (define (fetch-signature-under-cursor params)
   (define editor-word
     (get-word-under-cursor params))

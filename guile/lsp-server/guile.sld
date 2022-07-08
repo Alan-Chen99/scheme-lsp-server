@@ -245,9 +245,6 @@
 (define (pathname-directory path)
   (dirname path))
 
-(define (stringify elem)
-  (format "~a" elem))
-
 (define (get-module-path module-name)
   (define num-parts (if (list? module-name)
                         (length module-name)

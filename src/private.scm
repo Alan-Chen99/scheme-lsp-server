@@ -216,4 +216,5 @@
                             (print-log port)))))))
         (else (print-log (current-error-port)))))
 
-
+(define (stringify elem)
+  (format "~a" elem))

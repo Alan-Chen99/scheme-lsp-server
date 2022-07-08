@@ -1,8 +1,9 @@
 (define-module (lsp-server parse)
 
 #:export (collect-meta-data-from-file
+          fetch-signature
           generate-meta-data!
-          get-definition-locations)
+          fetch-definition-locations)
 
 #:use-module (srfi srfi-1)
 #:use-module (srfi srfi-28)

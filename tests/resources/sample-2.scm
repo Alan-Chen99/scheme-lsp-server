@@ -8,4 +8,7 @@
             x))
  (else))
 
+(define (func2 x . args)
+  (cons x args))
+
 (include "sample-3-included.scm")

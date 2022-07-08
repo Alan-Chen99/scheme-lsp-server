@@ -450,9 +450,9 @@
                (not (string=? f "")))
              files)))))
 
-(define (get-definition-locations identifier)
+(define (fetch-definition-locations identifier)
   (write-log 'debug
-             (format "get-definition-locations: ~a (~a)"
+             (format "fetch-definition-locations: ~a (~a)"
                      identifier
                      (if (symbol? identifier)
                          'symbol
@@ -485,6 +485,34 @@
                                      (character . ,char-number))))))))
              locations))
       '()))
+
+(define (pinfo-signature pinfo)
+  (define name (procedure-info-name pinfo))
+  (define args (procedure-info-arguments pinfo))
+
+  (format "~a" (cons name args)))
+
+(define (fetch-signature identifier)
+  (define id
+    (if (symbol? identifier)
+        identifier
+        (string->symbol identifier)))
+  (define source-meta-data-table
+    (hash-table-ref/default
+     (identifier-to-source-meta-data-table)
+     id
+     #f))
+  (define pinfos
+    (if source-meta-data-table
+        (hash-table-values source-meta-data-table)
+        '()))
+  (define pinfo
+    (if (not (null? pinfos))
+        (car pinfos)
+        #f))
+  (if pinfo
+      (pinfo-signature pinfo)
+      #f))
 
 (define (compose f g)
   (lambda args
