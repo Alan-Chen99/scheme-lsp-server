@@ -37,7 +37,7 @@
 
 (include "../src/parse.scm")
 
-(test-begin "cond-expand parsing")
+(test-begin "cond-expand parse tests")
 
 (cond-expand
  (guile (test-assert (cond-expand-clause-satisfied? '(guile #t))))
@@ -76,9 +76,9 @@
              '(cond-expand ((or gambit guile) "gambit or guile")
                            ((or chicken chibi) "chibi or chicken")
                            (else))))
-(test-end "cond-expand parsing")
+(test-end "cond-expand parse tests")
 
-(test-begin "Collecting meta-data")
+(test-begin "parse tests")
 
 (test-assert (tagged-expression? '(import ...) 'import))
 
@@ -189,7 +189,7 @@
 
 (parameterize ((identifier-to-source-meta-data-table (make-hash-table))
                (source-path-timestamps (make-hash-table)))
-  (parse-and-update-table! "resources/sample-2.scm")
+  (generate-meta-data! "resources/sample-2.scm")
   (test-equal "(func2 x . args)"
               (fetch-signature 'func2))
   (test-assert (lset-intersection equal?
@@ -203,10 +203,11 @@
                        (hash-table-keys
                         (hash-table-ref
                          (identifier-to-source-meta-data-table) 'included-func))))
-  (test-assert (hash-table-exists? (source-path-timestamps)
-                                   "resources/sample-2.scm")
-               (hash-table-exists? (source-path-timestamps)
-                                   "resources/sample-3-included.scm")))
+  (display (hash-table-keys (source-path-timestamps)))
+  (test-assert (and (hash-table-exists? (source-path-timestamps)
+                                        "resources/sample-2.scm")
+                    (hash-table-exists? (source-path-timestamps)
+                                        "resources/sample-3-included.scm"))))
 
 (parameterize ((identifier-to-source-meta-data-table (make-hash-table))
                (source-path-timestamps (make-hash-table)))
@@ -226,4 +227,4 @@
   (test-assert (member '(scheme file)
                        (source-meta-data-imports meta-data))))
 
-(test-end "Collecting meta-data")
+(test-end "parse tests")

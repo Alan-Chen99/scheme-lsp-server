@@ -3,6 +3,7 @@
 (export generate-meta-data!
         fetch-definition-locations
         fetch-documentation
+        fetch-signature
         file-already-parsed?)
 
 (import (srfi 1)
@@ -15,8 +16,10 @@
         (chicken irregex)
         (chicken file)
         (chicken file posix)
-        (lsp-server chicken)
-        (lsp-server private))
+        (only (chicken keyword) keyword?)
+        (lsp-server chicken util)
+        (lsp-server private)
+        (lsp-server trie))
 
 (begin
   (include "parse.scm")

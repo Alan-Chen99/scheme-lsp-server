@@ -13,7 +13,10 @@
         $tcp-accept
         $tcp-connect
         $tcp-listen
-        $tcp-read-timeout)
+        $tcp-read-timeout
+        get-module-path
+        pathname-directory
+        pathname-join)
 
 (import (apropos)
         (chicken base)
@@ -42,6 +45,8 @@
 
         (srfi 18)
         (lsp-server private)
+        (lsp-server chicken util)
+        (lsp-server parse)
         (lsp-server tags))
 
 (begin
@@ -91,9 +96,9 @@
     ;;(initialize-tags-path)
     (set! module-egg-mapping (build-module-egg-mapping))
     ;;(generate-tags (tags-path) #t eggs-path chicken-source-path (root-path))
-    (generate-tags! eggs-path)
-    (generate-tags! chicken-source-path)
-    (generate-tags! (root-path))
+    (generate-meta-data! eggs-path)
+    (generate-meta-data! chicken-source-path)
+    (generate-meta-data! (root-path))
 
     ;;(tags-table (parse-tags-file (tags-path)))
     #t)
@@ -284,5 +289,4 @@
      (foreign-value "C_CHICKEN_STATUS_PROGRAM" c-string)))
 
   (define (spawn-repl-server port-num)
-    (nrepl port-num)))
-)
+    (nrepl port-num))))

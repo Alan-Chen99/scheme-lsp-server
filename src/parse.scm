@@ -417,6 +417,13 @@
                       (generate-meta-data! module-path))))
                 (source-meta-data-imports meta-data)))))
 
+(define scheme-file-regex
+  (irregex '(: (* any)
+               (or ".scm"
+                   ".sld"
+                   ".ss")
+               eol)))
+
 (cond-expand
  (guile (define (generate-meta-data! . files)
           (write-log 'debug
@@ -425,7 +432,9 @@
            (lambda (f)
              (ftw f
                   (lambda (filename statinfo flag)
-                    (when (eq? flag 'regular)
+                    (when (and (eq? flag 'regular)
+                               (irregex-search scheme-file-regex
+                                               filename))
                       (let ((old-time-stamp (hash-table-ref/default
                                              (source-path-timestamps)
                                              filename
@@ -455,11 +464,7 @@
                                 f))))
         (if (directory? f)
             (let ((files (find-files f
-                                     #:test (irregex
-                                             '(: (* any)
-                                                 (or ".scm"
-                                                     ".sld"
-                                                     ".ss"))))))
+                                     #:test scheme-file-regex)))
               (for-each
                (lambda (filename)
                  (let* ((stats (file-stat filename))

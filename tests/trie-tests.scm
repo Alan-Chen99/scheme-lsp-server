@@ -1,6 +1,10 @@
-(import (scheme base)
-        (srfi srfi-64)
-        (srfi srfi-69))
+(import (scheme base))
+
+(cond-expand
+ (guile (import (srfi srfi-64)
+                (srfi srfi-69)))
+ (else (import (srfi 64)
+               (srfi 69))))
 
 (include "../src/trie.scm")
 
