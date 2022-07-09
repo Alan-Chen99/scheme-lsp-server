@@ -99,20 +99,8 @@
                     identifier)
                 (apropos-fold-accessible (current-module))))
 
-;;; Return the documentation (a string) found for IDENTIFIER (a symbol) in
-;;; MODULE (a symbol). Return #f if nothing found.
-;;; Example call: $fetch-documentation '(srfi-1) 'map
 (define ($fetch-documentation module-name identifier)
-  (define mod (resolve-module module-name))
-  (define obj (module-ref mod identifier))
-  (if (and obj (procedure? obj))
-      (format "~a~%~a"
-              (build-procedure-signature module-name identifier obj)
-              (let ((doc (object-documentation obj)))
-                (if doc
-                    (string-append doc "\n")
-                    "")))
-      #f))
+  #f)
 
 (define ($get-definition-locations identifier)
   #f)

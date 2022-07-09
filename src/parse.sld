@@ -2,7 +2,9 @@
 
 (export collect-meta-data-from-file
         generate-meta-data!
-        fetch-definition-locations)
+        fetch-definition-locations
+        fetch-documentation
+        file-already-parsed?)
 
 (import (srfi 1)
         (srfi 28)

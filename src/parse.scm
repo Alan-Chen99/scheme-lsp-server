@@ -1,10 +1,11 @@
 (define-record-type <procedure-info>
-  (make-procedure-info name arguments line character)
+  (make-procedure-info name arguments line character docstring)
   procedure-info?
   (name procedure-info-name)
   (arguments procedure-info-arguments)
   (line procedure-info-line set-procedure-info-line!)
-  (character procedure-info-character set-procedure-info-character!))
+  (character procedure-info-character set-procedure-info-character!)
+  (docstring procedure-info-docstring))
 
 (define-record-type <source-meta-data>
   (make-source-meta-data procedure-infos imports)
@@ -129,8 +130,20 @@
                  '()
                  (cdr expr))))
 
+(define (case-lambda-docstring expr)
+  (define body (cdr expr))
+  (cond ((null? body) #f)
+        ((string? (car body)) (car body))
+        (else #f)))
+
 (define (lambda-arguments expr)
   (cadr expr))
+
+(define (lambda-docstring expr)
+  (define body (cddr expr))
+  (cond ((null? body) #f)
+        ((string? (car body)) (car body))
+        (else #f)))
 
 (define (procedure-definition-name expr)
   (cond ((procedure-definition-with-parenthesis? expr)
@@ -145,6 +158,17 @@
          (case-lambda-arguments (caddr expr)))
         ((procedure-definition-with-lambda? expr)
          (lambda-arguments (caddr expr)))))
+
+(define (procedure-definition-docstring expr)
+  (cond ((procedure-definition-with-parenthesis? expr)
+         (let ((body (cddr expr)))
+           (cond ((null? body) #f)
+                 ((string? (car body)) (car body))
+                 (else #f))))
+        ((procedure-definition-with-lambda? expr)
+         (lambda-docstring (caddr expr)))
+        ((procedure-definition-with-case-lambda? expr)
+         (case-lambda-docstring (caddr expr)))))
 
 ;;;; Main procedures
 
@@ -234,7 +258,8 @@
                                     (make-procedure-info proc-name
                                                          (procedure-definition-arguments expr)
                                                          #f
-                                                         #f))
+                                                         #f
+                                                         (procedure-definition-docstring expr)))
                    procedure-infos)
                  imports))
           ((or (include-form? expr)
@@ -287,7 +312,7 @@
 (define definition-regex
   (irregex '(: (* whitespace)
                (* #\()
-               (: (or "define" "define-syntax" "set!")
+               (: (or "define" "define*" "define-syntax" "set!")
                   (+ whitespace)
                   (? #\()
                   (submatch (+ (~ (or whitespace
@@ -337,7 +362,8 @@
                                              pname
                                              (procedure-info-arguments pinfo)
                                              (list-ref loc 0)
-                                             (list-ref loc 1))
+                                             (list-ref loc 1)
+                                             (procedure-info-docstring pinfo))
                                             pinfo))
                        acc))
                    (make-hash-table)))
@@ -503,7 +529,7 @@
 
   (format "~a" (cons name args)))
 
-(define (fetch-signature identifier)
+(define (fetch-pinfo identifier)
   (define id
     (if (symbol? identifier)
         identifier
@@ -517,12 +543,24 @@
     (if source-meta-data-table
         (hash-table-values source-meta-data-table)
         '()))
-  (define pinfo
-    (if (not (null? pinfos))
-        (car pinfos)
-        #f))
+  (if (not (null? pinfos))
+      (car pinfos)
+      #f))
+
+(define (file-already-parsed? file-path)
+  (hash-table-exists? (source-path-timestamps) file-path))
+
+(define (fetch-signature identifier)
+  (define pinfo (fetch-pinfo identifier))
   (if pinfo
       (pinfo-signature pinfo)
+      #f))
+
+;;; ignore module for now, but keep the API as before
+(define (fetch-documentation module identifier)
+  (define pinfo (fetch-pinfo identifier))
+  (if pinfo
+      (procedure-info-docstring pinfo)
       #f))
 
 (define (apropos-list word)

@@ -41,6 +41,8 @@
   (newline)
   (display "    --listen <port-num>: port to listen to and spawn repl upon connection.")
   (newline)
+  (display "    --tcp <port-num>: listen on tcp port <port-num> instead of stdio.")
+  (newline)
   (display "    --help (or -h):    display this help and exit.")
   (newline)
   (display "    --version (or -v): display version information and exit.")
@@ -85,31 +87,42 @@
            => (lambda (port-num)
                 (loop (cddr args)
                       (cons `(listen . ,port-num) options))))
+          ((and (>= (length args) 2)
+                (string=? (car args) "--tcp")
+                (string->number (cadr args)))
+           => (lambda (port-num)
+                (loop (cddr args)
+                      (cons `(tcp . ,port-num) options))))
           (else (print-usage)
                 (exit)))))
 
 (define (main args)
   (define options (process-args args))
-  (display "options: ")
-  (display options)
-  (newline)
   (define log-level (let ((log-level-option (assoc 'log-level options)))
                       (if log-level-option
                           (cdr log-level-option)
                           'error)))
-  (define listen-port-num
+  (define repl-port-num
     (let ((listen-option (assoc 'listen options)))
       (if listen-option
           (cdr listen-option)
           #f)))
 
-  (if listen-port-num
+  (define tcp-port-num
+    (let ((tcp-option (assoc 'tcp options)))
+      (if tcp-option
+          (cdr tcp-option)
+          #f)))
+
+  (if repl-port-num
       (thread-start!
        (make-thread
-        (lambda () (spawn-repl-server listen-port-num))))
+        (lambda () (spawn-repl-server repl-port-num))))
       #f)
 
   (parameterize ((lsp-server-log-level log-level))
-    (lsp-server-start/stdio)))
+    (if tcp-port-num
+        (lsp-server-start/tcp tcp-port-num)
+        (lsp-server-start/stdio))))
 
 (main (cdr (command-line)))

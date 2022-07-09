@@ -4,6 +4,7 @@
         lsp-server-log-level
         lsp-spawner-start
         lsp-server-start/stdio
+        lsp-server-start/tcp
         lsp-server-version)
 
 (import (except (chicken io) read-string)

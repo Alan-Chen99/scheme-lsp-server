@@ -29,11 +29,13 @@
   '((textDocumentSync . ((save . #t)
                          (change . 2)))
     (hoverProvider . #t)
-    (completionProvider . ((resolveProvider . #f)))
+    (completionProvider . ((resolveProvider . #t)))
     (signatureHelpProvider . ())))
 
 (define-handler (initialize-handler params)
   (define root-path (get-root-path params))
+  (when (and root-path (not (equal? root-path 'null)))
+    (generate-meta-data! root-path))
   (when ($initialize-lsp-server! root-path)
     (write-log 'info "LSP server initialized"))
   (set! lsp-server-state 'on)
@@ -228,7 +230,7 @@
            (write-log 'debug
                       (format "Calling $fetch-documentation for mod ~a id ~a"
                               mod id))
-           (let ((doc ($fetch-documentation mod id)))
+           (let ((doc (fetch-documentation mod id)))
              (cons `(documentation . ,doc)
                    params)))))
 
@@ -279,8 +281,13 @@
     `((signatures . ,(vector `((label . ,signature)))))))
 
 (define-handler (text-document/hover params)
+  (define file-path (get-uri-path params))
   (write-log 'debug
              (format "hover with params: ~a" params))
+
+  ;; somehow VSCode doesn't send didOpen calls, so we parse files if needed.
+  (when (not (file-already-parsed? file-path))
+    (generate-meta-data! file-path))
   (let ((signature (fetch-signature-under-cursor params)))
     (if (and signature
              (not (equal? signature ""))
@@ -329,6 +336,10 @@
    ((input-port output-port)
     (parameterize-and-run
      (lambda () (json-rpc-loop input-port output-port))))))
+
+(define (lsp-server-start/tcp port-num)
+  (parameterize-and-run
+   (lambda () (json-rpc-start-server/tcp port-num))))
 
 (define (parameterize-log-levels thunk)
   (parameterize ((log-level (lsp-server-log-level))

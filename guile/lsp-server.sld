@@ -3,6 +3,7 @@
 #:export (lsp-server-log-level
           lsp-spawner-start
           lsp-server-start/stdio
+          lsp-server-start/tcp
           lsp-server-version)
 
 #:re-export (lsp-server-log-file)

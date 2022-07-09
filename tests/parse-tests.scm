@@ -10,7 +10,8 @@
                 (except (srfi srfi-69) hash-table-merge!)
                 (ice-9 ftw)
                 (lsp-server private)
-                (lsp-server guile)))
+                (lsp-server guile)
+                (lsp-server trie)))
  (chicken (import (srfi 1)
                   (srfi 28)
                   (srfi 64)
@@ -105,6 +106,18 @@
              '(define (lset-union = . rest)
                 ;; Likewise, allow memq / memv to be used if possible.
                 #t)))
+
+(test-equal "my func"
+            (procedure-definition-docstring
+             '(define (f x) "my func" x)))
+
+(test-equal "my func"
+            (procedure-definition-docstring
+             '(define f (lambda (x) "my func" x))))
+
+(test-equal "my func"
+            (procedure-definition-docstring
+             '(define f (case-lambda "my func" (() 1) ((x) x)))))
 
 (let ((res (parse-expression
             '(begin (import (srfi 1) (srfi 69) utf-8)
