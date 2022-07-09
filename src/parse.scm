@@ -404,18 +404,18 @@
 (define (parse-and-update-table! source-path)
   (write-log 'debug
              (format "parse-and-update-table!: ~s~%" source-path))
-  (define meta-data (collect-meta-data-from-file source-path))
-  (write-log 'debug
-             "parse-and-update-table!: collected meta data:\n")
-  (print-meta-data meta-data)
-  (update-identifier-to-source-meta-data-table! source-path meta-data)
-  (write-log 'debug "parse-and-update-table!: current meta data table state:\n")
-  (print-source-meta-data-table)
-  (for-each (lambda (path)
-              (let ((module-path (get-module-path path)))
-                (when module-path
-                  (generate-meta-data! module-path))))
-            (source-meta-data-imports meta-data)))
+  (guard (condition
+          (#t (write-log 'error
+                         (format "parse-and-update-table!: error parsing file ~a"
+                                 source-path))
+              #f))
+    (let ((meta-data (collect-meta-data-from-file source-path)))
+      (update-identifier-to-source-meta-data-table! source-path meta-data)
+      (for-each (lambda (path)
+                  (let ((module-path (get-module-path path)))
+                    (when module-path
+                      (generate-meta-data! module-path))))
+                (source-meta-data-imports meta-data)))))
 
 (cond-expand
  (guile (define (generate-meta-data! . files)

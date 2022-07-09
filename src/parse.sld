@@ -1,7 +1,6 @@
 (define-library (lsp-server parse)
 
-(export collect-meta-data-from-file
-        generate-meta-data!
+(export generate-meta-data!
         fetch-definition-locations
         fetch-documentation
         file-already-parsed?)

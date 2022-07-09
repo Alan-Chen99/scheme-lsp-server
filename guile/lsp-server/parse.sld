@@ -1,7 +1,6 @@
 (define-module (lsp-server parse)
 
-#:export (collect-meta-data-from-file
-          fetch-signature
+#:export (fetch-signature
           generate-meta-data!
           fetch-definition-locations
           fetch-documentation
@@ -11,7 +10,10 @@
 #:use-module (srfi srfi-1)
 #:use-module (srfi srfi-28)
 #:use-module (srfi srfi-69)
-#:use-module ((scheme base) #:select (define-record-type features read-line))
+#:use-module ((scheme base) #:select (define-record-type
+                                      features
+                                      guard
+                                      read-line))
 #:use-module ((scheme file) #:select (with-input-from-file))
 #:use-module (scheme read)
 #:use-module (lsp-server guile)
