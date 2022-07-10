@@ -103,8 +103,9 @@ CONFIG_CLEAN_FILES = lsp-server/private.scm lsp-server/document.scm \
 	lsp-server/file.scm lsp-server/main.scm lsp-server/server.scm \
 	lsp-server/trie.scm lsp-server/parse.scm README.md
 CONFIG_CLEAN_VPATH_FILES = lsp-server/guile.sld \
-	lsp-server/document.sld lsp-server/private.sld \
-	lsp-server/trie.sld lsp-server/parse.sld lsp-server.sld
+	lsp-server/guile/util.sld lsp-server/document.sld \
+	lsp-server/private.sld lsp-server/trie.sld \
+	lsp-server/parse.sld lsp-server.sld
 am__vpath_adj_setup = srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`;
 am__vpath_adj = case $$p in \
     $(srcdir)/*) f=`echo "$$p" | sed "s|^$$srcdirstrip/||"`;; \
@@ -186,6 +187,7 @@ am__DIST_COMMON = $(srcdir)/Makefile.in $(srcdir)/guile.am \
 	$(top_srcdir)/build-aux/missing \
 	$(top_srcdir)/lsp-server/document.sld \
 	$(top_srcdir)/lsp-server/guile.sld \
+	$(top_srcdir)/lsp-server/guile/util.sld \
 	$(top_srcdir)/lsp-server/parse.sld \
 	$(top_srcdir)/lsp-server/private.sld \
 	$(top_srcdir)/lsp-server/trie.sld build-aux/install-sh \
@@ -321,11 +323,12 @@ NOCOMP_SOURCES = \
   irregex.scm
 
 SOURCES = \
-  lsp-server/private.sld  \
-  lsp-server/document.sld \
-  lsp-server/trie.sld     \
-  lsp-server/parse.sld    \
-  lsp-server/guile.sld    \
+  lsp-server/private.sld    \
+  lsp-server/document.sld   \
+  lsp-server/trie.sld       \
+  lsp-server/parse.sld      \
+  lsp-server/guile/util.sld \
+  lsp-server/guile.sld      \
   lsp-server.sld
 
 EXTRA_DIST = \

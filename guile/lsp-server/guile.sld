@@ -14,11 +14,8 @@
           $tcp-read-timeout
           spawn-repl-server
           library-available?
-          alist-ref
           get-module-path
-          hash-table-join!
-          pathname-directory
-          pathname-join)
+          hash-table-join!)
 
 #:use-module ((scheme base)
               #:select (read-line guard))
@@ -34,6 +31,7 @@
 #:use-module (system vm program)
 #:use-module (system repl server)
 #:use-module (lsp-server private)
+#:use-module (lsp-server guile util)
 
 #:declarative? #f)
 
@@ -105,12 +103,6 @@
 (define ($get-definition-locations identifier)
   #f)
 
-(define (alist-ref key lst)
-  (define res (assoc key lst))
-  (if res
-      (cdr res)
-      #f))
-
 (define* (read-lines #:optional (port #f))
   (define p (or port (current-input-port)))
   (let loop ((res '()))
@@ -134,14 +126,6 @@
   (if base-path
       (canonicalize-path (string-append base-path "/" path))
       path))
-
-(define (pathname-join dir-name file-name)
-  (string-concatenate (list dir-name
-                            file-name-separator-string
-                            file-name)))
-
-(define (pathname-directory path)
-  (dirname path))
 
 (define (get-module-path module-name)
   (define num-parts (if (list? module-name)

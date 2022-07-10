@@ -156,10 +156,10 @@
              3))
       'null
       (let* ((word (editor-word-text editor-word))
-             (suggestions (apropos-list word)))
+             (suggestions (list-completions word)))
         (write-log 'debug "getting completion suggestions for word "
                    word)
-
+        (write-log 'debug (format "suggestions list: ~a" suggestions))
         (write-log 'debug
                    (format "suggestions found: ~a~%"
                            (fold (lambda (sug acc)

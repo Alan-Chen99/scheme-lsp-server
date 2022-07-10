@@ -21,6 +21,7 @@ AC_CONFIG_LINKS([lsp-server/private.scm:../src/private.scm
                  lsp-server/parse.scm:../src/parse.scm
 
                  lsp-server/guile.sld:lsp-server/guile.sld
+                 lsp-server/guile/util.sld:lsp-server/guile/util.sld
                  lsp-server/document.sld:lsp-server/document.sld
                  lsp-server/private.sld:lsp-server/private.sld
                  lsp-server/trie.sld:lsp-server/trie.sld

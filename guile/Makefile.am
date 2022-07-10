@@ -10,11 +10,12 @@ NOCOMP_SOURCES =          \
   irregex.scm
 
 SOURCES = \
-  lsp-server/private.sld  \
-  lsp-server/document.sld \
-  lsp-server/trie.sld     \
-  lsp-server/parse.sld    \
-  lsp-server/guile.sld    \
+  lsp-server/private.sld    \
+  lsp-server/document.sld   \
+  lsp-server/trie.sld       \
+  lsp-server/parse.sld      \
+  lsp-server/guile/util.sld \
+  lsp-server/guile.sld      \
   lsp-server.sld
 
 EXTRA_DIST =            \

@@ -103,12 +103,6 @@
                    (- (string-length mod) 1))
         " ")))
 
-(define (alist-ref key alist)
-  (let ((p (assoc key alist)))
-    (if p
-        (cdr p)
-        #f)))
-
 (define (alist-ref* keys alist)
   (let loop ((keys keys)
              (alist alist))
@@ -150,15 +144,6 @@
 
 (define (char-bracket? char)
   (memq char '(#\( #\) #\{ #\} #\[ #\])))
-
-
-(cond-expand
- (guile (define (alist-ref key alist)
-          (define match (assoc key alist))
-          (if match
-              (cdr match)
-              #f)))
- (else))
 
 (define (symbols->string sl)
   (string-append "(" (string-join (map symbol->string sl)) ")"))

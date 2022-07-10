@@ -402,15 +402,16 @@
      (trie-insert! (all-identifiers) (stringify identifier) #f))))
 
 (define (parse-and-update-table! source-path)
+  (define abs-source-path (get-absolute-pathname source-path))
   (write-log 'debug
-             (format "parse-and-update-table!: ~s~%" source-path))
+             (format "parse-and-update-table!: ~s~%" abs-source-path))
   (guard (condition
           (#t (write-log 'error
                          (format "parse-and-update-table!: error parsing file ~a"
-                                 source-path))
+                                 abs-source-path))
               #f))
-    (let ((meta-data (collect-meta-data-from-file source-path)))
-      (update-identifier-to-source-meta-data-table! source-path meta-data)
+    (let ((meta-data (collect-meta-data-from-file abs-source-path)))
+      (update-identifier-to-source-meta-data-table! abs-source-path meta-data)
       (for-each (lambda (path)
                   (let ((module-path (get-module-path path)))
                     (when module-path
@@ -432,21 +433,22 @@
            (lambda (f)
              (ftw f
                   (lambda (filename statinfo flag)
-                    (when (and (eq? flag 'regular)
-                               (irregex-search scheme-file-regex
-                                               filename))
-                      (let ((old-time-stamp (hash-table-ref/default
-                                             (source-path-timestamps)
-                                             filename
-                                             #f)))
-                        (when (or (not old-time-stamp)
-                                  (< old-time-stamp
-                                     (stat:mtime statinfo)))
-                          (begin
-                            (hash-table-set! (source-path-timestamps)
-                                             filename
-                                             (stat:mtime statinfo))
-                            (parse-and-update-table! filename)))))
+                    (let ((abs-filename (get-absolute-pathname filename)))
+                     (when (and (eq? flag 'regular)
+                                (irregex-search scheme-file-regex
+                                                abs-filename))
+                       (let ((old-time-stamp (hash-table-ref/default
+                                              (source-path-timestamps)
+                                              abs-filename
+                                              #f)))
+                         (when (or (not old-time-stamp)
+                                   (< old-time-stamp
+                                      (stat:mtime statinfo)))
+                           (begin
+                             (hash-table-set! (source-path-timestamps)
+                                              abs-filename
+                                              (stat:mtime statinfo))
+                             (parse-and-update-table! abs-filename))))))
                     #t)))
            (filter (lambda (f)
                      (not (string=? f "")))
@@ -467,17 +469,20 @@
                                      #:test scheme-file-regex)))
               (for-each
                (lambda (filename)
-                 (let* ((stats (file-stat filename))
+                 (let* ((abs-filename (get-absolute-pathname filename))
+                        (stats (file-stat abs-filename))
                         (mtime (vector-ref stats 8))
                         (old-time-stamp (hash-table-ref/default
-                                         (source-path-timestamps) filename #f)))
+                                         (source-path-timestamps)
+                                         abs-filename
+                                         #f)))
                    (when (or (not old-time-stamp)
                              (> mtime old-time-stamp))
                      (begin
                        (hash-table-set! (source-path-timestamps)
-                                        filename
+                                        abs-filename
                                         mtime)
-                       (parse-and-update-table! filename)))))
+                       (parse-and-update-table! abs-filename)))))
                files))
             (parse-and-update-table! f))))
      (filter (lambda (f)
@@ -568,7 +573,7 @@
       (procedure-info-docstring pinfo)
       #f))
 
-(define (apropos-list word)
+(define (list-completions word)
   (map (lambda (name)
          (make-apropos-info #f name #f #f))
        (trie-words-with-prefix (all-identifiers)

@@ -1,9 +1,12 @@
 (import (scheme base))
 
 (cond-expand
- (guile (import (srfi srfi-64)
-                (srfi srfi-69)))
- (else (import (srfi 64)
+ (guile (import (only (srfi srfi-1) every fold)
+                (srfi srfi-64)
+                (srfi srfi-69)
+                (lsp-server guile util)))
+ (else (import (only (srfi srfi-1) every fold)
+               (srfi 64)
                (srfi 69))))
 
 (include "../src/trie.scm")

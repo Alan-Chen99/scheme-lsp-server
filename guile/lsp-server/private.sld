@@ -46,6 +46,7 @@
 #:use-module (srfi srfi-1)
 #:use-module (srfi srfi-28)
 #:use-module (srfi srfi-69)
+#:use-module (lsp-server guile util)
 
 
 #:declarative? #f)

@@ -5,14 +5,17 @@
                         map
                         error)
                 (srfi srfi-1)
+                (only (srfi srfi-13) string-contains)
                 (srfi srfi-28)
                 (srfi srfi-64)
                 (except (srfi srfi-69) hash-table-merge!)
                 (ice-9 ftw)
                 (lsp-server private)
                 (lsp-server guile)
+                (lsp-server guile util)
                 (lsp-server trie)))
  (chicken (import (srfi 1)
+                  (only (srfi 13) string-contains)
                   (srfi 28)
                   (srfi 64)
                   (srfi 69)
@@ -24,6 +27,7 @@
                   (chicken file)
                   (chicken file posix)
                   (lsp-server chicken)
+                  (lsp-server chicken util)
                   (lsp-server private))))
 (cond-expand
  (chicken
@@ -181,10 +185,11 @@
   (test-assert (lset-intersection equal?
                                   (hash-table-keys (identifier-to-source-meta-data-table))
                                   '(f g)))
-  (test-assert (member "resources/sample-1.scm"
-                       (hash-table-keys
-                        (hash-table-ref
-                         (identifier-to-source-meta-data-table) 'f))))
+  (test-assert (any (lambda (k)
+                      (string-contains k "sample-1.scm"))
+                    (hash-table-keys
+                     (hash-table-ref
+                      (identifier-to-source-meta-data-table) 'f))))
   (test-equal "(f x)" (fetch-signature 'f)))
 
 (parameterize ((identifier-to-source-meta-data-table (make-hash-table))
@@ -195,19 +200,34 @@
   (test-assert (lset-intersection equal?
                                   (hash-table-keys (identifier-to-source-meta-data-table))
                                   '(func included-func)))
-  (test-assert (member "resources/sample-2.scm"
-                       (hash-table-keys
-                        (hash-table-ref
-                         (identifier-to-source-meta-data-table) 'func))))
-  (test-assert (member "resources/sample-3-included.scm"
-                       (hash-table-keys
-                        (hash-table-ref
-                         (identifier-to-source-meta-data-table) 'included-func))))
+  (test-assert (any (lambda (k)
+                      (string-contains k "sample-2.scm"))
+                    (hash-table-keys
+                     (hash-table-ref
+                      (identifier-to-source-meta-data-table) 'func))))
+  (test-assert (any (lambda (k)
+                      (string-contains k
+                                       "sample-3-included.scm"))
+                    (hash-table-keys
+                     (hash-table-ref
+                      (identifier-to-source-meta-data-table) 'included-func))))
+  (test-assert (every absolute-pathname?
+                      (hash-table-keys
+                       (hash-table-ref
+                        (identifier-to-source-meta-data-table) 'func))))
+  (test-assert (every absolute-pathname?
+                      (hash-table-keys
+                       (hash-table-ref
+                        (identifier-to-source-meta-data-table) 'included-func))))
   (display (hash-table-keys (source-path-timestamps)))
-  (test-assert (and (hash-table-exists? (source-path-timestamps)
-                                        "resources/sample-2.scm")
-                    (hash-table-exists? (source-path-timestamps)
-                                        "resources/sample-3-included.scm"))))
+  (test-assert (and (any (lambda (k)
+                           (string-contains k "sample-2.scm"))
+                         (hash-table-keys (source-path-timestamps)))
+                    (any (lambda (k)
+                           (string-contains k "sample-3-included.scm"))
+                         (hash-table-keys (source-path-timestamps)))))
+  (test-assert (every absolute-pathname?
+                      (hash-table-keys (source-path-timestamps)))))
 
 (parameterize ((identifier-to-source-meta-data-table (make-hash-table))
                (source-path-timestamps (make-hash-table)))
@@ -217,7 +237,9 @@
   (test-assert (hash-table-exists? (identifier-to-source-meta-data-table)
                                    'g))
   (test-assert (hash-table-exists? (identifier-to-source-meta-data-table)
-                                   'func)))
+                                   'func))
+  (test-assert (every absolute-pathname?
+                      (hash-table-keys (source-path-timestamps)))))
 
 (let ((meta-data (collect-meta-data-from-file "../guile/lsp-server/parse.sld")))
   (test-assert (member '(srfi srfi-1)

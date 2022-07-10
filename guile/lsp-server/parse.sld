@@ -5,7 +5,7 @@
           fetch-definition-locations
           fetch-documentation
           file-already-parsed?
-          apropos-list)
+          list-completions)
 
 #:use-module (srfi srfi-1)
 #:use-module (srfi srfi-28)
@@ -19,6 +19,7 @@
 #:use-module (lsp-server guile)
 #:use-module (lsp-server private)
 #:use-module (lsp-server trie)
+#:use-module (lsp-server guile util)
 #:use-module (system vm program)
 #:use-module (ice-9 ftw)
 

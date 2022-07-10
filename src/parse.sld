@@ -4,7 +4,8 @@
         fetch-definition-locations
         fetch-documentation
         fetch-signature
-        file-already-parsed?)
+        file-already-parsed?
+        list-completions)
 
 (import (srfi 1)
         (srfi 28)

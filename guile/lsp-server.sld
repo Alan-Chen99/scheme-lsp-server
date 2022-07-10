@@ -28,6 +28,7 @@
 
 #:use-module (system vm program)
 
+#:use-module (lsp-server guile util)
 #:use-module (lsp-server guile)
 #:use-module (lsp-server document)
 #:use-module (lsp-server parse)
