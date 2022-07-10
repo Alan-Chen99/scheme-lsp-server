@@ -46,8 +46,7 @@
         (srfi 18)
         (lsp-server private)
         (lsp-server chicken util)
-        (lsp-server parse)
-        (lsp-server tags))
+        (lsp-server parse))
 
 (begin
 
@@ -55,19 +54,11 @@
 ;;; to fetch the correct documentation with chicken-doc
   (define module-egg-mapping #f)
 
-  ;;; Maps identifiers (string) to an alist that maps the path of
-  ;;; a source file (string) to a <tag-info> record.
-  (define tags-table
-    (make-parameter (make-hash-table)))
-
   (define eggs-path
     (make-pathname (system-cache-directory) "chicken-install"))
 
   (define chicken-source-path
     (or (get-environment-variable "CHICKEN_SOURCE_PATH") ""))
-
-  (define tags-path
-    (make-parameter #f))
 
   (define root-path
     (make-parameter #f))
@@ -76,12 +67,6 @@
 
   (define $server-name
     "CHICKEN LSP server")
-
-  (define (initialize-tags-path)
-    (when (not (tags-path))
-      (tags-path (if (eq? (root-path) 'null)
-                     (create-temporary-file)
-                     (make-pathname (root-path) "CHICKEN-TAGS")))))
 
   (define (pick-port)
     (+ (pseudo-random-integer 2000)
@@ -93,14 +78,11 @@
     (root-path (if (and root (not (equal? root 'null)))
                    root
                    "."))
-    ;;(initialize-tags-path)
     (set! module-egg-mapping (build-module-egg-mapping))
-    ;;(generate-tags (tags-path) #t eggs-path chicken-source-path (root-path))
     (generate-meta-data! eggs-path)
     (generate-meta-data! chicken-source-path)
     (generate-meta-data! (root-path))
 
-    ;;(tags-table (parse-tags-file (tags-path)))
     #t)
 
   ;;; An alist with implementation-specific server capabilities. See:
@@ -167,47 +149,11 @@
 
   ;;; Action to execute when FILE-PATH is opened. Used for side effects only.
   (define ($open-file! file-path)
-    (generate-tags! file-path))
+    (generate-meta-data! file-path))
 
   ;;; Action to execute when FILE-PATH is saved. Used for side effects only.
   (define ($save-file! file-path)
-    (generate-tags! file-path))
-
-  (define (read-definitions src-path)
-    (define regex
-      (irregex '(: (* whitespace)
-                   (submatch (+ (~ whitespace)))
-                   (* whitespace)
-                   #\delete
-                   (? (: (~ numeric) (* any) #\x1))
-                   (submatch (+ numeric))
-                   #\,
-                   (submatch (+ numeric)))))
-    (let loop ((line (read-line))
-               (res (make-hash-table)))
-      (if (or (eof-object? line)
-              (string-prefix? "\f" line))
-          res
-          (let ((submatches (irregex-match regex line)))
-            (if (and submatches
-                     (>= (irregex-match-num-submatches submatches)
-                         3))
-                (let ((identifier (irregex-match-substring submatches 1))
-                      (line-number
-                       (- (string->number
-                           (irregex-match-substring submatches 2))
-                          1))
-                      (char-number
-                       (string->number (irregex-match-substring submatches 3))))
-                  (loop (read-line)
-                        (begin (hash-table-set! res
-                                                identifier
-                                                `((,src-path . ,(make-tag-info src-path line-number char-number))))
-                               res)))
-                (begin (write-log 'debug
-                                  (format  "skipping ill-formed TAGS line: ~a"
-                                           line))
-                       (loop (read-line) res)))))))
+    (generate-meta-data! file-path))
 
   (define (join-definition-tables! left right)
     (for-each
@@ -240,7 +186,7 @@
   ;;;                     (character . <character number))))
   ;;;
   (define ($get-definition-locations identifier)
-    (get-definition-locations identifier))
+    (fetch-definition-locations identifier))
 
   (define (build-module-egg-mapping)
     (define-values (in out pid)

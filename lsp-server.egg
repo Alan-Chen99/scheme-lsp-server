@@ -29,16 +29,12 @@
   (extension lsp-server.chicken
              (source "chicken/chicken.sld")
              (component-dependencies lsp-server.private
-                                     lsp-server.chicken.util
-                                     lsp-server.tags))
+                                     lsp-server.chicken.util))
   (extension lsp-server.chicken.util
              (source "chicken/util.sld"))
   (extension lsp-server.document
              (source "src/document.sld")
              (source-dependencies "src/document.scm"))
-  (extension lsp-server.tags
-             (source "src/tags.sld")
-             (source-dependencies "src/tags.scm"))
   (extension lsp-server.trie
              (source "src/trie.sld")
              (source-dependencies "src/trie.scm"))
