@@ -16,7 +16,6 @@
                                       read-line))
 #:use-module ((scheme file) #:select (with-input-from-file))
 #:use-module (scheme read)
-#:use-module (lsp-server guile)
 #:use-module (lsp-server private)
 #:use-module (lsp-server trie)
 #:use-module (lsp-server guile util)

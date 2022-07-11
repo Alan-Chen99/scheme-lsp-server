@@ -129,7 +129,7 @@
                     (define g (lambda (x y) (+ x y))))
             (make-parse-context #f))))
   (test-equal '((srfi 1) (srfi 69) utf-8) (source-meta-data-imports res))
-  (test-equal 2 (hash-table-size (source-meta-data-procedure-infos res))))
+  (test-equal 2 (hash-table-size (source-meta-data-procedure-info-table res))))
 
 (let ((res (parse-expression
             '(define-library (my lib)
@@ -139,7 +139,7 @@
                 (define g (lambda (x y) (+ x y))))
              (make-parse-context #f))))
   (test-equal '((srfi 1) (srfi 69)) (source-meta-data-imports res))
-  (test-equal 2 (hash-table-size (source-meta-data-procedure-infos res))))
+  (test-equal 2 (hash-table-size (source-meta-data-procedure-info-table res))))
 
 (let ((res (parse-expression
             '(define-module (my lib)
@@ -161,24 +161,24 @@
             (make-parse-context #f))))
   (cond-expand
    (chicken (test-equal '((apropos-api)) (source-meta-data-imports res))
-            (test-equal 2 (hash-table-size (source-meta-data-procedure-infos res))))
+            (test-equal 2 (hash-table-size (source-meta-data-procedure-info-table res))))
    (guile (test-equal '((system vm program)) (source-meta-data-imports res))
-          (test-equal 1 (hash-table-size (source-meta-data-procedure-infos res))))))
+          (test-equal 1 (hash-table-size (source-meta-data-procedure-info-table res))))))
 
 (let ((res (collect-meta-data-from-file "resources/sample-1.scm")))
   (test-equal 2 (length (source-meta-data-imports res)))
   (test-equal 2 (hash-table-size
-                 (source-meta-data-procedure-infos res)))
+                 (source-meta-data-procedure-info-table res)))
   (test-equal 3 (procedure-info-line
-                 (hash-table-ref (source-meta-data-procedure-infos res) 'f)))
+                 (hash-table-ref (source-meta-data-procedure-info-table res) 'f)))
   (test-equal '(x)
               (procedure-info-arguments
-               (hash-table-ref (source-meta-data-procedure-infos res) 'f)))
+               (hash-table-ref (source-meta-data-procedure-info-table res) 'f)))
   (test-equal 6 (procedure-info-line
-                 (hash-table-ref (source-meta-data-procedure-infos res) 'g)))
+                 (hash-table-ref (source-meta-data-procedure-info-table res) 'g)))
   (test-equal '(x y)
               (procedure-info-arguments
-               (hash-table-ref (source-meta-data-procedure-infos res) 'g))))
+               (hash-table-ref (source-meta-data-procedure-info-table res) 'g))))
 
 (parameterize ((identifier-to-source-meta-data-table (make-hash-table)))
   (parse-and-update-table! "resources/sample-1.scm")

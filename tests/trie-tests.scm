@@ -19,6 +19,14 @@
   (trie-insert! trie "abc" #f)
   (test-equal '("abc" "abcd" "bla") (trie-keys trie))
   (test-equal '("abc" "abcd") (trie-words-with-prefix trie "ab"))
-  (test-equal '() (trie-words-with-prefix trie "ga")))
+  (test-equal '() (trie-words-with-prefix trie "ga"))
+
+  (let* ((alist (trie->alist trie))
+         (trie2 (alist->trie alist))
+         (keys (trie-keys trie2)))
+    (test-assert (every (lambda (entry)
+                          (member entry keys))
+                        '("abc" "abcd" "bla")))
+    (test-equal 3 (length keys))))
 
 (test-end "trie tests")

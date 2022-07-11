@@ -81,3 +81,38 @@
               (loop (+ idx 1)
                     next-node)
               '())))))
+
+(define (trie->alist trie)
+  (define children (trie-node-children trie))
+  (define terminal? (trie-node-terminal? trie))
+  (define value (trie-node-value trie))
+  `((children . ,(hash-table-fold children
+                                  (lambda (k v acc)
+                                    (cons `(,k . ,(trie->alist v))
+                                          acc))
+                                  '()))
+    (terminal? . ,terminal?)
+    (value . ,value)))
+
+(define (alist->trie alist)
+  (unless (not (null? alist))
+    (error "alist->trie: invalid alist-encoded trie: " alist))
+  (define children (assoc 'children alist))
+  (define terminal? (assoc 'terminal? alist))
+  (define value (assoc 'value alist))
+
+  (when (or (not children)
+            (not terminal?)
+            (not value))
+    (error "alist->trie: missing information to build trie: " alist))
+
+  (make-trie-node (alist->hash-table
+                   (fold (lambda (child-pair acc)
+                           (let ((char (car child-pair))
+                                 (node (cdr child-pair)))
+                             (cons (cons char (alist->trie node))
+                                   acc)))
+                         '()
+                         (cdr children)))
+                  (cdr terminal?)
+                  (cdr value)))

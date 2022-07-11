@@ -13,9 +13,7 @@
           $tcp-listen
           $tcp-read-timeout
           spawn-repl-server
-          library-available?
-          get-module-path
-          hash-table-join!)
+)
 
 #:use-module ((scheme base)
               #:select (read-line guard))
@@ -30,6 +28,7 @@
 #:use-module (ice-9 session)
 #:use-module (system vm program)
 #:use-module (system repl server)
+#:use-module (lsp-server parse)
 #:use-module (lsp-server private)
 #:use-module (lsp-server guile util)
 
@@ -103,19 +102,9 @@
 (define ($get-definition-locations identifier)
   #f)
 
-(define* (read-lines #:optional (port #f))
-  (define p (or port (current-input-port)))
-  (let loop ((res '()))
-    (let ((line (read-line p)))
-      (if (eof-object? line)
-          (reverse res)
-          (loop (cons line res))))))
-
-(define (symbol->object sym)
-  (if (and (symbol? sym)
-           (module-defined? (current-module) sym))
-      (module-ref (current-module) sym)
-      #f))
+(define (spawn-repl-server port-num)
+  (define sock (make-tcp-server-socket #:port port-num))
+  (run-server sock))
 
 (define (find-absolute-path path)
   (define base-path
@@ -127,59 +116,3 @@
       (canonicalize-path (string-append base-path "/" path))
       path))
 
-(define (get-module-path module-name)
-  (define num-parts (if (list? module-name)
-                        (length module-name)
-                        1))
-  (define file-path-without-extension
-    (cond ((> num-parts 1)
-          (let* ((dir-part (drop-right module-name 1))
-                 (dir-path
-                  (string-join (map stringify dir-part)
-                               file-name-separator-string)))
-            (pathname-join dir-path
-                           (stringify
-                            (last module-name)))))
-          ((= num-parts 1)
-           (stringify (if (list? module-name)
-                          (car module-name)
-                          module-name)))
-          (else (write-log 'error
-                           (format "invalid module name ~a"
-                                   module-name))
-                #f)))
-  (if (not file-path-without-extension)
-      #f
-      (let loop ((dirs %load-path))
-        (if (null? dirs)
-            #f
-            (let* ((dir (car dirs))
-                   (full-path-without-extension
-                    (pathname-join dir file-path-without-extension))
-                   (scm-file (string-append full-path-without-extension
-                                            ".scm"))
-                   (sld-file (string-append full-path-without-extension
-                                            ".sld"))
-                   (ss-file (string-append full-path-without-extension
-                                           ".ss"))
-                   (file-found
-                    (find file-exists? (list sld-file scm-file ss-file))))
-              (if file-found
-                  file-found
-                  (loop (cdr dirs))))))))
-
-(define (spawn-repl-server port-num)
-  (define sock (make-tcp-server-socket #:port port-num))
-  (run-server sock))
-
-(define (library-available? library-name)
-  (resolve-module library-name #f #f #:ensure #f))
-
-;;; hash-table-merge! had a bug and was only fixed on a recent Guile
-;;; version, we want to support older versions too though.
-(define (hash-table-join! ht other-ht)
-  "Add all key/value pairs from OTHER-HT to HT, overriding HT's
-mappings where present.  Return HT."
-  (hash-table-fold
-   other-ht (lambda (k v ign) (hash-table-set! ht k v)) #f)
-  ht)
