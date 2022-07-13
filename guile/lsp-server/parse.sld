@@ -5,7 +5,10 @@
           fetch-definition-locations
           fetch-documentation
           file-already-parsed?
-          list-completions)
+          list-completions
+          parse-file
+          parse-library-name-from-file
+          source-meta-data-imports)
 
 #:use-module (srfi srfi-1)
 #:use-module (srfi srfi-28)

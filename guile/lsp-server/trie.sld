@@ -4,6 +4,7 @@
           trie?
           trie-insert!
           trie-keys
+          trie-entries-with-prefix
           trie-words-with-prefix
           trie->alist
           alist->trie)

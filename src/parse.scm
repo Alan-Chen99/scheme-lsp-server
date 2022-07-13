@@ -1,22 +1,25 @@
 (define-record-type <procedure-info>
-  (make-procedure-info name arguments line character docstring)
+  (make-procedure-info name arguments module line character docstring)
   procedure-info?
   (name procedure-info-name)
   (arguments procedure-info-arguments)
+  (module procedure-info-module)
   (line procedure-info-line set-procedure-info-line!)
   (character procedure-info-character set-procedure-info-character!)
   (docstring procedure-info-docstring))
 
 (define-record-type <source-meta-data>
-  (make-source-meta-data procedure-info-table imports)
+  (make-source-meta-data library-name procedure-info-table imports)
   source-meta-data?
+  (library-name source-meta-data-library-name set-source-meta-data-library-name!)
   (procedure-info-table source-meta-data-procedure-info-table)
   (imports source-meta-data-imports))
 
 (define-record-type <parse-context>
-  (make-parse-context directory)
+  (make-parse-context directory library-name)
   parse-context?
-  (directory parse-context-directory))
+  (directory parse-context-directory)
+  (library-name parse-context-library-name))
 
 ;;;; Parameters
 
@@ -173,11 +176,13 @@
 ;;;; Main procedures
 
 (define (parse-guile-module expression)
-  (let loop ((expr (cddr expression)) ;; skip module name for now
+  (define lib-name (cadr expression))
+  (let loop ((expr (cddr expression))
              (previous-keyword #f)
              (imports '()))
     (cond ((null? expr)
-           (make-source-meta-data (make-hash-table)
+           (make-source-meta-data lib-name
+                                  (make-hash-table)
                                   (reverse imports)))
           ((keyword? (car expr))
            (loop (cdr expr)
@@ -207,87 +212,116 @@
          (parse-r7rs-import-set (cadr expr)))
         (else expr)))
 
-(define (parse-expression expression context)
-  (let loop ((expr expression)
-             (procedure-info-table (make-hash-table))
-             (imports '()))
-    (cond ((not (list? expr))
-           (make-source-meta-data procedure-info-table
-                                  (reverse imports)))
-          ((null? expr)
-           (make-source-meta-data procedure-info-table
-                                  (reverse imports)))
-          ((guile-library-definition-form? expr)
-           (let ((subform-meta-data (parse-guile-module expr)))
-             (loop (cdr expr)
-                   procedure-info-table
-                   (append (source-meta-data-imports subform-meta-data)
-                           imports))))
-          ((or (library-definition-form? expr)
-               (begin-form? expr))
-           (let ((subforms-meta-data
-                  (map (lambda (e)
-                         (parse-expression e context))
-                       (cdr expr))))
-             (loop (cdr expr)
-                   (fold (lambda (sub-ht acc)
-                           (hash-table-join! acc sub-ht))
-                         procedure-info-table
-                         (map source-meta-data-procedure-info-table
-                              subforms-meta-data))
-                   (append (flatmap source-meta-data-imports
-                                    subforms-meta-data)
-                           imports))))
-          ((cond-expand-form? expr)
-           (let* ((matching-clause (cond-expand-find-satisfied-clause expr))
-                  (subform-meta-data
-                   (parse-expression matching-clause context)))
-             (loop (cdr expr)
-                   (source-meta-data-procedure-info-table subform-meta-data)
-                   (source-meta-data-imports subform-meta-data))))
-          ((import-form? expr)
-           (loop (cdr expr)
-                 procedure-info-table
-                 (append (map parse-r7rs-import-set (cdr expr))
-                         imports)))
-          ((procedure-definition-form? expr)
-           (loop (cdr expr)
-                 (let ((proc-name (procedure-definition-name expr)))
-                   (hash-table-set! procedure-info-table
-                                    proc-name
-                                    (make-procedure-info proc-name
-                                                         (procedure-definition-arguments expr)
-                                                         #f
-                                                         #f
-                                                         (procedure-definition-docstring expr)))
-                   procedure-info-table)
-                 imports))
-          ((or (include-form? expr)
-               (load-form? expr))
-           (when (and (not (null? (cdr expr)))
-                      (string? (cadr expr)))
-             (generate-meta-data!
-              (pathname-join (parse-context-directory context)
-                             (cadr expr))))
-           (make-source-meta-data procedure-info-table
-                                  imports))
-          (else (loop (cdr expr)
-                      procedure-info-table
-                      imports)))))
+(define (parse-expression expr context)
+  (cond ((not (list? expr))
+         #f)
+        ((null? expr)
+         #f)
+        ((guile-library-definition-form? expr)
+         (parse-guile-module expr))
+        ((library-definition-form? expr)
+         (let* ((lib-name (cadr expr))
+                (subforms-meta-data
+                 (fold (lambda (e acc)
+                         (let ((sub-meta-data
+                                (parse-expression e
+                                                  (make-parse-context
+                                                   (parse-context-directory
+                                                    context)
+                                                   lib-name))))
+                           (if sub-meta-data
+                               (cons sub-meta-data acc)
+                               acc)))
+                       '()
+                       (cddr expr))))
+           (make-source-meta-data
+            lib-name
+            (fold (lambda (sub-ht acc)
+                    (hash-table-join! acc sub-ht))
+                  (make-hash-table)
+                  (map source-meta-data-procedure-info-table
+                       subforms-meta-data))
+            (flatmap source-meta-data-imports
+                     subforms-meta-data))))
+        ((begin-form? expr)
+         (let ((subforms-meta-data
+                (fold (lambda (e acc)
+                        (let ((sub-meta-data
+                               (parse-expression e context)))
+                          (if sub-meta-data
+                              (cons sub-meta-data acc)
+                              acc)))
+                      '()
+                      (cdr expr))))
+           (make-source-meta-data
+            (parse-context-library-name context)
+            (fold (lambda (sub-ht acc)
+                    (hash-table-join! acc sub-ht))
+                  (make-hash-table)
+                  (map source-meta-data-procedure-info-table
+                       subforms-meta-data))
+            (flatmap source-meta-data-imports
+                     subforms-meta-data))))
+        ((cond-expand-form? expr)
+         (let* ((matching-clause (cond-expand-find-satisfied-clause expr))
+                (subform-meta-data
+                 (parse-expression matching-clause context)))
+           (if subform-meta-data
+               (make-source-meta-data
+                (parse-context-library-name context)
+                (source-meta-data-procedure-info-table subform-meta-data)
+                (source-meta-data-imports subform-meta-data))
+               #f)))
+        ((import-form? expr)
+         (make-source-meta-data
+          (parse-context-library-name context)
+          (make-hash-table)
+          (map parse-r7rs-import-set (cdr expr))))
+        ((procedure-definition-form? expr)
+         (make-source-meta-data
+          (parse-context-library-name context)
+          (let ((proc-name (procedure-definition-name expr)))
+            (alist->hash-table
+             `((,proc-name .
+                           ,(make-procedure-info
+                             proc-name
+                             (procedure-definition-arguments expr)
+                             (parse-context-library-name context)
+                             #f
+                             #f
+                             (procedure-definition-docstring expr))))))
+          '()))
+        ((or (include-form? expr)
+             (load-form? expr))
+         (when (and (not (null? (cdr expr)))
+                    (string? (cadr expr)))
+           (generate-meta-data!
+            (pathname-join (parse-context-directory context)
+                           (cadr expr))))
+         #f)
+        (else #f)))
 
 (define (cond-expand-find-satisfied-clause expr)
   (cons 'begin (cdr (find cond-expand-clause-satisfied?
                           (cdr expr)))))
 
 (define (merge-meta-data lst)
-  (fold (lambda (m acc)
-          (make-source-meta-data (hash-table-join!
-                                  (source-meta-data-procedure-info-table m)
-                                  (source-meta-data-procedure-info-table acc))
-                                 (append (source-meta-data-imports m)
-                                         (source-meta-data-imports acc))))
-        (make-source-meta-data (make-hash-table) '())
-        lst))
+  (define lib-name #f)
+  (define merged
+    (fold (lambda (m acc)
+            (let ((lib-name-found (source-meta-data-library-name m)))
+              (when lib-name-found
+                (set! lib-name lib-name-found)))
+            (make-source-meta-data #f
+                                   (hash-table-join!
+                                    (source-meta-data-procedure-info-table m)
+                                    (source-meta-data-procedure-info-table acc))
+                                   (append (source-meta-data-imports m)
+                                           (source-meta-data-imports acc))))
+          (make-source-meta-data #f (make-hash-table) '())
+          lst))
+  (set-source-meta-data-library-name! merged lib-name)
+  merged)
 
 (define (print-meta-data meta-data)
   (write-log 'debug (format "imports: ~s" (source-meta-data-imports meta-data)))
@@ -361,6 +395,7 @@
                                             (make-procedure-info
                                              pname
                                              (procedure-info-arguments pinfo)
+                                             (procedure-info-module pinfo)
                                              (list-ref loc 0)
                                              (list-ref loc 1)
                                              (procedure-info-docstring pinfo))
@@ -368,7 +403,17 @@
                        acc))
                    (make-hash-table)))
 
-(define (collect-meta-data-from-file filename)
+(define (parse-library-name-from-file filename)
+  (with-input-from-file filename
+    (lambda ()
+      (let loop ((expr (read)))
+        (cond ((eof-object? expr) #f)
+              ((library-definition-form? expr)
+               (cadr expr))
+              (else
+               (loop (read))))))))
+
+(define (parse-file filename)
   (define meta-data-without-location
     (with-input-from-file filename
       (lambda ()
@@ -377,10 +422,14 @@
           (if (eof-object? expr)
               (merge-meta-data meta-data)
               (loop (read)
-                    (cons (parse-expression expr (make-parse-context
-                                                  (pathname-directory filename)))
-                          meta-data)))))))
+                    (let ((sub-meta-data (parse-expression expr (make-parse-context
+                                                                 (pathname-directory filename)
+                                                                 #f))))
+                      (if sub-meta-data
+                          (cons sub-meta-data meta-data)
+                          meta-data))))))))
   (make-source-meta-data
+   (source-meta-data-library-name meta-data-without-location)
    (collect-procedure-locations
     (source-meta-data-procedure-info-table meta-data-without-location)
     filename)
@@ -399,7 +448,9 @@
                                           v))
                                  (alist->hash-table
                                   `((,source-path . ,pinfo))))
-     (trie-insert! (all-identifiers) (stringify identifier) #f))))
+     (trie-insert! (all-identifiers)
+                   (stringify identifier)
+                   (procedure-info-module pinfo)))))
 
 (define (parse-and-update-table! source-path)
   (define abs-source-path (get-absolute-pathname source-path))
@@ -410,13 +461,14 @@
                          (format "parse-and-update-table!: error parsing file ~a"
                                  abs-source-path))
               #f))
-    (let ((meta-data (collect-meta-data-from-file abs-source-path)))
+    (let ((meta-data (parse-file abs-source-path)))
       (update-identifier-to-source-meta-data-table! abs-source-path meta-data)
-      (for-each (lambda (path)
-                  (let ((module-path (get-module-path path)))
-                    (when module-path
-                      (generate-meta-data! module-path))))
-                (source-meta-data-imports meta-data)))))
+      ;; (for-each (lambda (path)
+      ;;             (let ((module-path (get-module-path path)))
+      ;;               (when module-path
+      ;;                 (generate-meta-data! module-path))))
+      ;;           (source-meta-data-imports meta-data))
+      )))
 
 (define scheme-file-regex
   (irregex '(: (* any)
@@ -497,7 +549,7 @@
 ;;;             (end . ((line  . <line number>)
 ;;;                     (character . <character number))))
 ;;;
-(define (fetch-definition-locations identifier)
+(define (fetch-definition-locations module identifier)
   (write-log 'debug
              (format "fetch-definition-locations: ~a (~a)"
                      identifier
@@ -560,8 +612,11 @@
 (define (file-already-parsed? file-path)
   (hash-table-exists? (source-path-timestamps) file-path))
 
-(define (fetch-signature identifier)
-  (define pinfo (fetch-pinfo identifier))
+(define (fetch-signature module identifier)
+  (define pinfo (fetch-pinfo
+                 (if (symbol? identifier)
+                     identifier
+                     (string->symbol identifier))))
   (if pinfo
       (pinfo-signature pinfo)
       #f))
@@ -574,10 +629,30 @@
       #f))
 
 (define (list-completions word)
-  (map (lambda (name)
-         (make-apropos-info #f name #f #f))
-       (trie-words-with-prefix (all-identifiers)
-                               (stringify word))))
+  (write-log 'debug
+             (format "list-completions ~s" word))
+  (map (lambda (entry)
+         (make-apropos-info #f (car entry) (cdr entry) #f))
+       (trie-entries-with-prefix (all-identifiers)
+                                 (stringify word))))
+
+(define (procedure-info-equal? left right)
+  (and (equal? (procedure-info-name left)
+               (procedure-info-name right))
+       (equal? (procedure-info-arguments left)
+               (procedure-info-arguments right))
+       (equal? (procedure-info-name left)
+               (procedure-info-name right))
+       (equal? (procedure-info-character left)
+               (procedure-info-character right))
+       (equal? (procedure-info-docstring left)
+               (procedure-info-docstring right))))
+
+(define (source-meta-data-equal? left right)
+  (and (procedure-info-equal? (source-meta-data-procedure-info-table left)
+                              (source-meta-data-procedure-info-table right))
+       (equal? (source-meta-data-imports left)
+               (source-meta-data-imports right))))
 
 (define (procedure-info->alist pinfo)
   `((name . ,(procedure-info-name pinfo))

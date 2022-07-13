@@ -63,6 +63,46 @@
                              (loop node (cons char chars)))))))
   words-found)
 
+(define (trie-entries trie)
+  (define entries-found '())
+  (let loop ((current-node trie)
+             (chars '()))
+    (let ((children (trie-node-children current-node)))
+      (if (trie-node-terminal? current-node)
+          (let ((word (list->string (reverse chars))))
+            (set! entries-found
+                  (cons
+                   (cons word (trie-node-value current-node))
+                   entries-found))
+            (if (= (hash-table-size children) 0)
+                #t
+                (hash-table-walk children
+                                 (lambda (char node)
+                                   (loop node
+                                         (cons char chars))))))
+          (hash-table-walk children
+                           (lambda (char node)
+                             (loop node (cons char chars)))))))
+  entries-found)
+
+(define (trie-entries-with-prefix trie prefix)
+  (define len (string-length prefix))
+  (let loop ((idx 0)
+             (current-node trie))
+    (if (= idx len)
+        (map (lambda (e)
+               (cons (string-append prefix (car e))
+                     (cdr e)))
+             (trie-entries current-node))
+        (let* ((char (string-ref prefix idx))
+               (next-node (hash-table-ref/default
+                           (trie-node-children current-node)
+                           char
+                           #f)))
+          (if next-node
+              (loop (+ idx 1)
+                    next-node)
+              '())))))
 
 (define (trie-words-with-prefix trie prefix)
   (define len (string-length prefix))
@@ -70,7 +110,7 @@
              (current-node trie))
     (if (= idx len)
         (map (lambda (w)
-               (string-append prefix w))
+                (string-append prefix w))
              (trie-keys current-node))
         (let* ((char (string-ref prefix idx))
                (next-node (hash-table-ref/default

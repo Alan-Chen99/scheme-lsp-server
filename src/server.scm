@@ -63,24 +63,38 @@
   (write-log 'debug (format "ignoring request. Params: ~a" params))
   #f)
 
+(define (get-identifier-module identifier)
+  (define apropos ($apropos-list identifier))
+  (if (null? apropos)
+      #f
+      (apropos-info-module (car apropos))))
 
 (define-handler (text-document/definition params)
   (define editor-word (get-word-under-cursor params))
+  (define word-text (editor-word-text editor-word))
+  (define module (if editor-word
+                     (get-identifier-module word-text)
+                     #f))
   (write-log 'debug (format "got word: ~a" editor-word))
-  (if editor-word
-      (let ((def-locs (fetch-definition-locations (editor-word-text editor-word))))
-        (if (not (null? def-locs))
-            (let ((v (list->vector def-locs)))
-              (write-log 'debug
-                         (format "$fetch-definition-locations resulted in ~a"
-                                 v))
-              v)
-            (begin
-              (write-log 'debug
-                         (format "no definitions found for ~a"
-                                 (editor-word-text editor-word)))
-              'null)))
-      'null))
+
+  (let ((def-locs (append
+                   (fetch-definition-locations module
+                                               word-text)
+                   (if module
+                       ($get-definition-locations module
+                                                  word-text)
+                       '()))))
+    (if (not (null? def-locs))
+        (let ((v (list->vector def-locs)))
+          (write-log 'debug
+                     (format "$fetch-definition-locations resulted in ~a"
+                             v))
+          v)
+        (begin
+          (write-log 'debug
+                     (format "no definitions found for ~a"
+                             (editor-word-text editor-word)))
+          'null))))
 
 (define-handler (text-document/did-change params)
   (define file-path (get-uri-path params))
@@ -119,7 +133,7 @@
 (define-handler (text-document/did-open params)
   (define file-path (get-uri-path params))
   (if file-path
-      (begin (generate-meta-data! file-path)
+      (begin ($open-file! file-path) ;;(generate-meta-data! file-path)
              (read-file! file-path)
              (let ((tmp-file (string-append "/tmp/" (remove-slashes file-path))))
                (write-log 'debug
@@ -139,7 +153,8 @@
 (define-handler (text-document/did-save params)
   (define file-path (get-uri-path params))
   (write-log 'info "file saved.")
-  (generate-meta-data! file-path)
+  ($save-file! file-path)
+  ;;(generate-meta-data! file-path)
   #f)
 
 (define-handler (text-document/completion params)
@@ -156,7 +171,9 @@
              3))
       'null
       (let* ((word (editor-word-text editor-word))
-             (suggestions (list-completions word)))
+             (suggestions (append
+                           (list-completions word)
+                           ($apropos-list word))))
         (write-log 'debug "getting completion suggestions for word "
                    word)
         (write-log 'debug (format "suggestions list: ~a" suggestions))
@@ -234,30 +251,31 @@
              (cons `(documentation . ,doc)
                    params)))))
 
-(define (fetch-signature-under-cursor params)
-  (define editor-word
-    (get-word-under-cursor params))
-  (if editor-word
-      (let* ((cur-word (editor-word-text editor-word))
-             (signature (fetch-signature cur-word)))
-        (if (not signature)
-            (begin
-              (write-log 'warning
-                         (format "no signature found for: ~a" cur-word))
-              'null)
-            signature))
-      #f))
+;; (define (fetch-signature-under-cursor params)
+;;   (define editor-word
+;;     (get-word-under-cursor params))
+;;   (if editor-word
+;;       (let* ((cur-word (editor-word-text editor-word))
+;;              (signature ($fetch-signature cur-word)))
+;;         (if (not signature)
+;;             (begin
+;;               (write-log 'warning
+;;                          (format "no signature found for: ~a" cur-word))
+;;               'null)
+;;             signature))
+;;       #f))
 
-#;
 (define (fetch-signature-under-cursor params)
   (define editor-word
     (get-word-under-cursor params))
   (if editor-word
       (let* ((cur-word (editor-word-text editor-word))
              (matches (filter (lambda (ap)
-                                (string=? (symbol->string (apropos-info-name ap))
+                                (string=? (stringify (apropos-info-name ap))
                                           cur-word))
-                              ($apropos-list cur-word))))
+                              (append
+                               (list-completions cur-word)
+                               ($apropos-list cur-word)))))
         (if (null? matches)
             (begin
               (write-log 'warning
@@ -271,8 +289,10 @@
                          'null)))
              (let* ((ainfo (car matches))
                     (signature
-                     ($fetch-signature (apropos-info-module ainfo)
-                                       (apropos-info-name ainfo))))
+                     (or (fetch-signature (apropos-info-module ainfo)
+                                          (apropos-info-name ainfo))
+                         ($fetch-signature (apropos-info-module ainfo)
+                                           (apropos-info-name ainfo)))))
                signature))))
       ""))
 

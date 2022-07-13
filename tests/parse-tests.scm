@@ -127,9 +127,10 @@
             '(begin (import (srfi 1) (srfi 69) utf-8)
                     (define (f x) x)
                     (define g (lambda (x y) (+ x y))))
-            (make-parse-context #f))))
+            (make-parse-context #f '(my lib)))))
   (test-equal '((srfi 1) (srfi 69) utf-8) (source-meta-data-imports res))
-  (test-equal 2 (hash-table-size (source-meta-data-procedure-info-table res))))
+  (test-equal 2 (hash-table-size (source-meta-data-procedure-info-table res)))
+  (test-equal '(my lib) (source-meta-data-library-name res)))
 
 (let ((res (parse-expression
             '(define-library (my lib)
@@ -137,19 +138,21 @@
                 (import (srfi 1) (except (srfi 69) make-hash-table))
                 (begin (define (f x) x))
                 (define g (lambda (x y) (+ x y))))
-             (make-parse-context #f))))
+             (make-parse-context #f #f))))
   (test-equal '((srfi 1) (srfi 69)) (source-meta-data-imports res))
-  (test-equal 2 (hash-table-size (source-meta-data-procedure-info-table res))))
+  (test-equal 2 (hash-table-size (source-meta-data-procedure-info-table res)))
+  (test-equal '(my lib) (source-meta-data-library-name res)))
 
 (let ((res (parse-expression
             '(define-module (my lib)
                 #:export (f g)
                 #:use-module (srfi 1)
                 #:use-module ((srfi 69) #:select (hash-table-walk)))
-            (make-parse-context #f))))
+            (make-parse-context #f #f))))
   (let ((imports (source-meta-data-imports res)))
     (test-assert (member '(srfi 1) imports))
-    (test-assert (member '(srfi 69) imports))))
+    (test-assert (member '(srfi 69) imports)))
+  (test-equal '(my lib) (source-meta-data-library-name res)))
 
 (let ((res (parse-expression
             '(cond-expand (guile (import (system vm program))
@@ -158,14 +161,14 @@
                                    (define (f x) x)
                                    (define (g x y) x))
                           (else))
-            (make-parse-context #f))))
+            (make-parse-context #f #f))))
   (cond-expand
    (chicken (test-equal '((apropos-api)) (source-meta-data-imports res))
             (test-equal 2 (hash-table-size (source-meta-data-procedure-info-table res))))
    (guile (test-equal '((system vm program)) (source-meta-data-imports res))
           (test-equal 1 (hash-table-size (source-meta-data-procedure-info-table res))))))
 
-(let ((res (collect-meta-data-from-file "resources/sample-1.scm")))
+(let ((res (parse-file "resources/sample-1.scm")))
   (test-equal 2 (length (source-meta-data-imports res)))
   (test-equal 2 (hash-table-size
                  (source-meta-data-procedure-info-table res)))
@@ -241,7 +244,10 @@
   (test-assert (every absolute-pathname?
                       (hash-table-keys (source-path-timestamps)))))
 
-(let ((meta-data (collect-meta-data-from-file "../guile/lsp-server/parse.sld")))
+(test-equal '(my lib)
+            (parse-library-name-from-file "resources/sample-guile-lib.scm"))
+
+(let ((meta-data (parse-file "../guile/lsp-server/parse.sld")))
   (test-assert (member '(srfi srfi-1)
                        (source-meta-data-imports meta-data)))
   (test-assert (member '(ice-9 ftw)
