@@ -7,9 +7,11 @@
           absolute-pathname?
           pathname-directory
           pathname-join
-          get-absolute-pathname)
+          get-absolute-pathname
+          hash-table-join!)
 
-#:use-module ((scheme base) #:select (assoc))
+#:use-module ((scheme base) #:select (assoc guard))
+#:use-module (srfi srfi-69)
 #:declarative? #f
 )
 
@@ -31,7 +33,16 @@
 
 (define absolute-pathname? absolute-file-name?)
 
-(define get-absolute-pathname canonicalize-path)
+(define (get-absolute-pathname path)
+  (guard
+   (condition
+    (#t #f))
+   (canonicalize-path path)))
+
+(define (hash-table-join! ht other-ht)
+  (hash-table-fold
+   other-ht (lambda (k v ign) (hash-table-set! ht k v)) #f)
+  ht)
 
 (define (create-directory path)
   (define parts
