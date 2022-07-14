@@ -118,8 +118,9 @@
                (case (car predicate)
                  ((and) (every (compose cond-expand-clause-satisfied? list) (cdr predicate)))
                  ((or) (any (compose cond-expand-clause-satisfied? list) (cdr predicate)))
-                 ((library) (and (not (null? (cdr predicate)))
-                                 (library-available? (cadr predicate))))
+                 ;; ((library) (and (not (null? (cdr predicate)))
+                 ;;                 (library-available? (cadr predicate))))
+                 ((library) #t)
                  ((not) (not (cond-expand-clause-satisfied? (cdr predicate))))
                  ((else) #t)
                  (else (memq (car predicate) (features)))))
@@ -457,25 +458,30 @@
                    (procedure-info-module pinfo)))))
 
 (define (parse-and-update-table! source-path)
+  (write-log 'debug
+             (format "parse-and-update-table!: ~s~%" source-path))
   (define abs-source-path (get-absolute-pathname source-path))
   (write-log 'debug
-             (format "parse-and-update-table!: ~s~%" abs-source-path))
-  (guard (condition
-          (#t (write-log 'error
-                         (format "parse-and-update-table!: error parsing file ~a"
-                                 abs-source-path))
-              #f))
-    (let ((meta-data (parse-file abs-source-path)))
-      (update-identifier-to-source-meta-data-table! abs-source-path meta-data)
-      ;; (for-each (lambda (path)
-      ;;             (let ((module-path (get-module-path path)))
-      ;;               (when module-path
-      ;;                 (generate-meta-data! module-path))))
-      ;;           (source-meta-data-imports meta-data))
-      )))
+             (format "parse-and-update-table!: absolute path ~s~%" abs-source-path))
+  (when abs-source-path
+    (guard (condition
+            (#t (write-log 'error
+                           (format "parse-and-update-table!: error parsing file ~a"
+                                   abs-source-path))
+                #f))
+           (let ((meta-data (parse-file abs-source-path)))
+             (update-identifier-to-source-meta-data-table! abs-source-path meta-data)
+             ;; (for-each (lambda (path)
+             ;;             (let ((module-path (get-module-path path)))
+             ;;               (when module-path
+             ;;                 (generate-meta-data! module-path))))
+             ;;           (source-meta-data-imports meta-data))
+             ))))
 
 (define scheme-file-regex
-  (irregex '(: (* any)
+  (irregex '(: bos
+               alphanumeric
+               (* any)
                (or ".scm"
                    ".sld"
                    ".ss")
@@ -489,8 +495,11 @@
            (lambda (f)
              (ftw f
                   (lambda (filename statinfo flag)
+                    (write-log 'debug
+                               (format "processing file ~a" filename))
                     (let ((abs-filename (get-absolute-pathname filename)))
-                     (when (and (eq? flag 'regular)
+                      (when (and abs-filename
+                                 (eq? flag 'regular)
                                 (irregex-search scheme-file-regex
                                                 abs-filename))
                        (let ((old-time-stamp (hash-table-ref/default

@@ -7,6 +7,7 @@ NOCOMP_SOURCES =          \
   lsp-server/parse.scm    \
   lsp-server/trie.scm    \
   lsp-server/server.scm   \
+  lsp-server/adapter.scm  \
   irregex.scm
 
 SOURCES = \
@@ -14,6 +15,12 @@ SOURCES = \
   lsp-server/document.sld   \
   lsp-server/trie.sld       \
   lsp-server/parse.sld      \
+  lsp-server/adapter.sld \
+  geiser/utils.sld          \
+  geiser/modules.sld        \
+  geiser/completion.sld     \
+  geiser/doc.sld            \
+  geiser/xref.sld           \
   lsp-server/guile/util.sld \
   lsp-server/guile.sld      \
   lsp-server.sld

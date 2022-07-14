@@ -18,15 +18,23 @@ AC_CONFIG_LINKS([lsp-server/private.scm:../src/private.scm
                  lsp-server/main.scm:../src/main.scm
                  lsp-server/server.scm:../src/server.scm
                  lsp-server/trie.scm:../src/trie.scm
+                 lsp-server/adapter.scm:../src/adapter.scm
                  lsp-server/parse.scm:../src/parse.scm
 
                  lsp-server/guile.sld:lsp-server/guile.sld
                  lsp-server/guile/util.sld:lsp-server/guile/util.sld
+                 lsp-server/adapter.sld:lsp-server/adapter.sld
                  lsp-server/document.sld:lsp-server/document.sld
                  lsp-server/private.sld:lsp-server/private.sld
                  lsp-server/trie.sld:lsp-server/trie.sld
                  lsp-server/parse.sld:lsp-server/parse.sld
                  lsp-server.sld:lsp-server.sld
+
+                 geiser/modules.sld:../geiser/guile/src/geiser/modules.scm
+                 geiser/utils.sld:../geiser/guile/src/geiser/utils.scm
+                 geiser/doc.sld:../geiser/guile/src/geiser/doc.scm
+                 geiser/completion.sld:../geiser/guile/src/geiser/completion.scm
+                 geiser/xref.sld:../geiser/guile/src/geiser/xref.scm
 
                  README.md:../README.md])
 

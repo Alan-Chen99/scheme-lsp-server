@@ -138,7 +138,7 @@
 (define-handler (text-document/did-open params)
   (define file-path (get-uri-path params))
   (if file-path
-      (begin ($open-file! file-path) ;;(generate-meta-data! file-path)
+      (begin ;;($open-file! file-path) ;;(generate-meta-data! file-path)
              (read-file! file-path)
              (let ((tmp-file (string-append "/tmp/" (remove-slashes file-path))))
                (write-log 'debug
@@ -158,7 +158,7 @@
 (define-handler (text-document/did-save params)
   (define file-path (get-uri-path params))
   (write-log 'info "file saved.")
-  ($save-file! file-path)
+  ;;($save-file! file-path)
   ;;(generate-meta-data! file-path)
   #f)
 
@@ -176,38 +176,27 @@
              3))
       'null
       (let* ((word (editor-word-text editor-word))
-             (suggestions (append
-                           (list-completions word)
-                           ($apropos-list word))))
+             (suggestions (geiser-completions word))
+             ;; (suggestions (append
+             ;;               (list-completions word)
+             ;;               ($apropos-list word)))
+             )
         (write-log 'debug "getting completion suggestions for word "
                    word)
         (write-log 'debug (format "suggestions list: ~a" suggestions))
-        (write-log 'debug
-                   (format "suggestions found: ~a~%"
-                           (fold (lambda (sug acc)
-                                   (format "~a ~a"
-                                           acc
-                                           (apropos-info-name sug)))
-                                 ""
-                                 suggestions)))
+        ;; (write-log 'debug
+        ;;            (format "suggestions found: ~a~%"
+        ;;                    (fold (lambda (sug acc)
+        ;;                            (format "~a ~a"
+        ;;                                    acc
+        ;;                                    (apropos-info-name sug)))
+        ;;                          ""
+        ;;                          suggestions)))
         `((isIncomplete . #t)
           (items .
                  ,(list->vector
-                   (map (lambda (ainfo)
-                          (let* ((ainfo-module (apropos-info-module ainfo))
-                                 (module-name
-                                  (if ainfo-module
-                                      (join-module-name ainfo-module)
-                                      ""))
-                                 (id-name
-                                  (stringify
-                                   (apropos-info-name ainfo)))
-                                 (label (if ainfo-module
-                                            (format "~a ~a"
-                                                    module-name
-                                                    id-name)
-                                            (format "~a" id-name)))
-                                 (start-line (alist-ref* '(position line)
+                   (map (lambda (id-name)
+                          (let* ((start-line (alist-ref* '(position line)
                                                          params))
                                  (start-char (editor-word-start-char
                                               editor-word))
@@ -219,15 +208,79 @@
                                               (end . ((line . ,start-line)
                                                       (character . ,cur-char-number)))))
                                     (newText . ,id-name))))
-                            `((label . ,label)
+                            `((label . ,id-name)
                               (insertText . ,id-name)
                               (sortText . ,id-name)
                               (textEdit . ,text-edit)
-                              (data . ,(if ainfo-module
-                                           `((identifier . ,id-name)
-                                             (module . ,module-name))
-                                           `((identifier . ,id-name)))))))
+                              (data . ((identifier . ,id-name))))))
                         suggestions)))))))
+
+;; (define-handler (text-document/completion params)
+;;   (define cur-char-number
+;;     (alist-ref* '(position character) params))
+;;   (define editor-word (get-word-under-cursor params))
+;;   (write-log 'debug
+;;              (format "editor-word: ~a, start-char: ~a, end-char: ~a~%"
+;;                      (editor-word-text editor-word)
+;;                      (editor-word-start-char editor-word)
+;;                      (editor-word-end-char editor-word)))
+;;   (if (or (not editor-word)
+;;           (< (string-length (editor-word-text editor-word))
+;;              3))
+;;       'null
+;;       (let* ((word (editor-word-text editor-word))
+;;              (suggestions (append
+;;                            (list-completions word)
+;;                            ($apropos-list word))))
+;;         (write-log 'debug "getting completion suggestions for word "
+;;                    word)
+;;         (write-log 'debug (format "suggestions list: ~a" suggestions))
+;;         (write-log 'debug
+;;                    (format "suggestions found: ~a~%"
+;;                            (fold (lambda (sug acc)
+;;                                    (format "~a ~a"
+;;                                            acc
+;;                                            (apropos-info-name sug)))
+;;                                  ""
+;;                                  suggestions)))
+;;         `((isIncomplete . #t)
+;;           (items .
+;;                  ,(list->vector
+;;                    (map (lambda (ainfo)
+;;                           (let* ((ainfo-module (apropos-info-module ainfo))
+;;                                  (module-name
+;;                                   (if ainfo-module
+;;                                       (join-module-name ainfo-module)
+;;                                       ""))
+;;                                  (id-name
+;;                                   (stringify
+;;                                    (apropos-info-name ainfo)))
+;;                                  (label (if ainfo-module
+;;                                             (format "~a ~a"
+;;                                                     module-name
+;;                                                     id-name)
+;;                                             (format "~a" id-name)))
+;;                                  (start-line (alist-ref* '(position line)
+;;                                                          params))
+;;                                  (start-char (editor-word-start-char
+;;                                               editor-word))
+;;                                  (end-char (editor-word-end-char
+;;                                             editor-word))
+;;                                  (text-edit
+;;                                   `((range . ((start . ((line . ,start-line)
+;;                                                         (character . ,start-char)))
+;;                                               (end . ((line . ,start-line)
+;;                                                       (character . ,cur-char-number)))))
+;;                                     (newText . ,id-name))))
+;;                             `((label . ,label)
+;;                               (insertText . ,id-name)
+;;                               (sortText . ,id-name)
+;;                               (textEdit . ,text-edit)
+;;                               (data . ,(if ainfo-module
+;;                                            `((identifier . ,id-name)
+;;                                              (module . ,module-name))
+;;                                            `((identifier . ,id-name)))))))
+;;                         suggestions)))))))
 
 (define-handler (completion-item/resolve params)
   (define id (string->symbol

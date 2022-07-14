@@ -193,13 +193,13 @@
                     (hash-table-keys
                      (hash-table-ref
                       (identifier-to-source-meta-data-table) 'f))))
-  (test-equal "(f x)" (fetch-signature 'f)))
+  (test-equal "(f x)" (fetch-signature #f 'f)))
 
 (parameterize ((identifier-to-source-meta-data-table (make-hash-table))
                (source-path-timestamps (make-hash-table)))
   (generate-meta-data! "resources/sample-2.scm")
   (test-equal "(func2 x . args)"
-              (fetch-signature 'func2))
+              (fetch-signature #f 'func2))
   (test-assert (lset-intersection equal?
                                   (hash-table-keys (identifier-to-source-meta-data-table))
                                   '(func included-func)))

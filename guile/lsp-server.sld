@@ -34,6 +34,8 @@
 #:use-module (lsp-server parse)
 #:use-module (lsp-server private)
 
+#:use-module (lsp-server adapter)
+
 #:declarative? #f)
 
 (include "lsp-server/file.scm")
