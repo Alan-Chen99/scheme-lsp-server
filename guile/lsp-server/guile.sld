@@ -192,24 +192,42 @@
                    (format "definition not found: ~a" identifier))
         '())))
 
+(define (file-in-load-path? file-path)
+  (any (lambda (dir)
+         (string-prefix? dir file-path))
+       %load-path))
+
 (define ($open-file! file-path)
-  (define lib-name (parse-library-name-from-file file-path))
-  (write-log 'info (format "lib resolved ~a" lib-name))
-  (when (or (not lib-name)
-            (not (resolve-module lib-name #f #:ensure #f)))
-    (write-log 'info (format "parsing file ~a" file-path))
-    (generate-meta-data! file-path))
-  #f)
+  (guard
+        (condition
+         (#t (write-log
+              'error
+              (format "$open-file: error occured while parsing file ~a"
+                      file-path))
+             #f))
+    (when (or (not (file-in-load-path? file-path))
+              (let ((lib-name (parse-library-name-from-file file-path)))
+                (or (not lib-name)
+                    (not (resolve-module lib-name #f #:ensure #f)))))
+      (write-log 'info (format "parsing file ~a" file-path))
+      (generate-meta-data! file-path))
+    #f))
 
 (define ($save-file! file-path)
-  (generate-meta-data! file-path)
-  ;; (define meta-data (parse-file file-path))
-  ;; (define imports (source-meta-data-imports meta-data))
-  ;; (for-each (lambda (imp)
-  ;;             (resolve-module imp #t))
-  ;;           imports)
-  ;;(load-protected file-path)
-  #f)
+  (guard
+      (condition
+       (#t (write-log
+              'error
+              (format "$save-file: error occured while parsing file ~a"
+                      file-path))))
+    (generate-meta-data! file-path)
+    ;; (define meta-data (parse-file file-path))
+    ;; (define imports (source-meta-data-imports meta-data))
+    ;; (for-each (lambda (imp)
+    ;;             (resolve-module imp #t))
+    ;;           imports)
+    ;;(load-protected file-path)
+    #f))
 
 
 (define (build-procedure-signature module name proc-obj)

@@ -38,6 +38,9 @@
        (not (null? expr))
        (eq? (car expr) procedure)))
 
+(define (r6rs-library-definition-form? expr)
+  (tagged-expression? expr 'library))
+
 (define (r7rs-library-definition-form? expr)
   (tagged-expression? expr 'define-library))
 
@@ -51,7 +54,8 @@
   (cond-expand
    (chicken (or (r7rs-library-definition-form? expr)
                 (chicken-library-definition-form? expr)))
-   (guile (or (r7rs-library-definition-form? expr)
+   (guile (or (r6rs-library-definition-form? expr)
+              (r7rs-library-definition-form? expr)
               (guile-library-definition-form? expr)))))
 
 (define (import-form? expr)
@@ -664,18 +668,53 @@
 (define (alist->procedure-info alist)
   (make-procedure-info (alist-ref 'name alist)
                        (alist-ref 'arguments alist)
+                       (alist-ref 'module alist)
                        (alist-ref 'line alist)
                        (alist-ref 'character alist)
                        (alist-ref 'docstring alist)))
 
-(define (source-meta-data->alist meta-data)
-  `((procedure-infos . ,(map procedure-info->alist
-                             (source-meta-data-procedure-infos
+(define (source-meta-data->alist* meta-data)
+  `((procedure-info-table . ,(map procedure-info->alist
+                             (source-meta-data-procedure-info-table
                               meta-data)))
     (import . ,(source-meta-data-imports meta-data))))
 
 (define (alist->source-meta-data alist)
-  (make-source-meta-data (map alist->procedure-info
-                              (alist-ref alist 'procedure-infos))
+  (make-source-meta-data (alist-ref alist 'library-name)
+                         (map alist->procedure-info
+                                 (alist-ref alist 'procedure-info-table))
                          (alist-ref alist 'imports)))
 
+(define (procedure-info-table->alist* pinfo-table)
+  (hash-table-fold pinfo-table
+                   (lambda (k v acc)
+                     (cons (cons k (procedure-info->alist v))
+                           acc))
+                   '()))
+
+(define (alist->procedure-info-table alist)
+  (alist->hash-table
+   (map (lambda (p)
+          (cons (car p)
+                (alist->procedure-info (cdr p))))
+        alist)))
+
+;; (define (serialize-source-meta-data-table)
+;;   (hash-table-walk
+;;    (identifier-to-source-meta-data-table)
+;;    (lambda (k v)
+;;      )))
+
+(define (identifier-to-source-meta-data-table->alist* table)
+  (hash-table-fold table
+                   (lambda (k v acc)
+                     (cons (cons k (source-meta-data->alist* v))
+                           acc))
+                   '()))
+
+(define (alist->identifier-to-source-meta-data-table alist)
+  (alist->hash-table
+   (map (lambda (p)
+          (cons (car p)
+                (alist->source-meta-data (cdr p))))
+        alist)))

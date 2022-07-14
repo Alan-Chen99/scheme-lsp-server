@@ -27,6 +27,7 @@
 ;; capabilities.
 (define mandatory-capabilities
   '((textDocumentSync . ((save . #t)
+                         (openClose . #t)
                          (change . 2)))
     (hoverProvider . #t)
     (completionProvider . ((resolveProvider . #t)))
@@ -77,13 +78,17 @@
                      #f))
   (write-log 'debug (format "got word: ~a" editor-word))
 
-  (let ((def-locs (append
-                   (fetch-definition-locations module
-                                               word-text)
-                   (if module
-                       ($get-definition-locations module
-                                                  word-text)
-                       '()))))
+  (let ((def-locs (delete-duplicates
+                   (append
+                    (fetch-definition-locations module
+                                                word-text)
+                    (if module
+                        ($get-definition-locations module
+                                                   word-text)
+                        '()))
+                   (lambda (left right)
+                     (equal? (assoc left 'uri)
+                             (assoc right 'uri))))))
     (if (not (null? def-locs))
         (let ((v (list->vector def-locs)))
           (write-log 'debug
