@@ -3,12 +3,17 @@
 #:export (lsp-geiser-completions
           lsp-geiser-documentation
           lsp-geiser-signature
-          lsp-geiser-symbol-location)
+          lsp-geiser-symbol-location
+          lsp-geiser-compile-file)
 
-#:use-module (geiser completion)
-#:use-module (geiser doc)
-#:use-module (geiser xref)
+#:use-module ((scheme base) #:select (guard))
+#:use-module ((geiser completion) #:prefix geiser-)
+#:use-module (geiser evaluation)
+#:use-module ((geiser doc) #:prefix geiser-)
+#:use-module ((geiser xref) #:prefix geiser-)
 #:use-module (lsp-server guile util)
+#:use-module (lsp-server parse)
+#:use-module (lsp-server private)
 #:use-module (srfi srfi-28)
 #:declarative? #f)
 

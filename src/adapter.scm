@@ -1,8 +1,8 @@
 (define (lsp-geiser-completions prefix)
-  (completions prefix))
+  (geiser-completions prefix))
 
 (define (lsp-geiser-signature identifier)
-  (define doc (alist-ref/default identifier (autodoc (list identifier)) '()))
+  (define doc (alist-ref/default identifier (geiser-autodoc (list identifier)) '()))
   (define args (alist-ref/default "args" doc '()))
   (define required-args
     (map symbol->string
@@ -51,19 +51,30 @@
                    " ")))))
 
 (define (lsp-geiser-documentation identifier)
-  (define doc (symbol-documentation identifier))
+  (define doc (geiser-symbol-documentation identifier))
   (if (and doc (list? doc))
       (alist-ref "docstring" doc)
       #f))
 
 (define (lsp-geiser-symbol-location identifier)
-  (define loc (symbol-location identifier))
+  (define loc (geiser-symbol-location identifier))
   (define file (and loc (alist-ref "file" loc)))
   (define line (and loc (alist-ref "line" loc)))
-  (if loc
+  (if (and loc file line)
       `((uri . ,(string-append "file://" file))
         (range . ((start . ((line . ,line)
                             (character . 0)))
                   (end . ((line . ,line)
                           (character . 0))))))
       '()))
+
+(define (lsp-geiser-compile-file file-path)
+  (guard
+   (condition
+    (#t (write-log 'error (format "Can't compile file ~a: ~a"
+                                  file-path
+                                  condition))))
+   (let ((lib-name (parse-library-name-from-file file-path)))
+     (when (or (not lib-name)
+               (not (resolve-module lib-name #t #:ensure #f)))
+       (ge:compile-file file-path)))))
