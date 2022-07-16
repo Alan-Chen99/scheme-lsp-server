@@ -1767,7 +1767,7 @@ ac_configure="$SHELL $ac_aux_dir/configure"  # Please don't use this var.
 
 
 
-am__api_version='1.16'
+am__api_version='1.15'
 
 # Find a good install program.  We prefer a C program (faster),
 # so one script is as good as another.  But avoid the broken or
@@ -1943,7 +1943,12 @@ program_transform_name=`$as_echo "$program_transform_name" | sed "$ac_script"`
 am_aux_dir=`cd "$ac_aux_dir" && pwd`
 
 if test x"${MISSING+set}" != xset; then
-  MISSING="\${SHELL} '$am_aux_dir/missing'"
+  case $am_aux_dir in
+  *\ * | *\	*)
+    MISSING="\${SHELL} \"$am_aux_dir/missing\"" ;;
+  *)
+    MISSING="\${SHELL} $am_aux_dir/missing" ;;
+  esac
 fi
 # Use eval to expand $SHELL
 if eval "$MISSING --is-lightweight"; then
@@ -2278,8 +2283,8 @@ MAKEINFO=${MAKEINFO-"${am_missing_run}makeinfo"}
 
 # For better backward compatibility.  To be removed once Automake 1.9.x
 # dies out for good.  For more background, see:
-# <https://lists.gnu.org/archive/html/automake/2012-07/msg00001.html>
-# <https://lists.gnu.org/archive/html/automake/2012-07/msg00014.html>
+# <http://lists.gnu.org/archive/html/automake/2012-07/msg00001.html>
+# <http://lists.gnu.org/archive/html/automake/2012-07/msg00014.html>
 mkdir_p='$(MKDIR_P)'
 
 # We need awk for the "check" target (and possibly the TAP driver).  The
@@ -2330,7 +2335,7 @@ END
 Aborting the configuration process, to ensure you take notice of the issue.
 
 You can download and install GNU coreutils to get an 'rm' implementation
-that behaves properly: <https://www.gnu.org/software/coreutils/>.
+that behaves properly: <http://www.gnu.org/software/coreutils/>.
 
 If you want to complete the configuration process using your problematic
 'rm' anyway, export the environment variable ACCEPT_INFERIOR_RM_PROGRAM
@@ -2734,7 +2739,7 @@ fi
 ac_config_files="$ac_config_files Makefile"
 
 
-ac_config_links="$ac_config_links lsp-server/private.scm:../src/private.scm lsp-server/document.scm:../src/document.scm lsp-server/file.scm:../src/file.scm lsp-server/main.scm:../src/main.scm lsp-server/server.scm:../src/server.scm lsp-server/trie.scm:../src/trie.scm lsp-server/adapter.scm:../src/adapter.scm lsp-server/parse.scm:../src/parse.scm lsp-server/guile.sld:lsp-server/guile.sld lsp-server/guile/util.sld:lsp-server/guile/util.sld lsp-server/adapter.sld:lsp-server/adapter.sld lsp-server/document.sld:lsp-server/document.sld lsp-server/private.sld:lsp-server/private.sld lsp-server/trie.sld:lsp-server/trie.sld lsp-server/parse.sld:lsp-server/parse.sld lsp-server.sld:lsp-server.sld geiser/modules.sld:../geiser/guile/src/geiser/modules.scm geiser/utils.sld:../geiser/guile/src/geiser/utils.scm geiser/doc.sld:../geiser/guile/src/geiser/doc.scm geiser/completion.sld:../geiser/guile/src/geiser/completion.scm geiser/xref.sld:../geiser/guile/src/geiser/xref.scm README.md:../README.md"
+ac_config_links="$ac_config_links lsp-server/private.scm:../src/private.scm lsp-server/document.scm:../src/document.scm lsp-server/file.scm:../src/file.scm lsp-server/main.scm:../src/main.scm lsp-server/server.scm:../src/server.scm lsp-server/trie.scm:../src/trie.scm lsp-server/adapter.scm:../src/adapter.scm lsp-server/parse.scm:../src/parse.scm lsp-server/guile.sld:lsp-server/guile.sld lsp-server/guile/util.sld:lsp-server/guile/util.sld lsp-server/adapter.sld:lsp-server/adapter.sld lsp-server/document.sld:lsp-server/document.sld lsp-server/private.sld:lsp-server/private.sld lsp-server/trie.sld:lsp-server/trie.sld lsp-server/parse.sld:lsp-server/parse.sld lsp-server.sld:lsp-server.sld geiser/modules.sld:../geiser/guile/src/geiser/modules.scm geiser/utils.sld:../geiser/guile/src/geiser/utils.scm geiser/doc.sld:../geiser/guile/src/geiser/doc.scm geiser/completion.sld:../geiser/guile/src/geiser/completion.scm geiser/evaluation.sld:../geiser/guile/src/geiser/evaluation.scm geiser/xref.sld:../geiser/guile/src/geiser/xref.scm README.md:../README.md"
 
 
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking if (json-rpc) is available" >&5
@@ -3495,6 +3500,7 @@ do
     "geiser/utils.sld") CONFIG_LINKS="$CONFIG_LINKS geiser/utils.sld:../geiser/guile/src/geiser/utils.scm" ;;
     "geiser/doc.sld") CONFIG_LINKS="$CONFIG_LINKS geiser/doc.sld:../geiser/guile/src/geiser/doc.scm" ;;
     "geiser/completion.sld") CONFIG_LINKS="$CONFIG_LINKS geiser/completion.sld:../geiser/guile/src/geiser/completion.scm" ;;
+    "geiser/evaluation.sld") CONFIG_LINKS="$CONFIG_LINKS geiser/evaluation.sld:../geiser/guile/src/geiser/evaluation.scm" ;;
     "geiser/xref.sld") CONFIG_LINKS="$CONFIG_LINKS geiser/xref.sld:../geiser/guile/src/geiser/xref.scm" ;;
     "README.md") CONFIG_LINKS="$CONFIG_LINKS README.md:../README.md" ;;
 

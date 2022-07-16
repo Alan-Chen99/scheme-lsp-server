@@ -34,11 +34,9 @@
     (signatureHelpProvider . ())))
 
 (define-handler (initialize-handler params)
-  (define root-path (get-root-path params))
-  (when (and root-path (not (equal? root-path 'null)))
-    (generate-meta-data! root-path))
-  (when ($initialize-lsp-server! root-path)
-    (write-log 'info "LSP server initialized"))
+  ;; (when ($initialize-lsp-server! root-path)
+  ;;   (write-log 'info "LSP server initialized"))
+  (write-log 'info "LSP server hallo")
   (set! lsp-server-state 'on)
   `((capabilities . ,(append mandatory-capabilities
                              $server-capabilities))
@@ -73,22 +71,13 @@
 (define-handler (text-document/definition params)
   (define editor-word (get-word-under-cursor params))
   (define word-text (editor-word-text editor-word))
-  (define module (if editor-word
-                     (get-identifier-module word-text)
-                     #f))
+  ;; (define module (if editor-word
+  ;;                    (get-identifier-module word-text)
+  ;;                    #f))
   (write-log 'debug (format "got word: ~a" editor-word))
 
-  (let ((def-locs (delete-duplicates
-                   (append
-                    (fetch-definition-locations module
-                                                word-text)
-                    (if module
-                        ($get-definition-locations module
-                                                   word-text)
-                        '()))
-                   (lambda (left right)
-                     (equal? (assoc left 'uri)
-                             (assoc right 'uri))))))
+  (let ((def-locs ($get-definition-locations #f
+                                             word-text)))
     (if (not (null? def-locs))
         (let ((v (list->vector def-locs)))
           (write-log 'debug
@@ -176,22 +165,11 @@
              3))
       'null
       (let* ((word (editor-word-text editor-word))
-             (suggestions (geiser-completions word))
-             ;; (suggestions (append
-             ;;               (list-completions word)
-             ;;               ($apropos-list word)))
-             )
+             (suggestions ($apropos-list word)))
         (write-log 'debug "getting completion suggestions for word "
                    word)
         (write-log 'debug (format "suggestions list: ~a" suggestions))
-        ;; (write-log 'debug
-        ;;            (format "suggestions found: ~a~%"
-        ;;                    (fold (lambda (sug acc)
-        ;;                            (format "~a ~a"
-        ;;                                    acc
-        ;;                                    (apropos-info-name sug)))
-        ;;                          ""
-        ;;                          suggestions)))
+
         `((isIncomplete . #t)
           (items .
                  ,(list->vector
@@ -215,72 +193,6 @@
                               (data . ((identifier . ,id-name))))))
                         suggestions)))))))
 
-;; (define-handler (text-document/completion params)
-;;   (define cur-char-number
-;;     (alist-ref* '(position character) params))
-;;   (define editor-word (get-word-under-cursor params))
-;;   (write-log 'debug
-;;              (format "editor-word: ~a, start-char: ~a, end-char: ~a~%"
-;;                      (editor-word-text editor-word)
-;;                      (editor-word-start-char editor-word)
-;;                      (editor-word-end-char editor-word)))
-;;   (if (or (not editor-word)
-;;           (< (string-length (editor-word-text editor-word))
-;;              3))
-;;       'null
-;;       (let* ((word (editor-word-text editor-word))
-;;              (suggestions (append
-;;                            (list-completions word)
-;;                            ($apropos-list word))))
-;;         (write-log 'debug "getting completion suggestions for word "
-;;                    word)
-;;         (write-log 'debug (format "suggestions list: ~a" suggestions))
-;;         (write-log 'debug
-;;                    (format "suggestions found: ~a~%"
-;;                            (fold (lambda (sug acc)
-;;                                    (format "~a ~a"
-;;                                            acc
-;;                                            (apropos-info-name sug)))
-;;                                  ""
-;;                                  suggestions)))
-;;         `((isIncomplete . #t)
-;;           (items .
-;;                  ,(list->vector
-;;                    (map (lambda (ainfo)
-;;                           (let* ((ainfo-module (apropos-info-module ainfo))
-;;                                  (module-name
-;;                                   (if ainfo-module
-;;                                       (join-module-name ainfo-module)
-;;                                       ""))
-;;                                  (id-name
-;;                                   (stringify
-;;                                    (apropos-info-name ainfo)))
-;;                                  (label (if ainfo-module
-;;                                             (format "~a ~a"
-;;                                                     module-name
-;;                                                     id-name)
-;;                                             (format "~a" id-name)))
-;;                                  (start-line (alist-ref* '(position line)
-;;                                                          params))
-;;                                  (start-char (editor-word-start-char
-;;                                               editor-word))
-;;                                  (end-char (editor-word-end-char
-;;                                             editor-word))
-;;                                  (text-edit
-;;                                   `((range . ((start . ((line . ,start-line)
-;;                                                         (character . ,start-char)))
-;;                                               (end . ((line . ,start-line)
-;;                                                       (character . ,cur-char-number)))))
-;;                                     (newText . ,id-name))))
-;;                             `((label . ,label)
-;;                               (insertText . ,id-name)
-;;                               (sortText . ,id-name)
-;;                               (textEdit . ,text-edit)
-;;                               (data . ,(if ainfo-module
-;;                                            `((identifier . ,id-name)
-;;                                              (module . ,module-name))
-;;                                            `((identifier . ,id-name)))))))
-;;                         suggestions)))))))
 
 (define-handler (completion-item/resolve params)
   (define id (string->symbol
@@ -305,54 +217,26 @@
            (write-log 'debug
                       (format "Calling $fetch-documentation for mod ~a id ~a"
                               mod id))
-           (let ((doc (fetch-documentation mod id)))
+           (let ((doc (or (lsp-geiser-documentation id)
+                          "")))
              (cons `(documentation . ,doc)
                    params)))))
-
-;; (define (fetch-signature-under-cursor params)
-;;   (define editor-word
-;;     (get-word-under-cursor params))
-;;   (if editor-word
-;;       (let* ((cur-word (editor-word-text editor-word))
-;;              (signature ($fetch-signature cur-word)))
-;;         (if (not signature)
-;;             (begin
-;;               (write-log 'warning
-;;                          (format "no signature found for: ~a" cur-word))
-;;               'null)
-;;             signature))
-;;       #f))
 
 (define (fetch-signature-under-cursor params)
   (define editor-word
     (get-word-under-cursor params))
+  (write-log 'info
+              (format "calling $fetch-signature with ~s" (editor-word-text editor-word)))
   (if editor-word
       (let* ((cur-word (editor-word-text editor-word))
-             (matches (filter (lambda (ap)
-                                (string=? (stringify (apropos-info-name ap))
-                                          cur-word))
-                              (append
-                               (list-completions cur-word)
-                               ($apropos-list cur-word)))))
-        (if (null? matches)
+             (signature ($fetch-signature (string->symbol cur-word))))
+        (if (not signature)
             (begin
               (write-log 'warning
                          (format "no signature found for: ~a" cur-word))
               'null)
-            (guard
-             (condition
-              (#t (begin (write-log 'warning
-                                    (format "Unable to fetch signature of `~a`"
-                                            cur-word))
-                         'null)))
-             (let* ((ainfo (car matches))
-                    (signature
-                     (or (fetch-signature (apropos-info-module ainfo)
-                                          (apropos-info-name ainfo))
-                         ($fetch-signature (apropos-info-module ainfo)
-                                           (apropos-info-name ainfo)))))
-               signature))))
-      ""))
+            signature))
+      #f))
 
 (define-handler (text-document/signature-help params)
   (let ((signature (fetch-signature-under-cursor params)))
@@ -364,8 +248,8 @@
              (format "hover with params: ~a" params))
 
   ;; somehow VSCode doesn't send didOpen calls, so we parse files if needed.
-  (when (not (file-already-parsed? file-path))
-    (generate-meta-data! file-path))
+  ;; (when (not (file-already-parsed? file-path))
+  ;;   (generate-meta-data! file-path))
   (let ((signature (fetch-signature-under-cursor params)))
     (if (and signature
              (not (equal? signature ""))

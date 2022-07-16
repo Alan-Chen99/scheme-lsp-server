@@ -20,6 +20,7 @@ SOURCES = \
   geiser/modules.sld        \
   geiser/completion.sld     \
   geiser/doc.sld            \
+  geiser/evaluation.sld     \
   geiser/xref.sld           \
   lsp-server/guile/util.sld \
   lsp-server/guile.sld      \

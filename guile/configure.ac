@@ -34,6 +34,7 @@ AC_CONFIG_LINKS([lsp-server/private.scm:../src/private.scm
                  geiser/utils.sld:../geiser/guile/src/geiser/utils.scm
                  geiser/doc.sld:../geiser/guile/src/geiser/doc.scm
                  geiser/completion.sld:../geiser/guile/src/geiser/completion.scm
+                 geiser/evaluation.sld:../geiser/guile/src/geiser/evaluation.scm
                  geiser/xref.sld:../geiser/guile/src/geiser/xref.scm
 
                  README.md:../README.md])

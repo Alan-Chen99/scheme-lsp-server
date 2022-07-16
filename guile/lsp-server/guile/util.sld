@@ -1,6 +1,7 @@
 (define-module (lsp-server guile util)
 
 #:export (alist-ref
+          alist-ref/default
           current-directory
           create-directory
 
@@ -20,6 +21,12 @@
   (if res
       (cdr res)
       #f))
+
+(define (alist-ref/default key lst default)
+  (define res (assoc key lst))
+  (if res
+      (cdr res)
+      default))
 
 (define current-directory getcwd)
 

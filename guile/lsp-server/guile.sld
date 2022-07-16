@@ -31,6 +31,7 @@
 #:use-module (system repl server)
 #:use-module (lsp-server parse)
 #:use-module (lsp-server private)
+#:use-module (lsp-server adapter)
 #:use-module (lsp-server guile util)
 
 #:declarative? #f)
@@ -88,26 +89,7 @@
 
 ;;; Return apropos instances of all functions matching IDENTIFIER (a symbol).
 (define ($apropos-list identifier)
-  (write-log 'debug
-             (format "apropos-list ~s" identifier))
-  ;;; apropos-fold crashes when searching, for instance, "*unspecified*"
-  (guard
-      (condition
-       (#t (write-log 'error
-                      (format "$apropos-list error fetching apropos for ~s"
-                              identifier))
-           '()))
-    (apropos-fold (lambda (mod name obj acc)
-                    (cons (make-apropos-info (module-name mod)
-                                             name
-                                             #f
-                                             obj)
-                          acc))
-                  '()
-                  (if (symbol? identifier)
-                      (symbol->string identifier)
-                      identifier)
-                  apropos-fold-all)))
+  (lsp-geiser-completions identifier))
 
 ;;; Return the documentation (a string) found for IDENTIFIER (a symbol) in
 ;;; MODULE (a symbol). Return #f if nothing found.
@@ -130,17 +112,8 @@
 ;;; Return the signature (a string) for IDENTIFIER (a symbol) in MODULE (a
 ;;; symbol). Return #f if nothing found.
 ;;; Example call: $fetch-documentation '(srfi 1) 'map
-(define ($fetch-signature module-name identifier)
-  (write-log 'debug
-             (format "$fetch-signature ~s ~s" module-name identifier))
-  (if module-name
-      (let* ((mod (resolve-module module-name #f #:ensure #f))
-             (obj (module-ref mod identifier)))
-        (if (and obj (procedure? obj))
-            (format "~a~%"
-                    (build-procedure-signature module-name identifier obj))
-            #f))
-      #f))
+(define ($fetch-signature identifier)
+  (lsp-geiser-signature identifier))
 
 ;;; Return a list of locations found for IDENTIFIER (a symbol).
 ;;; Each location is represented by an alist
@@ -151,46 +124,13 @@
 ;;;                     (character . <character number))))
 ;;;
 (define ($get-definition-locations module identifier)
-  (write-log 'debug
-             (format "$get-definition-locations ~a ~a" module identifier))
-  (define obj (symbol->object (resolve-module module #f #:ensure #f)
-                              (string->symbol identifier)))
-  (write-log 'debug (format "obj: ~a" obj))
-  (if (procedure? obj)
-      (begin
-        (let ((program (program-source obj 0)))
-          (write-log 'debug
-                     (format "program: ~a" program))
-          (if program
-              (let ((file-path (source:file program)))
-                (write-log 'debug (format "file-path: ~a" file-path))
-                (if file-path
-                    (let ((file-abs-path (if (absolute-file-name? file-path)
-                                             file-path
-                                             (find-absolute-path file-path))))
-                      (write-log 'debug (format "file-abs-path: ~a" file-abs-path))
-                      (write-log 'debug (format "line: ~a" (source:line program)))
-                      (write-log 'debug (format "column: ~a" (source:column program)))
-                      ;; TODO return all matches (see chicken.scm)
-                      (let ((ans (list
-                                  `((uri . ,(string-append "file://" file-abs-path))
-                                    (range . ((start . ((line . ,(source:line program))
-                                                        (character . ,(source:column program))))
-                                              (end . ((line . ,(source:line program))
-                                                      (character . ,(+ (source:column program)
-                                                                       (string-length identifier)))))))))))
-                        (write-log 'debug (format "responding with: ~a" ans))
-                        ans))
-                    (begin
-                      (write-log 'debug
-                                 (format "definition does not have a source file: ~a"
-                                         file-path))
-                      '())))
-              '())))
-      (begin
-        (write-log 'debug
-                   (format "definition not found: ~a" identifier))
-        '())))
+  (define loc
+    (lsp-geiser-symbol-location (if (symbol? identifier)
+                                    identifier
+                                    (string->symbol identifier))))
+  (if (null? loc)
+      loc
+      (list loc)))
 
 (define (file-in-load-path? file-path)
   (any (lambda (dir)
