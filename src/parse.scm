@@ -689,10 +689,10 @@
     (import . ,(source-meta-data-imports meta-data))))
 
 (define (alist->source-meta-data alist)
-  (make-source-meta-data (alist-ref alist 'library-name)
+  (make-source-meta-data (alist-ref 'library-name alist)
                          (map alist->procedure-info
-                                 (alist-ref alist 'procedure-info-table))
-                         (alist-ref alist 'imports)))
+                                 (alist-ref 'procedure-info-table alist))
+                         (alist-ref 'imports alist)))
 
 (define (procedure-info-table->alist* pinfo-table)
   (hash-table-fold pinfo-table

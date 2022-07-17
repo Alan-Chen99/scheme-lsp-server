@@ -5,7 +5,8 @@
         fetch-documentation
         fetch-signature
         file-already-parsed?
-        list-completions)
+        list-completions
+        parse-library-name-from-file)
 
 (import (srfi 1)
         (srfi 28)

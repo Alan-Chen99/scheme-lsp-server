@@ -33,9 +33,7 @@
 
         (lsp-server document)
         (lsp-server parse)
-        (lsp-server private)
-
-        (geiser completion))
+        (lsp-server private))
 
 (cond-expand
  (chicken (import (chicken format)

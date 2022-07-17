@@ -70,25 +70,26 @@
 
 (define-handler (text-document/definition params)
   (define editor-word (get-word-under-cursor params))
-  (define word-text (editor-word-text editor-word))
   ;; (define module (if editor-word
   ;;                    (get-identifier-module word-text)
   ;;                    #f))
   (write-log 'debug (format "got word: ~a" editor-word))
 
-  (let ((def-locs ($get-definition-locations #f
-                                             word-text)))
-    (if (not (null? def-locs))
-        (let ((v (list->vector def-locs)))
-          (write-log 'debug
-                     (format "$fetch-definition-locations resulted in ~a"
-                             v))
-          v)
-        (begin
-          (write-log 'debug
-                     (format "no definitions found for ~a"
-                             (editor-word-text editor-word)))
-          'null))))
+  (if editor-word
+      (let* ((word-text (editor-word-text editor-word))
+             (def-locs ($get-definition-locations word-text)))
+        (if (not (null? def-locs))
+            (let ((v (list->vector def-locs)))
+              (write-log 'debug
+                         (format "$fetch-definition-locations resulted in ~a"
+                                 v))
+              v)
+            (begin
+              (write-log 'debug
+                         (format "no definitions found for ~a"
+                                 (editor-word-text editor-word)))
+              'null)))
+      'null))
 
 (define-handler (text-document/did-change params)
   (define file-path (get-uri-path params))
@@ -217,7 +218,7 @@
            (write-log 'debug
                       (format "Calling $fetch-documentation for mod ~a id ~a"
                               mod id))
-           (let ((doc (or (lsp-geiser-documentation id)
+           (let ((doc (or ($fetch-documentation id)
                           "")))
              (cons `(documentation . ,doc)
                    params)))))
@@ -226,7 +227,7 @@
   (define editor-word
     (get-word-under-cursor params))
   (write-log 'info
-              (format "calling $fetch-signature with ~s" (editor-word-text editor-word)))
+              (format "calling $fetch-signature with ~s" editor-word))
   (if editor-word
       (let* ((cur-word (editor-word-text editor-word))
              (signature ($fetch-signature (string->symbol cur-word))))

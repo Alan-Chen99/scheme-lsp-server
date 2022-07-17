@@ -16,7 +16,7 @@
                     srfi-69
                     srfi-64)
  (component-options
-  (csc-options "-O3" "-X" "r7rs" "-R" "r7rs"))
+  (csc-options "-O3" "-X" "r7rs" "-R" "r7rs" "-J"))
  (components
   (program chicken-lsp-server
            (source "src/main.scm")
@@ -25,13 +25,20 @@
                          (custom-build "chicken/setup-chicken-doc-for-test.sh"))
   (extension lsp-server.private
              (source "src/private.sld")
-             (source-dependencies "src/private.scm"))
+             (source-dependencies "src/private.scm")
+             (component-dependencies lsp-server.chicken.util))
+  (extension lsp-server.chicken.util
+             (source "chicken/util.sld"))
+  (extension geiser
+             (source "geiser/chicken/src/geiser/chicken5.scm"))
   (extension lsp-server.chicken
              (source "chicken/chicken.sld")
              (component-dependencies lsp-server.private
                                      lsp-server.chicken.util))
-  (extension lsp-server.chicken.util
-             (source "chicken/util.sld"))
+  (extension lsp-server.adapter
+             (source "src/adapter.sld")
+             (component-dependencies geiser
+                                     lsp-server.parse))
   (extension lsp-server.document
              (source "src/document.sld")
              (source-dependencies "src/document.scm"))

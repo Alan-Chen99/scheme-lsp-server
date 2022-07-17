@@ -94,20 +94,8 @@
 ;;; Return the documentation (a string) found for IDENTIFIER (a symbol) in
 ;;; MODULE (a symbol). Return #f if nothing found.
 ;;; Example call: $fetch-documentation '(srfi-1) 'map
-(define ($fetch-documentation module-name identifier)
-  (write-log 'info (format "$fetch-documentation: ~s ~s"
-                           module-name
-                           identifier))
-  (define mod (resolve-module module-name))
-  (define obj (module-ref mod identifier))
-  (if (and obj (procedure? obj))
-      (format "~a~%~a"
-              (build-procedure-signature module-name identifier obj)
-              (let ((doc (object-documentation obj)))
-                (if doc
-                    (string-append doc "\n")
-                    "")))
-      #f))
+(define ($fetch-documentation identifier)
+  (lsp-geiser-documentation identifier))
 
 ;;; Return the signature (a string) for IDENTIFIER (a symbol) in MODULE (a
 ;;; symbol). Return #f if nothing found.
@@ -123,7 +111,7 @@
 ;;;             (end . ((line  . <line number>)
 ;;;                     (character . <character number))))
 ;;;
-(define ($get-definition-locations module identifier)
+(define ($get-definition-locations identifier)
   (define loc
     (lsp-geiser-symbol-location (if (symbol? identifier)
                                     identifier
@@ -138,7 +126,16 @@
        %load-path))
 
 (define ($open-file! file-path)
-  ;;(lsp-geiser-compile-file file-path)
+  (guard
+   (condition
+    (#t (write-log 'error (format "Can't compile file ~a: ~a"
+                                  file-path
+                                  condition))))
+   (let ((lib-name (parse-library-name-from-file file-path)))
+
+     (when (or (not lib-name)
+               (not (resolve-module lib-name #t #:ensure #f)))
+       (lsp-geiser-compile-file file-path))))
   #f)
 
 (define ($save-file! file-path)

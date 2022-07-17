@@ -1,6 +1,8 @@
 (define-library (lsp-server chicken util)
 
 (export absolute-pathname?
+        alist-ref
+        alist-ref/default
         current-directory
         get-module-path
         get-absolute-pathname
@@ -8,6 +10,7 @@
         pathname-join)
 
 (import (scheme base)
+        (chicken base)
         (chicken pathname)
         (chicken process-context))
 
@@ -19,5 +22,9 @@
   (define (get-absolute-pathname path)
     (if (absolute-pathname? path)
         path
-        (pathname-join (current-directory) path))))
+        (pathname-join (current-directory) path)))
+
+  (define (alist-ref/default key alist default)
+    (or (alist-ref key alist)
+        default)))
 )

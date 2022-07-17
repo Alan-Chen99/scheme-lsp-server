@@ -59,6 +59,7 @@
 
 (cond-expand
  (chicken (import (only (chicken base) intersperse)
+                  (lsp-server chicken util)
                   r7rs))
  (else))
 

@@ -46,7 +46,8 @@
         (srfi 18)
         (lsp-server private)
         (lsp-server chicken util)
-        (lsp-server parse))
+        (lsp-server parse)
+        (lsp-server adapter))
 
 (begin
 
@@ -100,52 +101,19 @@
 
   ;;; Return apropos instances of all functions matching IDENTIFIER (a symbol).
   (define ($apropos-list identifier)
-    (define suggestions
-      (apropos-information-list identifier #:macros? #t #:imported? #f))
-    (fold (lambda (s acc)
-            (let* ((mod-id-pair (car s))
-                   (mod (let ((fst (car mod-id-pair)))
-                          (if (eqv? fst '||)
-                              #f
-                              (map string->symbol
-                                   (string-split (symbol->string fst) ".")))))
-                   (id (cdr mod-id-pair))
-                   (type (cdr s)))
-              (if (string-prefix? identifier (symbol->string id))
-                  (cons (make-apropos-info mod id type #f)
-                        acc)
-                  acc)))
-          '()
-          suggestions))
+    (lsp-geiser-completions identifier))
 
   ;;; Return the documentation (a string) found for IDENTIFIER (a symbol) in
   ;;; MODULE (a symbol). Return #f if nothing found.
   ;;; Example call: $fetch-documentation '(srfi-1) 'map
-  (define ($fetch-documentation module identifier)
-    (define egg (or (module-egg module)
-                    module))
-    (define doc-path
-      (append (if (list? egg)
-                  egg
-                  (list egg))
-              (list identifier)))
-    (begin
-      (write-log 'debug
-                 (format "looking up doc-path: ~a" doc-path))
-      (with-output-to-string
-        (lambda ()
-          (describe (lookup-node doc-path))))))
+  (define ($fetch-documentation identifier)
+    (lsp-geiser-documentation identifier))
 
   ;;; Return the signature (a string) for IDENTIFIER (a symbol) in MODULE (a
   ;;; symbol). Return #f if nothing found.
   ;;; Example call: $fetch-documentation '(srfi 1) 'map
-  (define ($fetch-signature module identifier)
-    (define egg (or (module-egg module)
-                    (car module)))
-    (if (not egg)
-        #f
-        (node-signature
-         (lookup-node (list egg identifier)))))
+  (define ($fetch-signature identifier)
+    (lsp-geiser-signature identifier))
 
   ;;; Action to execute when FILE-PATH is opened. Used for side effects only.
   (define ($open-file! file-path)
@@ -186,7 +154,8 @@
   ;;;                     (character . <character number))))
   ;;;
   (define ($get-definition-locations identifier)
-    (fetch-definition-locations identifier))
+    ;;(fetch-definition-locations identifier)
+    '())
 
   (define (build-module-egg-mapping)
     (define-values (in out pid)
