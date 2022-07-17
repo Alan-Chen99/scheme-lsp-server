@@ -6,6 +6,7 @@
  (dependencies apropos
                chicken-doc
                json-rpc
+               nrepl
                r7rs
                srfi-1
                srfi-130
@@ -16,7 +17,7 @@
                     srfi-69
                     srfi-64)
  (component-options
-  (csc-options "-O3" "-X" "r7rs" "-R" "r7rs" "-J"))
+  (csc-options "-O3" "-X" "r7rs" "-R" "r7rs"))
  (components
   (program chicken-lsp-server
            (source "src/main.scm")
@@ -33,10 +34,13 @@
              (source "geiser/chicken/src/geiser/chicken5.scm"))
   (extension lsp-server.chicken
              (source "chicken/chicken.sld")
-             (component-dependencies lsp-server.private
+             (component-dependencies lsp-server.adapter
+                                     lsp-server.parse
+                                     lsp-server.private
                                      lsp-server.chicken.util))
   (extension lsp-server.adapter
              (source "src/adapter.sld")
+             (source-dependencies "src/adapter.scm")
              (component-dependencies geiser
                                      lsp-server.parse))
   (extension lsp-server.document
