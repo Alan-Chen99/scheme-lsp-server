@@ -43,6 +43,7 @@
         srfi-69
         srfi-130
 
+        (geiser)
         (srfi 18)
         (lsp-server private)
         (lsp-server chicken util)
@@ -51,9 +52,9 @@
 
 (begin
 
-;;; A hash table mapping modules (extensions) to eggs. This is needed
-;;; to fetch the correct documentation with chicken-doc
-  (define module-egg-mapping #f)
+  ;;; A hash table mapping modules (extensions) to eggs. This is needed
+  ;;; to fetch the correct documentation with chicken-doc
+  (define module-egg-table (make-hash-table))
 
   (define eggs-path
     (make-pathname (system-cache-directory) "chicken-install"))
@@ -79,7 +80,8 @@
     (root-path (if (and root (not (equal? root 'null)))
                    root
                    "."))
-    (set! module-egg-mapping (build-module-egg-mapping))
+    (verify-repository) ; needed to use chicken-doc in compiled code
+    (set! module-egg-table (build-module-egg-table))
     (generate-meta-data! eggs-path)
     (generate-meta-data! chicken-source-path)
     (generate-meta-data! (root-path))
@@ -107,21 +109,83 @@
   ;;; MODULE (a symbol). Return #f if nothing found.
   ;;; Example call: $fetch-documentation '(srfi-1) 'map
   (define ($fetch-documentation identifier)
-    (lsp-geiser-documentation identifier))
+    (define match (alist-ref identifier (geiser-autodoc identifier)))
+    (define module (and match
+                        (alist-ref "module" match equal?)))
+    (define egg (or (module-egg module) module))
+    (write-log 'debug
+               (format "$fetch-documentation identifier: ~a, match: ~a, module: ~a, egg: ~a"
+                       identifier
+                       match
+                       module
+                       egg))
+    (if (and egg (not (null? egg)))
+        (let ((doc-path
+               (append (if (list? egg)
+                           egg
+                           (list egg))
+                       (list identifier))))
+          (write-log 'debug
+                     (format "looking up doc-path: ~a" doc-path))
+          (with-output-to-string
+            (lambda ()
+              (guard (condition
+                      (#t (write-log
+                           'error
+                           (format "#fetch-documentation: docmuentation not found: (~a ~a)"
+                                   egg
+                                   identifier))
+                          #f))
+               (describe (lookup-node doc-path))))))
+        #f))
 
   ;;; Return the signature (a string) for IDENTIFIER (a symbol) in MODULE (a
   ;;; symbol). Return #f if nothing found.
   ;;; Example call: $fetch-documentation '(srfi 1) 'map
   (define ($fetch-signature identifier)
-    (lsp-geiser-signature identifier))
+    (define match (alist-ref identifier (geiser-autodoc (list identifier))))
+    (define module (and match (alist-ref "module" match equal?)))
+    (define egg (or (module-egg module) module))
+    (write-log 'debug
+               (format "$fetch-signature egg: ~a identifier: ~a"
+                       egg
+                       identifier))
+    (or (if (or (not egg)
+                (null? egg))
+            #f
+            (guard (condition
+                    (#t (write-log 'error
+                                   (format "#fetch-signature: signature not found: (~a ~a)"
+                                           egg
+                                           identifier))
+                        #f))
+              (node-signature
+               (lookup-node (list egg identifier)))))
+        (lsp-geiser-signature identifier)))
+
+  (define (load-or-import file-path)
+    (guard
+     (condition
+      (#t (write-log 'error (format "Can't load file ~a: ~a"
+                                    file-path
+                                    condition))))
+     (let ((lib-name (parse-library-name-from-file file-path)))
+
+       (if (not lib-name)
+           (lsp-geiser-load-file file-path)
+           (eval `(import ,lib-name))))))
 
   ;;; Action to execute when FILE-PATH is opened. Used for side effects only.
   (define ($open-file! file-path)
-    (generate-meta-data! file-path))
+    (load-or-import file-path)
+    (generate-meta-data! file-path)
+    #f)
 
   ;;; Action to execute when FILE-PATH is saved. Used for side effects only.
   (define ($save-file! file-path)
-    (generate-meta-data! file-path))
+    (load-or-import file-path)
+    (generate-meta-data! file-path)
+    #f)
 
   (define (join-definition-tables! left right)
     (for-each
@@ -154,10 +218,9 @@
   ;;;                     (character . <character number))))
   ;;;
   (define ($get-definition-locations identifier)
-    ;;(fetch-definition-locations identifier)
-    '())
+    (fetch-definition-locations identifier))
 
-  (define (build-module-egg-mapping)
+  (define (build-module-egg-table)
     (define-values (in out pid)
       (process (chicken-status) '("-c")))
     (define (egg-line? str)
@@ -194,7 +257,7 @@
                         cur-egg)))))
 
   (define (module-egg mod)
-    (hash-table-ref/default module-egg-mapping
+    (hash-table-ref/default module-egg-table
                             mod
                             #f))
 

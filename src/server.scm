@@ -34,8 +34,9 @@
     (signatureHelpProvider . ())))
 
 (define-handler (initialize-handler params)
-  ;; (when ($initialize-lsp-server! root-path)
-  ;;   (write-log 'info "LSP server initialized"))
+  (define root-path (get-root-path params))
+  (when ($initialize-lsp-server! root-path)
+    (write-log 'info "LSP server initialized"))
   (write-log 'info "LSP server hallo")
   (set! lsp-server-state 'on)
   `((capabilities . ,(append mandatory-capabilities
@@ -148,7 +149,7 @@
 (define-handler (text-document/did-save params)
   (define file-path (get-uri-path params))
   (write-log 'info "file saved.")
-  ;;($save-file! file-path)
+  ($save-file! file-path)
   ;;(generate-meta-data! file-path)
   #f)
 
@@ -226,17 +227,20 @@
 (define (fetch-signature-under-cursor params)
   (define editor-word
     (get-word-under-cursor params))
-  (write-log 'info
-              (format "calling $fetch-signature with ~s" editor-word))
-  (if editor-word
-      (let* ((cur-word (editor-word-text editor-word))
-             (signature ($fetch-signature (string->symbol cur-word))))
-        (if (not signature)
-            (begin
-              (write-log 'warning
-                         (format "no signature found for: ~a" cur-word))
-              'null)
-            signature))
+  (if (and editor-word (not (string=? (editor-word-text editor-word)
+                                      "")))
+      (begin
+        (write-log 'info
+                  (format "calling $fetch-signature with ~s"
+                          (editor-word-text editor-word)))
+        (let* ((cur-word (editor-word-text editor-word))
+               (signature ($fetch-signature (string->symbol cur-word))))
+          (if (not signature)
+              (begin
+                (write-log 'warning
+                           (format "no signature found for: ~a" cur-word))
+                'null)
+              signature)))
       #f))
 
 (define-handler (text-document/signature-help params)

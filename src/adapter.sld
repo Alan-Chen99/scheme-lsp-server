@@ -4,7 +4,8 @@
         lsp-geiser-documentation
         lsp-geiser-signature
         lsp-geiser-symbol-location
-        lsp-geiser-compile-file)
+        lsp-geiser-compile-file
+        lsp-geiser-load-file)
 
 (import (scheme base)
         (scheme)

@@ -78,9 +78,9 @@
 (define (lsp-geiser-compile-file file-path)
   (cond-expand
    (guile (ge:compile-file file-path))
-   (chicken (geiser-compile-file file-path)))
-  ;; (when (or (not lib-name)
-  ;;           (not (resolve-module lib-name #t #:ensure #f)))
+   (chicken (geiser-compile-file file-path))))
 
-  ;;   )
-  )
+(define (lsp-geiser-load-file file-path)
+  (cond-expand
+   (guile (ge:load-file file-path))
+   (chicken (geiser-load-file file-path))))

@@ -222,7 +222,8 @@
                       (hash-table-keys
                        (hash-table-ref
                         (identifier-to-source-meta-data-table) 'included-func))))
-  (display (hash-table-keys (source-path-timestamps)))
+  (with-output-to-file "/tmp/out.log"
+    (lambda () (display (hash-table-keys (source-path-timestamps)))))
   (test-assert (and (any (lambda (k)
                            (string-contains k "sample-2.scm"))
                          (hash-table-keys (source-path-timestamps)))
@@ -244,8 +245,11 @@
   (test-assert (every absolute-pathname?
                       (hash-table-keys (source-path-timestamps)))))
 
-(test-equal '(my lib)
-            (parse-library-name-from-file "resources/sample-guile-lib.scm"))
+(cond-expand
+ (guile (test-equal '(my lib)
+                    (parse-library-name-from-file "resources/sample-guile-lib.scm")))
+ (r7rs (test-equal '(my lib)
+                   (parse-library-name-from-file "resources/sample-r7rs-lib.scm"))))
 
 (let ((meta-data (parse-file "../guile/lsp-server/parse.sld")))
   (test-assert (member '(srfi srfi-1)

@@ -487,6 +487,15 @@
                    ".ss")
                eol)))
 
+(define chicken-relevant-scheme-file-regex
+  (irregex '(: (* any)
+               (~ "/tests/")
+               (~ "import")
+               (or ".scm"
+                   ".sld"
+                   ".ss")
+               eol)))
+
 (cond-expand
  (guile (define (generate-meta-data! . files)
           (write-log 'debug
@@ -500,8 +509,8 @@
                     (let ((abs-filename (get-absolute-pathname filename)))
                       (when (and abs-filename
                                  (eq? flag 'regular)
-                                (irregex-search scheme-file-regex
-                                                abs-filename))
+                                 (irregex-search scheme-file-regex
+                                                 (pathname-base abs-filename)))
                        (let ((old-time-stamp (hash-table-ref/default
                                               (source-path-timestamps)
                                               abs-filename
@@ -519,6 +528,20 @@
                      (not (string=? f "")))
                    files))))
  (chicken
+  (define (parse-and-update-if-needed! filename)
+    (let* ((abs-filename (get-absolute-pathname filename))
+           (stats (file-stat abs-filename))
+           (mtime (vector-ref stats 8))
+           (old-time-stamp (hash-table-ref/default
+                            (source-path-timestamps)
+                            abs-filename
+                            #f)))
+      (when (or (not old-time-stamp)
+                (> mtime old-time-stamp))
+        (hash-table-set! (source-path-timestamps)
+                         abs-filename
+                         mtime)
+        (parse-and-update-table! abs-filename))))
   (define (generate-meta-data! . files)
     (write-log 'debug
                (format "generate-meta-data! for files ~a" files))
@@ -527,29 +550,22 @@
        (guard
         (condition
          (#t (write-log 'warning
-                        (format "generate-tags: can't read file ~a"
+                        (format "generate-meta-data!: can't read file ~a"
                                 f))))
-        (if (directory? f)
-            (let ((files (find-files f
-                                     #:test scheme-file-regex)))
-              (for-each
-               (lambda (filename)
-                 (let* ((abs-filename (get-absolute-pathname filename))
-                        (stats (file-stat abs-filename))
-                        (mtime (vector-ref stats 8))
-                        (old-time-stamp (hash-table-ref/default
-                                         (source-path-timestamps)
-                                         abs-filename
-                                         #f)))
-                   (when (or (not old-time-stamp)
-                             (> mtime old-time-stamp))
-                     (begin
-                       (hash-table-set! (source-path-timestamps)
-                                        abs-filename
-                                        mtime)
-                       (parse-and-update-table! abs-filename)))))
-               files))
-            (parse-and-update-table! f))))
+        (cond ((directory? f)
+               (write-log 'debug (format "generate-meta-data!: processing directory ~a" f))
+               (let ((files
+                      (find-files f
+                                  #:test chicken-relevant-scheme-file-regex)))
+                 (for-each
+                  (lambda (filename)
+                    (write-log 'debug
+                               (format "generate-meta-data!: processing file ~a"
+                                       filename))
+                    (parse-and-update-if-needed! filename))
+                  files)))
+              (else
+               (parse-and-update-if-needed! f)))))
      (filter (lambda (f)
                (not (string=? f "")))
              files)))))
@@ -562,7 +578,7 @@
 ;;;             (end . ((line  . <line number>)
 ;;;                     (character . <character number))))
 ;;;
-(define (fetch-definition-locations module identifier)
+(define (fetch-definition-locations identifier)
   (write-log 'debug
              (format "fetch-definition-locations: ~a (~a)"
                      identifier

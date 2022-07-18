@@ -7,6 +7,7 @@
 
           absolute-pathname?
           pathname-directory
+          pathname-base
           pathname-join
           get-absolute-pathname
           hash-table-join!)
@@ -37,6 +38,9 @@
 
 (define (pathname-directory path)
   (dirname path))
+
+(define (pathname-base path)
+  (basename path))
 
 (define absolute-pathname? absolute-file-name?)
 

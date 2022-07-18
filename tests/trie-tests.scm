@@ -5,7 +5,7 @@
                 (srfi srfi-64)
                 (srfi srfi-69)
                 (lsp-server guile util)))
- (else (import (only (srfi srfi-1) every fold)
+ (else (import (only (srfi 1) every fold)
                (srfi 64)
                (srfi 69))))
 

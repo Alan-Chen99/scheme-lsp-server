@@ -125,7 +125,7 @@
          (string-prefix? dir file-path))
        %load-path))
 
-(define ($open-file! file-path)
+(define (compile-if-needed file-path)
   (guard
    (condition
     (#t (write-log 'error (format "Can't compile file ~a: ~a"
@@ -135,10 +135,14 @@
 
      (when (or (not lib-name)
                (not (resolve-module lib-name #t #:ensure #f)))
-       (lsp-geiser-compile-file file-path))))
+       (lsp-geiser-compile-file file-path)))))
+
+(define ($open-file! file-path)
+  (compile-if-needed file-path)
   #f)
 
 (define ($save-file! file-path)
+  (compile-if-needed file-path)
   #f)
 
 

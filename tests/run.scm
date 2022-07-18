@@ -19,7 +19,6 @@
                   (only (chicken port) with-input-from-string)
                   (only (srfi 130) string-replace)
                   (lsp-server chicken)
-                  (lsp-server tags)
                   (lsp-server trie)))
  (guile (import (except (scheme base)
                         cond-expand
