@@ -218,8 +218,7 @@
   ;;;                     (character . <character number))))
   ;;;
   (define ($get-definition-locations identifier)
-    ;;(fetch-definition-locations identifier)
-    '())
+    (fetch-definition-locations identifier))
 
   (define (build-module-egg-table)
     (define-values (in out pid)
