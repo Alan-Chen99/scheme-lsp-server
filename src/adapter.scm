@@ -76,6 +76,7 @@
         (else '())))
 
 (define (lsp-geiser-compile-file file-path)
+  (write-log 'debug (format "lsp-geiser-compile-file: ~a" file-path))
   (cond-expand
    (guile (ge:compile-file file-path))
    (chicken (geiser-compile-file file-path))))

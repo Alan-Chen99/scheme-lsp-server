@@ -125,24 +125,55 @@
          (string-prefix? dir file-path))
        %load-path))
 
-(define (compile-if-needed file-path)
+(define (import-library-by-name lib-name)
+  (write-log 'debug
+             (format "importing module ~a" lib-name))
+  (eval `(import ,lib-name) (interaction-environment))
+  (let ((mod (resolve-module lib-name #t #:ensure #f)))
+    (import-module-dependencies mod)))
+
+(define (import-module-dependencies mod)
+  (for-each (lambda (m)
+              (let ((lib-name (module-name m)))
+                (write-log 'debug
+                           (format "importing library ~a" lib-name))
+                (eval `(import ,lib-name)
+                      (interaction-environment))))
+            (module-uses mod)))
+
+(define (compile-and-import-if-needed file-path)
   (guard
    (condition
     (#t (write-log 'error (format "Can't compile file ~a: ~a"
                                   file-path
                                   condition))))
-   (let ((lib-name (parse-library-name-from-file file-path)))
-
-     (when (or (not lib-name)
-               (not (resolve-module lib-name #t #:ensure #f)))
-       (lsp-geiser-compile-file file-path)))))
+   (let* ((lib-name (parse-library-name-from-file file-path))
+          (mod (resolve-module lib-name #t #:ensure #f)))
+     (cond ((and lib-name (not mod))
+            (lsp-geiser-compile-file file-path)
+            (import-library-by-name lib-name))
+           (mod
+            (import-library-by-name lib-name))
+           (else
+            (write-log 'debug
+                       (format "compile-and-import-if-needed: ignoring file ~a"
+                               file-path)))))))
 
 (define ($open-file! file-path)
-  (compile-if-needed file-path)
+  (compile-and-import-if-needed file-path)
   #f)
 
 (define ($save-file! file-path)
-  (compile-if-needed file-path)
+  ;;(compile-and-import-if-needed file-path)
+  (define lib-name (parse-library-name-from-file file-path))
+  (define mod (resolve-module lib-name #t #:ensure #f))
+  (guard
+   (condition (#t (write-log 'error
+                             (format "$save-file: error reloading module ~a: ~a"
+                                     lib-name
+                                      condition))))
+   (reload-module mod)
+   (import-library-by-name lib-name))
   #f)
 
 
