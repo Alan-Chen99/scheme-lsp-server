@@ -165,22 +165,24 @@
   #f)
 
 (define ($save-file! file-path)
-  ;;(compile-and-import-if-needed file-path)
   (define lib-name (parse-library-name-from-file file-path))
-  (define mod (resolve-module lib-name #t #:ensure #f))
-  (guard
-   (condition (#t
-               (write-log 'error
-                          (format "$save-file: error reloading module ~a: ~a"
-                                  lib-name
-                                  condition))
-               (raise-exception
-                (make-json-rpc-custom-error
-                 'load-error
-                 (format "error loading/import file ~a" file-path)))))
-   (reload-module mod)
-   (import-library-by-name lib-name))
-  #f)
+  (if lib-name
+      (guard
+       (condition (#t
+                   (write-log 'error
+                              (format "$save-file: error reloading module ~a: ~a"
+                                      lib-name
+                                      condition))
+                   (raise-exception
+                    (make-json-rpc-custom-error
+                     'load-error
+                     (format "error loading/import file ~a" file-path)))))
+       (let ((mod (resolve-module lib-name #t #:ensure #f)))
+
+         (reload-module mod)
+         (import-library-by-name lib-name)
+         #f))
+      #f))
 
 
 (define (build-procedure-signature module name proc-obj)
