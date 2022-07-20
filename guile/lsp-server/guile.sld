@@ -29,6 +29,7 @@
 #:use-module (ice-9 session)
 #:use-module (system vm program)
 #:use-module (system repl server)
+#:use-module (json-rpc lolevel)
 #:use-module (lsp-server parse)
 #:use-module (lsp-server private)
 #:use-module (lsp-server adapter)
@@ -168,10 +169,15 @@
   (define lib-name (parse-library-name-from-file file-path))
   (define mod (resolve-module lib-name #t #:ensure #f))
   (guard
-   (condition (#t (write-log 'error
-                             (format "$save-file: error reloading module ~a: ~a"
-                                     lib-name
-                                      condition))))
+   (condition (#t
+               (write-log 'error
+                          (format "$save-file: error reloading module ~a: ~a"
+                                  lib-name
+                                  condition))
+               (raise-exception
+                (make-json-rpc-custom-error
+                 'load-error
+                 (format "error loading/import file ~a" file-path)))))
    (reload-module mod)
    (import-library-by-name lib-name))
   #f)
