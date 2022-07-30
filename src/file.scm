@@ -30,32 +30,35 @@
         (write-log 'info
                    (format "~s" (change-contents-text change-contents)))
         (mutex-lock! file-table-mutex)
-        (let ((result (if (change-contents-range change-contents)
-                          (if (hash-table-exists? file-table path)
-                              (hash-table-update! file-table
+        (let ((result (cond ((change-contents-range change-contents)
+                             (if (hash-table-exists? file-table path)
+                                 (hash-table-update! file-table
+                                                     path
+                                                     (lambda (contents)
+                                                       (let ((new-contents (apply-change change-contents contents)))
+                                                         new-contents)))
+                                 (hash-table-set! file-table
                                                   path
-                                                  (lambda (contents)
-                                                    (let ((new-contents (apply-change change-contents contents)))
-                                                      new-contents)))
-                              (hash-table-set! file-table
-                                               path
-                                               (begin
-                                                 (write-log 'debug
-                                                            (format "reading file from disk: ~a" path))
-                                                 (call-with-input-file path
-                                                   (lambda (p)
-                                                     (apply-change change-contents
-                                                                   (read-document p)))))))
-                          ;; if range is not set (#f), the client will send the complete file.
-                          (let ((contents (change-contents-text change-contents)))
-                            ;; TODO is this according to the protocol possible?
-                            (when (hash-table-exists? file-table path)
-                              (error "missing implementation when hash-table exists"))
-                            (hash-table-set! file-table
-                                             path
-                                             (lambda (v)
-                                               contents))
-                            contents))))
+                                                  (begin
+                                                    (write-log 'debug
+                                                               (format "reading file from disk: ~a" path))
+                                                    (call-with-input-file path
+                                                      (lambda (p)
+                                                        (apply-change change-contents
+                                                                      (read-document p))))))))
+                            ;; if range is not set (#f), the client will send the complete file.
+                            (else
+                             (let ((contents (change-contents-text change-contents)))
+                               ;; TODO is this according to the protocol possible?
+                               (when (hash-table-exists? file-table path)
+                                 (write-log 'warning
+                                            (format "Replacing contents for file ~a"
+                                                    path)))
+                               (hash-table-set! file-table
+                                                path
+                                                (lambda (v)
+                                                  contents))
+                               contents)))))
           (mutex-unlock! file-table-mutex)
           result))
       #f))
