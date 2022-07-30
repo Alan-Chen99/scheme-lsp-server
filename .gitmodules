@@ -1,6 +1,0 @@
-[submodule "geiser/chicken"]
-	path = geiser/chicken
-	url = https://gitlab.com/emacs-geiser/chicken/
-[submodule "geiser/guile"]
-	path = geiser/guile
-	url = https://gitlab.com/emacs-geiser/guile/
