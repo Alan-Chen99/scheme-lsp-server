@@ -15,7 +15,7 @@
 
         intersperse
 
-        join-module-name
+        module-name->string
         split-module-name
 
         alist-ref*

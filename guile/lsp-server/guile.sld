@@ -100,7 +100,7 @@
 
 (define (add-modules-to-symbols lst)
   (map (lambda (s)
-         (cons s (library-name->string
+         (cons s (module-name->string
                   (symbol-module (if (string? s)
                                      (string->symbol s)
                                      s)))))
@@ -145,10 +145,10 @@
 ;;;             (end . ((line  . <line number>)
 ;;;                     (character . <character number))))
 ;;;
-(define ($get-definition-locations lib-name identifier)
+(define ($get-definition-locations mod-name identifier)
   (write-log 'debug
              (format "$get-definition-locations ~a ~a"
-                     lib-name
+                     mod-name
                      identifier))
   (define loc
     (lsp-geiser-symbol-location (if (symbol? identifier)
@@ -156,8 +156,8 @@
                                     (string->symbol identifier))))
   (write-log 'debug
              (format "loc: ~a" loc))
-  (cond ((and (or (not loc) (null? loc)) lib-name)
-         (execute-in-module lib-name
+  (cond ((and (or (not loc) (null? loc)) mod-name)
+         (execute-in-module mod-name
                             (lambda ()
                               (let ((loc2
                                      (lsp-geiser-symbol-location
@@ -175,19 +175,19 @@
          (string-prefix? dir file-path))
        %load-path))
 
-(define (import-library-by-name lib-name)
+(define (import-library-by-name mod-name)
   (write-log 'debug
-             (format "importing module ~a" lib-name))
-  (eval `(import ,lib-name) (interaction-environment))
-  (let ((mod (resolve-module lib-name #t #:ensure #f)))
+             (format "importing module ~a" mod-name))
+  (eval `(import ,mod-name) (interaction-environment))
+  (let ((mod (resolve-module mod-name #t #:ensure #f)))
     (import-module-dependencies mod)))
 
 (define (import-module-dependencies mod)
   (for-each (lambda (m)
-              (let ((lib-name (module-name m)))
+              (let ((mod-name (module-name m)))
                 (write-log 'debug
-                           (format "importing library ~a" lib-name))
-                (eval `(import ,lib-name)
+                           (format "importing library ~a" mod-name))
+                (eval `(import ,mod-name)
                       (interaction-environment))))
             (module-uses mod)))
 
@@ -197,21 +197,21 @@
     (#t (write-log 'error (format "Can't compile file ~a: ~a"
                                   file-path
                                   condition))))
-   (let* ((lib-name (parse-library-name-from-file file-path))
-          (mod (if lib-name
-                   (resolve-module lib-name #t #:ensure #f)
+   (let* ((mod-name (parse-library-name-from-file file-path))
+          (mod (if mod-name
+                   (resolve-module mod-name #t #:ensure #f)
                    #f)))
-     (cond ((and lib-name (not mod))
+     (cond ((and mod-name (not mod))
             (write-log 'debug
                        (format "compile-and-import-if-needed: compiling ~a and importing ~a"
                                file-path
-                               lib-name))
+                               mod-name))
             (lsp-geiser-compile-file file-path)
-            (import-library-by-name lib-name))
-           ((and lib-name mod)
+            (import-library-by-name mod-name))
+           ((and mod-name mod)
             (write-log 'debug
-                       (format "compile-and-import-if-needed: importing ~a" lib-name))
-            (import-library-by-name lib-name))
+                       (format "compile-and-import-if-needed: importing ~a" mod-name))
+            (import-library-by-name mod-name))
            (else
             (write-log 'debug
                        (format "compile-and-import-if-needed: ignoring file ~a" file-path))
@@ -222,22 +222,22 @@
   #f)
 
 (define ($save-file! file-path)
-  (define lib-name (parse-library-name-from-file file-path))
-  (if lib-name
+  (define mod-name (parse-library-name-from-file file-path))
+  (if mod-name
       (guard
        (condition (#t
                    (write-log 'error
                               (format "$save-file: error reloading module ~a: ~a"
-                                      lib-name
+                                      mod-name
                                       condition))
                    (raise-exception
                     (make-json-rpc-custom-error
                      'load-error
                      (format "error loading/import file ~a" file-path)))))
-       (let ((mod (resolve-module lib-name #t #:ensure #f)))
+       (let ((mod (resolve-module mod-name #t #:ensure #f)))
 
          (reload-module mod)
-         (import-library-by-name lib-name)
+         (import-library-by-name mod-name)
          #f))
       (lsp-geiser-load-file file-path)))
 

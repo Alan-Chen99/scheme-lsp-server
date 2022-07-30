@@ -181,12 +181,12 @@
 ;;;; Main procedures
 
 (define (parse-guile-module expression)
-  (define lib-name (cadr expression))
+  (define mod-name (cadr expression))
   (let loop ((expr (cddr expression))
              (previous-keyword #f)
              (imports '()))
     (cond ((null? expr)
-           (make-source-meta-data lib-name
+           (make-source-meta-data mod-name
                                   (make-hash-table)
                                   (reverse imports)))
           ((keyword? (car expr))
@@ -225,7 +225,7 @@
         ((guile-library-definition-form? expr)
          (parse-guile-module expr))
         ((library-definition-form? expr)
-         (let* ((lib-name (cadr expr))
+         (let* ((mod-name (cadr expr))
                 (subforms-meta-data
                  (fold (lambda (e acc)
                          (let ((sub-meta-data
@@ -233,14 +233,14 @@
                                                   (make-parse-context
                                                    (parse-context-directory
                                                     context)
-                                                   lib-name))))
+                                                   mod-name))))
                            (if sub-meta-data
                                (cons sub-meta-data acc)
                                acc)))
                        '()
                        (cddr expr))))
            (make-source-meta-data
-            lib-name
+            mod-name
             (fold (lambda (sub-ht acc)
                     (hash-table-join! acc sub-ht))
                   (make-hash-table)
@@ -311,12 +311,12 @@
                           (cdr expr)))))
 
 (define (merge-meta-data lst)
-  (define lib-name #f)
+  (define mod-name #f)
   (define merged
     (fold (lambda (m acc)
-            (let ((lib-name-found (source-meta-data-library-name m)))
-              (when lib-name-found
-                (set! lib-name lib-name-found)))
+            (let ((mod-name-found (source-meta-data-library-name m)))
+              (when mod-name-found
+                (set! mod-name mod-name-found)))
             (make-source-meta-data #f
                                    (hash-table-join!
                                     (source-meta-data-procedure-info-table m)
@@ -325,7 +325,7 @@
                                            (source-meta-data-imports acc))))
           (make-source-meta-data #f (make-hash-table) '())
           lst))
-  (set-source-meta-data-library-name! merged lib-name)
+  (set-source-meta-data-library-name! merged mod-name)
   merged)
 
 (define (print-meta-data meta-data)

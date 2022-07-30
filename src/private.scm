@@ -87,14 +87,6 @@
                                result))))))))
  (else))
 
-(define (join-module-name mod)
-  (if mod
-      (apply string-append (append '("(")
-                                   (intersperse (map symbol->string mod)
-                                                " ")
-                                   '(")")))
-      #f))
-
 (define (split-module-name mod)
   (map string->symbol
        ($string-split
@@ -204,13 +196,13 @@
 (define (stringify elem)
   (format "~a" elem))
 
-(define (library-name->string lib-name)
-  (cond ((list? lib-name)
-         (let ((lib-parts (map symbol->string lib-name)))
+(define (module-name->string mod-name)
+  (cond ((list? mod-name)
+         (let ((lib-parts (map symbol->string mod-name)))
            (string-append "("
                           (string-join lib-parts " ")
                           ")")))
-        (else (symbol->string lib-name))))
+        (else (symbol->string mod-name))))
 
 (define (compose f g)
   (lambda args

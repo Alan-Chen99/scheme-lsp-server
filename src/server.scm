@@ -65,12 +65,12 @@
 (define-handler (text-document/definition params)
   (define editor-word (get-word-under-cursor params))
   (define file-path (get-uri-path params))
-  (define lib-name (and file-path
+  (define mod-name (and file-path
                         (parse-library-name-from-file file-path)))
 
   (if editor-word
       (let* ((word-text (editor-word-text editor-word))
-             (def-locs ($get-definition-locations lib-name word-text)))
+             (def-locs ($get-definition-locations mod-name word-text)))
         (cond ((not (null? def-locs))
                (let ((v (list->vector def-locs)))
                  (write-log 'debug
@@ -155,7 +155,7 @@
     (alist-ref* '(position character) params))
   (define editor-word (get-word-under-cursor params))
   (define file-path (get-uri-path params))
-  (define lib-name (and file-path
+  (define mod-name (and file-path
                         (parse-library-name-from-file file-path)))
   (write-log 'debug
              (format "editor-word: ~a, start-char: ~a, end-char: ~a~%"
@@ -167,7 +167,7 @@
              3))
       'null
       (let* ((word (editor-word-text editor-word))
-             (suggestions ($apropos-list lib-name word)))
+             (suggestions ($apropos-list mod-name word)))
         (write-log 'debug "getting completion suggestions for word "
                    word)
         (write-log 'debug (format "suggestions list: ~a" suggestions))
@@ -177,7 +177,7 @@
                  ,(list->vector
                    (map (lambda (suggestion)
                           (let* ((id-name (car suggestion))
-                                 (lib-name-str (stringify (cdr suggestion)))
+                                 (mod-name-str (stringify (cdr suggestion)))
                                  (start-line (alist-ref* '(position line)
                                                             params))
                                  (start-char (editor-word-start-char
@@ -194,7 +194,7 @@
                               (insertText . ,id-name)
                               (sortText . ,id-name)
                               (textEdit . ,text-edit)
-                              (data . ((identifier . ,id-name) (module . ,lib-name-str))))))
+                              (data . ((identifier . ,id-name) (module . ,mod-name-str))))))
                         suggestions)))))))
 
 
@@ -202,12 +202,12 @@
   (define id (string->symbol
               (alist-ref* '(data identifier) params)))
   (define file-path (get-uri-path params))
-  (define lib-name (and file-path
+  (define mod-name (and file-path
                         (parse-library-name-from-file file-path)))
   (define mod (let ((m (alist-ref* '(data module) params)))
                 (if m
                     (split-module-name m)
-                    lib-name)))
+                    mod-name)))
   (write-log 'debug (format "params: ~a" params))
   (guard (condition
           (#t (begin
@@ -231,7 +231,7 @@
   (define editor-word
     (get-word-under-cursor params))
   (define file-path (get-uri-path params))
-  (define lib-name (and file-path
+  (define mod-name (and file-path
                         (parse-library-name-from-file file-path)))
 
   (if (and editor-word (not (string=? (editor-word-text editor-word)
@@ -239,10 +239,10 @@
       (begin
         (write-log 'info
                    (format "calling $fetch-signature with ~s ~s"
-                           lib-name
+                           mod-name
                            (editor-word-text editor-word)))
         (let* ((cur-word (editor-word-text editor-word))
-               (signature ($fetch-signature lib-name
+               (signature ($fetch-signature mod-name
                                             (string->symbol cur-word))))
           (if (not signature)
               (begin
