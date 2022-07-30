@@ -102,13 +102,14 @@
   (define $tcp-listen tcp-listen)
 
   ;;; Return apropos instances of all functions matching IDENTIFIER (a symbol).
-  (define ($apropos-list identifier)
-    (lsp-geiser-completions identifier))
+  (define ($apropos-list lib-name identifier)
+    (map (lambda (s) (cons s #f)) ;; TODO add library to each symbol
+         (lsp-geiser-completions identifier)))
 
   ;;; Return the documentation (a string) found for IDENTIFIER (a symbol) in
   ;;; MODULE (a symbol). Return #f if nothing found.
   ;;; Example call: $fetch-documentation '(srfi-1) 'map
-  (define ($fetch-documentation identifier)
+  (define ($fetch-documentation lib-name identifier)
     (define match (alist-ref identifier (geiser-autodoc identifier)))
     (define module (and match
                         (alist-ref "module" match equal?)))
@@ -142,7 +143,7 @@
   ;;; Return the signature (a string) for IDENTIFIER (a symbol) in MODULE (a
   ;;; symbol). Return #f if nothing found.
   ;;; Example call: $fetch-documentation '(srfi 1) 'map
-  (define ($fetch-signature identifier)
+  (define ($fetch-signature module identifier)
     (define match (alist-ref identifier (geiser-autodoc (list identifier))))
     (define module (and match (alist-ref "module" match equal?)))
     (define egg (or (module-egg module) module))
@@ -217,7 +218,7 @@
   ;;;             (end . ((line  . <line number>)
   ;;;                     (character . <character number))))
   ;;;
-  (define ($get-definition-locations identifier)
+  (define ($get-definition-locations lib-name identifier)
     (fetch-definition-locations identifier))
 
   (define (build-module-egg-table)

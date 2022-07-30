@@ -37,7 +37,6 @@
   (define root-path (get-root-path params))
   (when ($initialize-lsp-server! root-path)
     (write-log 'info "LSP server initialized"))
-  (write-log 'info "LSP server hallo")
   (set! lsp-server-state 'on)
   `((capabilities . ,(append mandatory-capabilities
                              $server-capabilities))
@@ -63,33 +62,26 @@
   (write-log 'debug (format "ignoring request. Params: ~a" params))
   #f)
 
-(define (get-identifier-module identifier)
-  (define apropos ($apropos-list identifier))
-  (if (null? apropos)
-      #f
-      (apropos-info-module (car apropos))))
-
 (define-handler (text-document/definition params)
   (define editor-word (get-word-under-cursor params))
-  ;; (define module (if editor-word
-  ;;                    (get-identifier-module word-text)
-  ;;                    #f))
-  (write-log 'debug (format "got word: ~a" editor-word))
+  (define file-path (get-uri-path params))
+  (define lib-name (and file-path
+                        (parse-library-name-from-file file-path)))
 
   (if editor-word
       (let* ((word-text (editor-word-text editor-word))
-             (def-locs ($get-definition-locations word-text)))
-        (if (not (null? def-locs))
-            (let ((v (list->vector def-locs)))
-              (write-log 'debug
-                         (format "$fetch-definition-locations resulted in ~a"
-                                 v))
-              v)
-            (begin
-              (write-log 'debug
-                         (format "no definitions found for ~a"
-                                 (editor-word-text editor-word)))
-              'null)))
+             (def-locs ($get-definition-locations lib-name word-text)))
+        (cond ((not (null? def-locs))
+               (let ((v (list->vector def-locs)))
+                 (write-log 'debug
+                            (format "$fetch-definition-locations resulted in ~a"
+                                    v))
+                 v))
+              (else
+               (write-log 'debug
+                          (format "no definitions found for ~a"
+                                  (editor-word-text editor-word)))
+               'null)))
       'null))
 
 (define-handler (text-document/did-change params)
@@ -131,13 +123,19 @@
   (if file-path
       (begin ($open-file! file-path) ;;(generate-meta-data! file-path)
              (read-file! file-path)
-             (let ((tmp-file (string-append "/tmp/" (remove-slashes file-path))))
-               (write-log 'debug
-                          (format "dumping content read into ~a" tmp-file))
-               #;
-               (with-output-to-file tmp-file
-                       (lambda ()
-                         (display (hash-table-ref (file-table) file-path)))))
+             ;; TODO first make this portable (i.e. not relying on /tmp), then
+             ;; uncomment it.
+             ;; We leave it in, since it's helpful when debugging problems
+             ;; regarding the internal document representation (out-of-index etc).
+             ;; (when (satisfies-log-level? 'debug)
+             ;;   (let ((tmp-file (string-append "/tmp/" (remove-slashes file-path))))
+             ;;     (write-log 'debug
+             ;;                (format "dumping content read into ~a" tmp-file))
+             ;;     (mutex-lock! file-table-mutex)
+             ;;     (with-output-to-file tmp-file
+             ;;       (lambda ()
+             ;;         (display (hash-table-ref file-table file-path))))
+             ;;     (mutex-unlock! file-table-mutex)))
              (write-log 'debug
                         (format "file contents read: ~a"
                                 file-path)))
@@ -150,13 +148,15 @@
   (define file-path (get-uri-path params))
   (write-log 'info "file saved.")
   ($save-file! file-path)
-  ;;(generate-meta-data! file-path)
   #f)
 
 (define-handler (text-document/completion params)
   (define cur-char-number
     (alist-ref* '(position character) params))
   (define editor-word (get-word-under-cursor params))
+  (define file-path (get-uri-path params))
+  (define lib-name (and file-path
+                        (parse-library-name-from-file file-path)))
   (write-log 'debug
              (format "editor-word: ~a, start-char: ~a, end-char: ~a~%"
                      (editor-word-text editor-word)
@@ -167,7 +167,7 @@
              3))
       'null
       (let* ((word (editor-word-text editor-word))
-             (suggestions ($apropos-list word)))
+             (suggestions ($apropos-list lib-name word)))
         (write-log 'debug "getting completion suggestions for word "
                    word)
         (write-log 'debug (format "suggestions list: ~a" suggestions))
@@ -175,9 +175,11 @@
         `((isIncomplete . #t)
           (items .
                  ,(list->vector
-                   (map (lambda (id-name)
-                          (let* ((start-line (alist-ref* '(position line)
-                                                         params))
+                   (map (lambda (suggestion)
+                          (let* ((id-name (car suggestion))
+                                 (lib-name-str (stringify (cdr suggestion)))
+                                 (start-line (alist-ref* '(position line)
+                                                            params))
                                  (start-char (editor-word-start-char
                                               editor-word))
                                  (end-char (editor-word-end-char
@@ -192,17 +194,21 @@
                               (insertText . ,id-name)
                               (sortText . ,id-name)
                               (textEdit . ,text-edit)
-                              (data . ((identifier . ,id-name))))))
+                              (data . ((identifier . ,id-name) (module . ,lib-name-str))))))
                         suggestions)))))))
 
 
 (define-handler (completion-item/resolve params)
   (define id (string->symbol
               (alist-ref* '(data identifier) params)))
+  (define file-path (get-uri-path params))
+  (define lib-name (and file-path
+                        (parse-library-name-from-file file-path)))
   (define mod (let ((m (alist-ref* '(data module) params)))
                 (if m
                     (split-module-name m)
-                    '())))
+                    lib-name)))
+  (write-log 'debug (format "params: ~a" params))
   (guard (condition
           (#t (begin
                 (write-log 'warning
@@ -216,10 +222,7 @@
                                     id)))
                     'null))))
          (begin
-           (write-log 'debug
-                      (format "Calling $fetch-documentation for mod ~a id ~a"
-                              mod id))
-           (let ((doc (or ($fetch-documentation id)
+           (let ((doc (or ($fetch-documentation mod id)
                           "")))
              (cons `(documentation . ,doc)
                    params)))))
@@ -227,14 +230,20 @@
 (define (fetch-signature-under-cursor params)
   (define editor-word
     (get-word-under-cursor params))
+  (define file-path (get-uri-path params))
+  (define lib-name (and file-path
+                        (parse-library-name-from-file file-path)))
+
   (if (and editor-word (not (string=? (editor-word-text editor-word)
                                       "")))
       (begin
         (write-log 'info
-                  (format "calling $fetch-signature with ~s"
-                          (editor-word-text editor-word)))
+                   (format "calling $fetch-signature with ~s ~s"
+                           lib-name
+                           (editor-word-text editor-word)))
         (let* ((cur-word (editor-word-text editor-word))
-               (signature ($fetch-signature (string->symbol cur-word))))
+               (signature ($fetch-signature lib-name
+                                            (string->symbol cur-word))))
           (if (not signature)
               (begin
                 (write-log 'warning
@@ -248,7 +257,6 @@
     `((signatures . ,(vector `((label . ,signature)))))))
 
 (define-handler (text-document/hover params)
-  (define file-path (get-uri-path params))
   (write-log 'debug
              (format "hover with params: ~a" params))
 

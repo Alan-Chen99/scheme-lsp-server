@@ -26,6 +26,7 @@
           symbols->string
           hash-table-merge-updating!
           stringify
+          library-name->string
 
           write-log
           lsp-server-log-file

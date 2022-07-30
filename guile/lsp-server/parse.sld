@@ -8,7 +8,9 @@
           list-completions
           parse-file
           parse-library-name-from-file
-          source-meta-data-imports)
+          source-meta-data-imports
+          irregex
+          irregex-search)
 
 #:use-module (srfi srfi-1)
 #:use-module (srfi srfi-28)

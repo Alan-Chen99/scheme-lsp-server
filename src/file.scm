@@ -6,16 +6,16 @@
 (define (read-file! path)
   (mutex-lock! file-table-mutex)
   (define result
-    (if (hash-table-exists? file-table path)
-        (hash-table-ref file-table path)
-        (let ((doc (call-with-input-file path
-                     (lambda (p) (read-document p)))))
-          (hash-table-update!/default file-table
-                                      path
-                                      (lambda (v)
-                                        doc)
-                                      doc)
-          doc)))
+    (cond ((hash-table-exists? file-table path)
+           (hash-table-ref file-table path))
+          (else
+           (let ((doc (call-with-input-file path read-document)))
+             (hash-table-update!/default file-table
+                                         path
+                                         (lambda (v)
+                                           doc)
+                                         doc)
+             doc))))
   (mutex-unlock! file-table-mutex)
   result)
 

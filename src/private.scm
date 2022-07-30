@@ -204,6 +204,14 @@
 (define (stringify elem)
   (format "~a" elem))
 
+(define (library-name->string lib-name)
+  (cond ((list? lib-name)
+         (let ((lib-parts (map symbol->string lib-name)))
+           (string-append "("
+                          (string-join lib-parts " ")
+                          ")")))
+        (else (symbol->string lib-name))))
+
 (define (compose f g)
   (lambda args
     (f (apply g args))))

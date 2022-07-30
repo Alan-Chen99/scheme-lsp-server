@@ -1,4 +1,5 @@
-(import (lsp-server))
+(import (lsp-server)
+        (lsp-server private))
 
 (cond-expand
  (guile (import (except (scheme base)

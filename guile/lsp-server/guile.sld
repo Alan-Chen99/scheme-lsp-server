@@ -24,6 +24,7 @@
               #:select (string-join string-concatenate))
 #:use-module (srfi srfi-28)
 #:use-module (srfi srfi-69)
+#:use-module (geiser modules)
 #:use-module (ice-9 documentation)
 #:use-module (ice-9 optargs)
 #:use-module (ice-9 session)
@@ -40,6 +41,13 @@
 (define root-path (make-parameter #f))
 (define current-path (make-parameter #f))
 
+(define scheme-file-regex
+  (irregex '(: (* any)
+               (or ".scm"
+                   ".sld"
+                   ".ss")
+               eol)))
+
 ;;; Ignored for now
 (define $tcp-read-timeout (make-parameter #f))
 
@@ -49,6 +57,8 @@
 ;;; Initialize LSP server to manage project at ROOT (a string). Used
 ;;; for implementation-specific side effects only. Empty for now.
 (define ($initialize-lsp-server! root)
+  (when (not (eq? root 'null))
+    (add-to-load-path root))
   ;; (define boot-module-path (get-module-path '(ice-9 boot-9)))
   ;; (when boot-module-path
   ;;   (generate-meta-data! boot-module-path))
@@ -88,21 +98,44 @@
   (connect sock (make-socket-address AF_INET addr tcp-port))
   (values sock sock))
 
-;;; Return apropos instances of all functions matching IDENTIFIER (a symbol).
-(define ($apropos-list identifier)
-  (lsp-geiser-completions identifier))
+(define (add-modules-to-symbols lst)
+  (map (lambda (s)
+         (cons s (library-name->string
+                  (symbol-module (if (string? s)
+                                     (string->symbol s)
+                                     s)))))
+       lst))
+
+;;; Return completion suggestions for PREFIX (a symbol).
+;;; MODULE may be used to give a hint where to search for suggestions, besides
+;;; of the current module (probably guile-user).
+;;; A suggestion is a pair of strings (identifier . library)
+(define ($apropos-list module prefix)
+  (define lst (add-modules-to-symbols (lsp-geiser-completions prefix)))
+  (define extra-lst (if module
+                        (execute-in-module
+                         module
+                         (lambda ()
+                           (add-modules-to-symbols (lsp-geiser-completions prefix))))
+                        '()))
+  (lset-union equal? lst extra-lst))
 
 ;;; Return the documentation (a string) found for IDENTIFIER (a symbol) in
 ;;; MODULE (a symbol). Return #f if nothing found.
 ;;; Example call: $fetch-documentation '(srfi-1) 'map
-(define ($fetch-documentation identifier)
-  (lsp-geiser-documentation identifier))
+(define ($fetch-documentation module identifier)
+  (or (lsp-geiser-documentation identifier)
+      (execute-in-module module
+                         (lambda ()
+                           (lsp-geiser-documentation identifier)))))
 
 ;;; Return the signature (a string) for IDENTIFIER (a symbol) in MODULE (a
 ;;; symbol). Return #f if nothing found.
 ;;; Example call: $fetch-documentation '(srfi 1) 'map
-(define ($fetch-signature identifier)
-  (lsp-geiser-signature identifier))
+(define ($fetch-signature module identifier)
+  (or (lsp-geiser-signature identifier)
+      (execute-in-module module (lambda ()
+                                  (lsp-geiser-signature identifier)))))
 
 ;;; Return a list of locations found for IDENTIFIER (a symbol).
 ;;; Each location is represented by an alist
@@ -112,14 +145,30 @@
 ;;;             (end . ((line  . <line number>)
 ;;;                     (character . <character number))))
 ;;;
-(define ($get-definition-locations identifier)
+(define ($get-definition-locations lib-name identifier)
+  (write-log 'debug
+             (format "$get-definition-locations ~a ~a"
+                     lib-name
+                     identifier))
   (define loc
     (lsp-geiser-symbol-location (if (symbol? identifier)
                                     identifier
                                     (string->symbol identifier))))
-  (if (null? loc)
-      loc
-      (list loc)))
+  (write-log 'debug
+             (format "loc: ~a" loc))
+  (cond ((and (or (not loc) (null? loc)) lib-name)
+         (execute-in-module lib-name
+                            (lambda ()
+                              (let ((loc2
+                                     (lsp-geiser-symbol-location
+                                      (if (symbol? identifier)
+                                          identifier
+                                          (string->symbol identifier)))))
+                                (if (null? loc2)
+                                    '()
+                                    (list loc2))))))
+        ((or (not loc) (null? loc)) '())
+        (else (list loc))))
 
 (define (file-in-load-path? file-path)
   (any (lambda (dir)
@@ -149,16 +198,24 @@
                                   file-path
                                   condition))))
    (let* ((lib-name (parse-library-name-from-file file-path))
-          (mod (resolve-module lib-name #t #:ensure #f)))
+          (mod (if lib-name
+                   (resolve-module lib-name #t #:ensure #f)
+                   #f)))
      (cond ((and lib-name (not mod))
+            (write-log 'debug
+                       (format "compile-and-import-if-needed: compiling ~a and importing ~a"
+                               file-path
+                               lib-name))
             (lsp-geiser-compile-file file-path)
             (import-library-by-name lib-name))
-           (mod
+           ((and lib-name mod)
+            (write-log 'debug
+                       (format "compile-and-import-if-needed: importing ~a" lib-name))
             (import-library-by-name lib-name))
            (else
             (write-log 'debug
-                       (format "compile-and-import-if-needed: ignoring file ~a"
-                               file-path)))))))
+                       (format "compile-and-import-if-needed: ignoring file ~a" file-path))
+            #f)))))
 
 (define ($open-file! file-path)
   (compile-and-import-if-needed file-path)
@@ -182,7 +239,7 @@
          (reload-module mod)
          (import-library-by-name lib-name)
          #f))
-      #f))
+      (lsp-geiser-load-file file-path)))
 
 
 (define (build-procedure-signature module name proc-obj)
@@ -217,3 +274,14 @@
       (canonicalize-path (string-append base-path "/" path))
       path))
 
+(define (execute-in-module module thunk)
+  (if module
+      (save-module-excursion
+       (lambda ()
+         (let ((mod (resolve-module module #f #:ensure #f)))
+           (if mod
+               (begin
+                 (set-current-module (resolve-module module #f #:ensure #f))
+                 (thunk))
+               #f))))
+      #f))

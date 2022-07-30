@@ -24,31 +24,31 @@
   (if (null? doc)
       #f
       (format "(~a~a ~a)"
-                 (if module-name
-                     (format "~a:" module-name)
-                     "")
-                 identifier
-                 (string-append
-                  (string-join
-                   (map (lambda (req-arg)
-                          (format "~a" req-arg))
-                        required-args)
-                   " ")
-                  (if (not (null? optional-args))
-                      " "
-                      "")
-                  (apply string-append
-                         (map (lambda (opt-arg)
-                                (format "(~a)" opt-arg))
-                              optional-args))
-                  (if (not (null? key-args))
-                      " "
-                      "")
-                  (string-join
-                   (map (lambda (key-arg)
-                          (format "~a" key-arg))
-                        key-args)
-                   " ")))))
+              (if module-name
+                  (format "~a:" module-name)
+                  "")
+              identifier
+              (string-append
+               (string-join
+                (map (lambda (req-arg)
+                       (format "~a" req-arg))
+                     required-args)
+                " ")
+               (if (not (null? optional-args))
+                   " "
+                   "")
+               (apply string-append
+                      (map (lambda (opt-arg)
+                             (format "(~a)" opt-arg))
+                           optional-args))
+               (if (not (null? key-args))
+                   " "
+                   "")
+               (string-join
+                (map (lambda (key-arg)
+                       (format "~a" key-arg))
+                     key-args)
+                " ")))))
 
 (define (lsp-geiser-documentation identifier)
   (define doc (geiser-symbol-documentation identifier))
@@ -58,12 +58,18 @@
 
 (define (lsp-geiser-symbol-location identifier)
   (define loc (geiser-symbol-location identifier))
-  (define file (and loc (let ((val (alist-ref "file" loc)))
-                          (and (not (null? val))
-                               val))))
-  (define line (and loc (let ((val (alist-ref "line" loc)))
-                          (and (not (null? val))
-                               val))))
+  (write-log 'debug (format "lsp-geiser-symbol-location loc: ~s" loc))
+
+  (define file (and loc
+                    (not (null? loc))
+                    (let ((val (alist-ref "file" loc)))
+                      (and (not (null? val))
+                           val))))
+  (define line (and loc
+                    (not (null? loc))
+                    (let ((val (alist-ref "line" loc)))
+                      (and (not (null? val))
+                           val))))
   (define file-path (if (and file (not (null? file)))
                         (format "file://~a" file)
                         #f))
@@ -87,5 +93,11 @@
 
 (define (lsp-geiser-load-file file-path)
   (cond-expand
-   (guile (ge:load-file file-path))
-   (chicken (geiser-load-file file-path))))
+   (guile (define load-file-fn ge:load-file))
+   (chicken (define load-file-fn geiser-load-file)))
+  (guard
+   (condition (#t (write-log 'error
+                             (format "load-file ~a error: ~a"
+                                     file-path
+                                     condition))))
+   (load-file-fn file-path)))
