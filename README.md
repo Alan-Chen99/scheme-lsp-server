@@ -15,7 +15,7 @@ separating implementation-specific code in different directories.
 Currently only CHICKEN 5 and Guile are supported.
 
 *Note*: this code is still in an early development stage and the API may change.
-Design suggestions are welcome.
+Change suggestions are welcome.
 
 ## API
 
@@ -26,16 +26,17 @@ A symbol to control the server's verbosity. It can be either 'error, 'warning,
 'info or 'debug.
 
 ```
-[function] (lsp-server-start tcp-port-number [tcp-error-port-number])
-[function] (lsp-server-start/background tcp-port [tcp-error-port-number])
+[procedure] (lsp-server-start/stdio)
+```
+
+Start an LSP server listening on stdio.
+
+
+```
+[procedure] (lsp-server-start/tcp tcp-port-number)
 ```
 
 Start an LSP server listening on `tcp-port-number`.
-`start-lsp-server/background` starts the server on a new thread and returns it.
-
-Optionally one can provide a `tcp-error-port-number` to receive logging messages
-from the server. If not provided, all error messages are directed to
-`(current-error-port)`.
 
 ## Supported Features
 
@@ -76,7 +77,7 @@ from the server. If not provided, all error messages are directed to
 
 <tbody>
 <tr>
-<td class="org-left">Autocomplete symbol</td>
+<td class="org-left">Autocomplete identifier</td>
 <td class="org-left">X</td>
 <td class="org-left">X</td>
 </tr>
@@ -106,10 +107,9 @@ are welcome.
 
 ### GUILE
 
-We rely on Guile's runtime to get information such as function definition
-location. This allows fetching symbols restricted to the user's project.
-On the other hand, an LSP client has to load the corresponding
-files in the runtime so that this information becomes available.
+Most of the current implemention relies on Geiser. We include the corresponding
+Scheme files in our repository (git submodules was discarded to simplify
+packaging and automatic installation from LSP clients.
 
 ## Ideas on extending support to other Schemes
 
@@ -134,10 +134,3 @@ This is unfortunately still not the case, since the server relies on
 It would be extremely helpful if those bits are solved by separate libraries
 or SRFIs. Guile's version for JSON-RPC already uses SRFI 180, so I would suggest
 to adopt it by other implementations.
-
-### write more (and portable) tests.
-
-For now all the testing is done using a CHICKEN specific library
-(see 'tests/run.scm'). Their should for one side be improved to cover other
-parts of the library, and possibly be written in a portable way to allow
-ironing out bugs in other implementation.

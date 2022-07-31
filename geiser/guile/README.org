@@ -1,0 +1,3 @@
+Code copied over from https://gitlab.com/emacs-geiser/guile. See license for
+the corresponding terms. See version for information regarding which state
+was copied over.
