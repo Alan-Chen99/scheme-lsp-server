@@ -33,8 +33,8 @@ SUFFIXES = .scm .sld .go
 PREFIX=$(AM_V_GEN)GUILE_LOAD_COMPILED_PATH="@abs_top_builddir@/:$(GUILE_LOAD_COMPILED_PATH)"; \
       GUILE_LOAD_PATH="@abs_top_builddir@/:@abs_top_srcdir@/:$(GUILE_LOAD_PATH)"
 
-# distclean-local:
-# 	rm -Rf src/
+distclean-local:
+	rm -Rf src/ geiser/
 
 .sld.go:
 	$(PREFIX) $(GUILE_TOOLS) compile $(GUILE_WARNINGS) -O0 --r7rs -o "$@" "$<"

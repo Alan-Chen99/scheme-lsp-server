@@ -37,6 +37,8 @@ AC_CONFIG_LINKS([lsp-server/private.scm:../src/private.scm
                  geiser/evaluation.sld:../geiser/guile/src/geiser/evaluation.scm
                  geiser/xref.sld:../geiser/guile/src/geiser/xref.scm
 
+                 irregex.scm:../src/irregex.scm
+
                  README.md:../README.md])
 
 GUILE_MODULE_REQUIRED(json-rpc)

@@ -104,7 +104,7 @@ CONFIG_CLEAN_FILES = lsp-server/private.scm lsp-server/document.scm \
 	lsp-server/trie.scm lsp-server/adapter.scm \
 	lsp-server/parse.scm geiser/modules.sld geiser/utils.sld \
 	geiser/doc.sld geiser/completion.sld geiser/evaluation.sld \
-	geiser/xref.sld README.md
+	geiser/xref.sld irregex.scm README.md
 CONFIG_CLEAN_VPATH_FILES = lsp-server/guile.sld \
 	lsp-server/guile/util.sld lsp-server/adapter.sld \
 	lsp-server/document.sld lsp-server/private.sld \
@@ -189,8 +189,8 @@ am__DIST_COMMON = $(srcdir)/Makefile.in $(srcdir)/guile.am \
 	$(top_srcdir)/../geiser/guile/src/geiser/xref.scm \
 	$(top_srcdir)/../src/adapter.scm \
 	$(top_srcdir)/../src/document.scm \
-	$(top_srcdir)/../src/file.scm $(top_srcdir)/../src/main.scm \
-	$(top_srcdir)/../src/parse.scm \
+	$(top_srcdir)/../src/file.scm $(top_srcdir)/../src/irregex.scm \
+	$(top_srcdir)/../src/main.scm $(top_srcdir)/../src/parse.scm \
 	$(top_srcdir)/../src/private.scm \
 	$(top_srcdir)/../src/server.scm $(top_srcdir)/../src/trie.scm \
 	$(top_srcdir)/build-aux/install-sh \
@@ -752,7 +752,8 @@ clean-am: clean-generic mostlyclean-am
 distclean: distclean-am
 	-rm -f $(am__CONFIG_DISTCLEAN_FILES)
 	-rm -f Makefile
-distclean-am: clean-am distclean-generic distclean-tags
+distclean-am: clean-am distclean-generic distclean-local \
+	distclean-tags
 
 dvi: dvi-am
 
@@ -822,19 +823,19 @@ uninstall-am: uninstall-binSCRIPTS uninstall-nobase_dist_modDATA \
 	clean-cscope clean-generic cscope cscopelist-am ctags ctags-am \
 	dist dist-all dist-bzip2 dist-gzip dist-lzip dist-shar \
 	dist-tarZ dist-xz dist-zip dist-zstd distcheck distclean \
-	distclean-generic distclean-tags distcleancheck distdir \
-	distuninstallcheck dvi dvi-am html html-am info info-am \
-	install install-am install-binSCRIPTS install-data \
-	install-data-am install-dvi install-dvi-am install-exec \
-	install-exec-am install-html install-html-am install-info \
-	install-info-am install-man install-nobase_dist_modDATA \
-	install-nobase_goDATA install-pdf install-pdf-am install-ps \
-	install-ps-am install-strip installcheck installcheck-am \
-	installdirs maintainer-clean maintainer-clean-generic \
-	mostlyclean mostlyclean-generic pdf pdf-am ps ps-am tags \
-	tags-am uninstall uninstall-am uninstall-binSCRIPTS \
-	uninstall-hook uninstall-nobase_dist_modDATA \
-	uninstall-nobase_goDATA
+	distclean-generic distclean-local distclean-tags \
+	distcleancheck distdir distuninstallcheck dvi dvi-am html \
+	html-am info info-am install install-am install-binSCRIPTS \
+	install-data install-data-am install-dvi install-dvi-am \
+	install-exec install-exec-am install-html install-html-am \
+	install-info install-info-am install-man \
+	install-nobase_dist_modDATA install-nobase_goDATA install-pdf \
+	install-pdf-am install-ps install-ps-am install-strip \
+	installcheck installcheck-am installdirs maintainer-clean \
+	maintainer-clean-generic mostlyclean mostlyclean-generic pdf \
+	pdf-am ps ps-am tags tags-am uninstall uninstall-am \
+	uninstall-binSCRIPTS uninstall-hook \
+	uninstall-nobase_dist_modDATA uninstall-nobase_goDATA
 
 .PRECIOUS: Makefile
 
@@ -850,8 +851,8 @@ uninstall-hook:
 	rm -f $(DESTDIR)$(godir)/$(GOBJECTS)
 	rm -f $(DESTDIR)$(bindir)/$(EXECUTABLE)
 
-# distclean-local:
-# 	rm -Rf src/
+distclean-local:
+	rm -Rf src/ geiser/
 
 .sld.go:
 	$(PREFIX) $(GUILE_TOOLS) compile $(GUILE_WARNINGS) -O0 --r7rs -o "$@" "$<"
