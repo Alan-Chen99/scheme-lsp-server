@@ -13,7 +13,10 @@
           hash-table-join!)
 
 #:use-module ((scheme base) #:select (assoc guard))
+#:use-module (srfi srfi-1)
+#:use-module (srfi srfi-28)
 #:use-module (srfi srfi-69)
+#:use-module ((lsp-server private) #:select (write-log))
 #:declarative? #f
 )
 
@@ -45,10 +48,20 @@
 (define absolute-pathname? absolute-file-name?)
 
 (define (get-absolute-pathname path)
+  (define base-path
+    (find (lambda (load-path)
+            (file-exists? (string-append load-path "/" path)))
+          %load-path))
   (guard
    (condition
-    (#t #f))
-   (canonicalize-path path)))
+    (#t (write-log 'error
+                   (format "error getting absolute path of ~s: ~a"
+                           path
+                           condition))
+        #f))
+   (if base-path
+      (canonicalize-path (string-append base-path "/" path))
+      #f)))
 
 (define (hash-table-join! ht other-ht)
   (hash-table-fold

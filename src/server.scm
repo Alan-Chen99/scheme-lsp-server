@@ -75,7 +75,7 @@
         (cond ((not (null? def-locs))
                (let ((v (list->vector def-locs)))
                  (write-log 'debug
-                            (format "$fetch-definition-locations resulted in ~a"
+                            (format "$get-definition-locations resulted in ~a"
                                     v))
                  v))
               (else

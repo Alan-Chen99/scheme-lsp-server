@@ -277,16 +277,6 @@
       (module-ref mod sym)
       #f))
 
-(define (find-absolute-path path)
-  (define base-path
-    (find (lambda (load-path)
-            (file-exists? (string-append load-path "/" path)))
-          (append (filter values (list (root-path) (current-path)))
-                  %load-path)))
-  (if base-path
-      (canonicalize-path (string-append base-path "/" path))
-      path))
-
 (define (execute-in-module module thunk)
   (if module
       (save-module-excursion
