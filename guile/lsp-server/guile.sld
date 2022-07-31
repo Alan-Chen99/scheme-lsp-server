@@ -99,24 +99,32 @@
   (values sock sock))
 
 (define (add-modules-to-symbols lst)
-  (map (lambda (s)
-         (cons s (module-name->string
-                  (symbol-module (if (string? s)
-                                     (string->symbol s)
-                                     s)))))
-       lst))
+  (fold (lambda (s acc)
+          (if s
+              (let ((mod (symbol-module (if (string? s)
+                                            (string->symbol s)
+                                            s))))
+                (if mod
+                    (cons (cons s (module-name->string mod))
+                          acc)
+                    acc))
+              acc))
+        '()
+        lst))
 
 ;;; Return completion suggestions for PREFIX (a symbol).
 ;;; MODULE may be used to give a hint where to search for suggestions, besides
 ;;; of the current module (probably guile-user).
 ;;; A suggestion is a pair of strings (identifier . library)
 (define ($apropos-list module prefix)
+  (write-log 'debug (format "$apropos-list ~a ~a" module prefix))
   (define lst (add-modules-to-symbols (lsp-geiser-completions prefix)))
   (define extra-lst (if module
-                        (execute-in-module
-                         module
-                         (lambda ()
-                           (add-modules-to-symbols (lsp-geiser-completions prefix))))
+                        (or (execute-in-module
+                             module
+                             (lambda ()
+                               (add-modules-to-symbols (lsp-geiser-completions prefix))))
+                            '())
                         '()))
   (lset-union equal? lst extra-lst))
 
