@@ -17,7 +17,7 @@
                     srfi-69
                     srfi-64)
  (component-options
-  (csc-options "-O3" "-X" "r7rs" "-R" "r7rs"))
+  (csc-options "-O3" "-X" "r7rs" "-R" "r7rs" "-J"))
  (components
   (program chicken-lsp-server
            (source "src/main.scm")

@@ -111,7 +111,7 @@
 ;;;             (end . ((line  . <line number>)
 ;;;                     (character . <character number))))
 ;;;
-(define ($get-definition-locations module identifier)
+(define ($get-definition-locations identifier)
   (define loc
     (lsp-geiser-symbol-location (if (symbol? identifier)
                                     identifier
