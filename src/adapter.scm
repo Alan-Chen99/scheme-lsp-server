@@ -75,7 +75,11 @@
                                    (if (absolute-pathname? file)
                                        file
                                        (get-absolute-pathname file))))
-                          (module (geiser-module-path module))
+                          (module (format "file://~a"
+                                          (let ((mod-path (geiser-module-path module)))
+                                            (if (absolute-pathname? mod-path)
+                                                mod-path
+                                                (get-absolute-pathname mod-path)))))
                           (else #f)))
   (cond ((and line (< line 0))
          (write-log 'error
