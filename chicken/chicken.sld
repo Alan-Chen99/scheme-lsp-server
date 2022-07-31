@@ -160,15 +160,17 @@
                (describe (lookup-node doc-path))))))
         #f))
 
-  ;;; Return the signature (a string) for IDENTIFIER (a symbol) in MODULE (a
-  ;;; symbol). Return #f if nothing found.
-  ;;; Example call: $fetch-documentation '(srfi 1) 'map
+
+  (define (find-identifier-module identifier)
+    (let* ((id-str (symbol->string identifier))
+           (suggestions ($apropos-list #f id-str)))
+      (alist-ref id-str suggestions equal?)))
+
+;;; Return the signature (a string) for IDENTIFIER (a symbol) in MODULE (a
+;;; symbol). Return #f if nothing found.
+;;; Example call: $fetch-documentation '(srfi 1) 'map
   (define ($fetch-signature module identifier)
-    (define egg (or (module-egg module)
-                    module
-                    (let* ((id-str (symbol->string identifier))
-                           (suggestions ($apropos-list #f id-str)))
-                      (alist-ref id-str suggestions equal?))))
+    (define egg (find-identifier-module identifier))
     (write-log 'debug
                (format "$fetch-signature egg: ~a identifier: ~a"
                        egg
@@ -182,8 +184,8 @@
                                            egg
                                            identifier))
                         #f))
-              (node-signature
-               (lookup-node (list egg identifier)))))
+                   (node-signature
+                    (lookup-node (list egg identifier)))))
         ;;(lsp-geiser-signature identifier)
         (fetch-signature module identifier)))
 

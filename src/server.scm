@@ -70,7 +70,8 @@
 
   (if editor-word
       (let* ((word-text (editor-word-text editor-word))
-             (def-locs ($get-definition-locations mod-name word-text)))
+             (def-locs ($get-definition-locations mod-name
+                                                  (string->symbol word-text))))
         (cond ((not (null? def-locs))
                (let ((v (list->vector def-locs)))
                  (write-log 'debug

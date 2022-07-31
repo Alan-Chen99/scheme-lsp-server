@@ -577,42 +577,36 @@
 ;;;                       (character . <character number))
 ;;;             (end . ((line  . <line number>)
 ;;;                     (character . <character number))))
-;;;
 (define (fetch-definition-locations identifier)
   (write-log 'debug
-             (format "fetch-definition-locations: ~a (~a)"
-                     identifier
-                     (if (symbol? identifier)
-                         'symbol
-                         'string)))
+             (format "fetch-definition-locations: ~s" identifier))
   (define locations
     (hash-table->alist
      (hash-table-ref/default (identifier-to-source-meta-data-table)
-                             (string->symbol identifier)
+                             identifier
                              (make-hash-table))))
-  (if (not (null? locations))
-      (begin
-        (write-log 'debug
-                   (format "locations for identifier ~a found: ~a"
-                           identifier
-                           locations))
-        (map (lambda (loc)
-               (let* ((path (car loc))
-                      (pinfo (cdr loc))
-                      (line-number (procedure-info-line pinfo))
-                      (char-number (procedure-info-character pinfo)))
-                 (write-log 'debug (format "identifier ~a found: path ~a, line ~a, char ~a "
-                                           identifier
-                                           path
-                                           line-number
-                                           char-number))
-                 `((uri . ,(string-append "file://" path))
-                   (range . ((start . ((line . ,line-number)
-                                       (character . ,char-number)))
-                             (end . ((line . ,line-number)
-                                     (character . ,char-number))))))))
-             locations))
-      '()))
+  (cond ((not (null? locations))
+         (write-log 'debug
+                    (format "locations for identifier ~a found: ~a"
+                            identifier
+                            locations))
+         (map (lambda (loc)
+                (let* ((path (car loc))
+                       (pinfo (cdr loc))
+                       (line-number (procedure-info-line pinfo))
+                       (char-number (procedure-info-character pinfo)))
+                  (write-log 'debug (format "identifier ~a found: path ~a, line ~a, char ~a "
+                                            identifier
+                                            path
+                                            line-number
+                                            char-number))
+                  `((uri . ,(string-append "file://" path))
+                    (range . ((start . ((line . ,line-number)
+                                        (character . ,char-number)))
+                              (end . ((line . ,line-number)
+                                      (character . ,char-number))))))))
+              locations))
+        (else '())))
 
 (define (pinfo-signature pinfo)
   (define name (procedure-info-name pinfo))
