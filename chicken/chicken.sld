@@ -20,6 +20,7 @@
 
 (import (apropos)
         (chicken base)
+        (chicken condition)
         (chicken file)
         (chicken foreign)
         (chicken format)
@@ -101,10 +102,29 @@
 
   (define $tcp-listen tcp-listen)
 
-  ;;; Return apropos instances of all functions matching IDENTIFIER (a symbol).
-  (define ($apropos-list mod-name identifier)
-    (map (lambda (s) (cons s #f)) ;; TODO add library to each symbol
-         (lsp-geiser-completions identifier)))
+  ;;; Return completion suggestions for PREFIX (a symbol).
+  ;;; MODULE is ignored for now, but belongs to the API, since other
+  ;;; implementations (e.g. guile) use it.
+  ;;; A suggestion is a pair of strings (identifier . library)
+  (define ($apropos-list module prefix)
+    (define suggestions
+      (apropos-information-list prefix #:macros? #t #:imported? #f))
+    (fold (lambda (s acc)
+            (let* ((mod-id-pair (car s))
+                   (mod (let ((fst (car mod-id-pair)))
+                          (if (eqv? fst '||)
+                              #f
+                              (map string->symbol
+                                   (string-split (symbol->string fst) ".")))))
+                   (id (cdr mod-id-pair))
+                   (type (cdr s)))
+              (if (string-prefix? prefix (symbol->string id))
+                  (cons (cons (symbol->string id)
+                              (module-name->chicken-string mod))
+                        acc)
+                  acc)))
+          '()
+          suggestions))
 
   ;;; Return the documentation (a string) found for IDENTIFIER (a symbol) in
   ;;; MODULE (a symbol). Return #f if nothing found.
@@ -133,7 +153,7 @@
               (guard (condition
                       (#t (write-log
                            'error
-                           (format "#fetch-documentation: docmuentation not found: (~a ~a)"
+                           (format "#fetch-documentation: documentation not found: (~a ~a)"
                                    egg
                                    identifier))
                           #f))
@@ -144,9 +164,11 @@
   ;;; symbol). Return #f if nothing found.
   ;;; Example call: $fetch-documentation '(srfi 1) 'map
   (define ($fetch-signature module identifier)
-    (define match (alist-ref identifier (geiser-autodoc (list identifier))))
-    (define module (and match (alist-ref "module" match equal?)))
-    (define egg (or (module-egg module) module))
+    (define egg (or (module-egg module)
+                    module
+                    (let* ((id-str (symbol->string identifier))
+                           (suggestions ($apropos-list #f id-str)))
+                      (alist-ref id-str suggestions equal?))))
     (write-log 'debug
                (format "$fetch-signature egg: ~a identifier: ~a"
                        egg
@@ -162,29 +184,31 @@
                         #f))
               (node-signature
                (lookup-node (list egg identifier)))))
-        (lsp-geiser-signature identifier)))
+        ;;(lsp-geiser-signature identifier)
+        (fetch-signature module identifier)))
 
   (define (load-or-import file-path)
     (guard
      (condition
       (#t (write-log 'error (format "Can't load file ~a: ~a"
                                     file-path
-                                    condition))))
+                                    (with-output-to-string
+                                      (lambda ()
+                                        (print-error-message condition)))))))
      (let ((mod-name (parse-library-name-from-file file-path)))
 
        (if (not mod-name)
            (lsp-geiser-load-file file-path)
-           (eval `(import ,mod-name))))))
+           (begin (lsp-geiser-load-file file-path)
+                  (eval `(import ,mod-name)))))))
 
   ;;; Action to execute when FILE-PATH is opened. Used for side effects only.
   (define ($open-file! file-path)
-    (load-or-import file-path)
     (generate-meta-data! file-path)
     #f)
 
   ;;; Action to execute when FILE-PATH is saved. Used for side effects only.
   (define ($save-file! file-path)
-    (load-or-import file-path)
     (generate-meta-data! file-path)
     #f)
 
@@ -256,6 +280,14 @@
             (else (loop (read-line in)
                         table
                         cur-egg)))))
+
+  (define (module-name->chicken-string mod-name)
+    (cond ((not mod-name)
+           #f)
+          ((list? mod-name)
+           (let ((lib-parts (map symbol->string mod-name)))
+             (string-join lib-parts ".")))
+          (else (symbol->string mod-name))))
 
   (define (module-egg mod)
     (hash-table-ref/default module-egg-table
