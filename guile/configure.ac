@@ -1,4 +1,4 @@
-AC_INIT([guile-lsp-server], [0.0.6])
+AC_INIT([guile-lsp-server], [0.1.0])
 AC_CONFIG_SRCDIR([lsp-server.sld])
 AC_CONFIG_AUX_DIR([build-aux])
 AC_CONFIG_MACRO_DIR([m4])
@@ -13,14 +13,30 @@ fi
 AC_CONFIG_FILES([Makefile])
 
 AC_CONFIG_LINKS([lsp-server/private.scm:../src/private.scm
-                 lsp-server/private.sld:lsp-server/private.sld
                  lsp-server/document.scm:../src/document.scm
-                 lsp-server/document.sld:lsp-server/document.sld
-                 lsp-server/guile.sld:lsp-server/guile.sld
                  lsp-server/file.scm:../src/file.scm
                  lsp-server/main.scm:../src/main.scm
                  lsp-server/server.scm:../src/server.scm
+                 lsp-server/trie.scm:../src/trie.scm
+                 lsp-server/adapter.scm:../src/adapter.scm
+                 lsp-server/parse.scm:../src/parse.scm
+
+                 lsp-server/guile.sld:lsp-server/guile.sld
+                 lsp-server/guile/util.sld:lsp-server/guile/util.sld
+                 lsp-server/adapter.sld:lsp-server/adapter.sld
+                 lsp-server/document.sld:lsp-server/document.sld
+                 lsp-server/private.sld:lsp-server/private.sld
+                 lsp-server/trie.sld:lsp-server/trie.sld
+                 lsp-server/parse.sld:lsp-server/parse.sld
                  lsp-server.sld:lsp-server.sld
+
+                 geiser/modules.sld:../geiser/guile/src/geiser/modules.scm
+                 geiser/utils.sld:../geiser/guile/src/geiser/utils.scm
+                 geiser/doc.sld:../geiser/guile/src/geiser/doc.scm
+                 geiser/completion.sld:../geiser/guile/src/geiser/completion.scm
+                 geiser/evaluation.sld:../geiser/guile/src/geiser/evaluation.scm
+                 geiser/xref.sld:../geiser/guile/src/geiser/xref.scm
+
                  README.md:../README.md])
 
 GUILE_MODULE_REQUIRED(json-rpc)

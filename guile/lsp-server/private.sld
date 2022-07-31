@@ -14,7 +14,7 @@
           editor-word-start-line
 
           intersperse
-          join-module-name
+          module-name->string
           split-module-name
 
           alist-ref*
@@ -25,6 +25,8 @@
           identifier-char?
           symbols->string
           hash-table-merge-updating!
+          stringify
+          library-name->string
 
           write-log
           lsp-server-log-file
@@ -33,7 +35,10 @@
 
           $string-split
 
-          delete-lines)
+          delete-lines
+
+          compose
+          flatmap)
 
 #:use-module ((scheme base)
               #:select (define-record-type
@@ -42,6 +47,7 @@
 #:use-module (srfi srfi-1)
 #:use-module (srfi srfi-28)
 #:use-module (srfi srfi-69)
+#:use-module (lsp-server guile util)
 
 
 #:declarative? #f)

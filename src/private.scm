@@ -87,14 +87,6 @@
                                result))))))))
  (else))
 
-(define (join-module-name mod)
-  (if mod
-      (apply string-append (append '("(")
-                                   (intersperse (map symbol->string mod)
-                                                " ")
-                                   '(")")))
-      #f))
-
 (define (split-module-name mod)
   (map string->symbol
        ($string-split
@@ -102,12 +94,6 @@
                    1
                    (- (string-length mod) 1))
         " ")))
-
-(define (alist-ref key alist)
-  (let ((p (assoc key alist)))
-    (if p
-        (cdr p)
-        #f)))
 
 (define (alist-ref* keys alist)
   (let loop ((keys keys)
@@ -150,15 +136,6 @@
 
 (define (char-bracket? char)
   (memq char '(#\( #\) #\{ #\} #\[ #\])))
-
-
-(cond-expand
- (guile (define (alist-ref key alist)
-          (define match (assoc key alist))
-          (if match
-              (cdr match)
-              #f)))
- (else))
 
 (define (symbols->string sl)
   (string-append "(" (string-join (map symbol->string sl)) ")"))
@@ -216,4 +193,20 @@
                             (print-log port)))))))
         (else (print-log (current-error-port)))))
 
+(define (stringify elem)
+  (format "~a" elem))
 
+(define (module-name->string mod-name)
+  (cond ((list? mod-name)
+         (let ((lib-parts (map symbol->string mod-name)))
+           (string-append "("
+                          (string-join lib-parts " ")
+                          ")")))
+        (else (symbol->string mod-name))))
+
+(define (compose f g)
+  (lambda args
+    (f (apply g args))))
+
+(define (flatmap proc lst)
+  (fold append '() (map proc lst)))

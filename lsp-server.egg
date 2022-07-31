@@ -1,11 +1,12 @@
 ((author "Ricardo Gabriel Herdt")
  (synopsis "LSP Server for CHICKEN.")
- (version "0.0.6")
+ (version "0.1.0")
  (license "MIT")
  (category tools)
  (dependencies apropos
                chicken-doc
                json-rpc
+               nrepl
                r7rs
                srfi-1
                srfi-130
@@ -25,17 +26,34 @@
                          (custom-build "chicken/setup-chicken-doc-for-test.sh"))
   (extension lsp-server.private
              (source "src/private.sld")
-             (source-dependencies "src/private.scm"))
+             (source-dependencies "src/private.scm")
+             (component-dependencies lsp-server.chicken.util))
+  (extension lsp-server.chicken.util
+             (source "chicken/util.sld"))
+  (extension geiser
+             (source "geiser/chicken/src/geiser/chicken5.scm"))
   (extension lsp-server.chicken
              (source "chicken/chicken.sld")
-             (component-dependencies lsp-server.private
-                                     lsp-server.tags))
+             (component-dependencies lsp-server.adapter
+                                     lsp-server.parse
+                                     lsp-server.private
+                                     lsp-server.chicken.util))
+  (extension lsp-server.adapter
+             (source "src/adapter.sld")
+             (source-dependencies "src/adapter.scm")
+             (component-dependencies geiser
+                                     lsp-server.parse))
   (extension lsp-server.document
              (source "src/document.sld")
              (source-dependencies "src/document.scm"))
-  (extension lsp-server.tags
-             (source "src/tags.sld")
-             (source-dependencies "src/tags.scm"))
+  (extension lsp-server.trie
+             (source "src/trie.sld")
+             (source-dependencies "src/trie.scm"))
+  (extension lsp-server.parse
+             (source "src/parse.sld")
+             (source-dependencies "src/parse.scm")
+             (component-dependencies lsp-server.trie
+                                     lsp-server.chicken.util))
   (extension lsp-server
              (source "src/lsp-server.sld")
              (source-dependencies "src/file.scm"

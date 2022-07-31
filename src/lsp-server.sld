@@ -4,6 +4,7 @@
         lsp-server-log-level
         lsp-spawner-start
         lsp-server-start/stdio
+        lsp-server-start/tcp
         lsp-server-version)
 
 (import (except (chicken io) read-string)
@@ -31,6 +32,7 @@
         (json-rpc lolevel)
 
         (lsp-server document)
+        (lsp-server parse)
         (lsp-server private))
 
 (cond-expand

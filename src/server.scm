@@ -1,6 +1,6 @@
 (define lsp-server-log-level (make-parameter 'debug))
 (define lsp-server-state 'off)
-(define lsp-server-version "0.0.6")
+(define lsp-server-version "0.1.0")
 
 (define listening-threads '())
 (define listening-threads-mutex (make-mutex))
@@ -27,6 +27,7 @@
 ;; capabilities.
 (define mandatory-capabilities
   '((textDocumentSync . ((save . #t)
+                         (openClose . #t)
                          (change . 2)))
     (hoverProvider . #t)
     (completionProvider . ((resolveProvider . #t)))
@@ -61,23 +62,27 @@
   (write-log 'debug (format "ignoring request. Params: ~a" params))
   #f)
 
-
 (define-handler (text-document/definition params)
   (define editor-word (get-word-under-cursor params))
-  (write-log 'debug (format "got word: ~a" editor-word))
+  (define file-path (get-uri-path params))
+  (define mod-name (and file-path
+                        (parse-library-name-from-file file-path)))
+
   (if editor-word
-      (let ((def-locs ($get-definition-locations (editor-word-text editor-word))))
-        (if (not (null? def-locs))
-            (let ((v (list->vector def-locs)))
-              (write-log 'debug
-                         (format "$get-definition-locations resulted in ~a"
-                                 v))
-              v)
-            (begin
-              (write-log 'debug
-                         (format "no definitions found for ~a"
-                                 (editor-word-text editor-word)))
-              'null)))
+      (let* ((word-text (editor-word-text editor-word))
+             (def-locs ($get-definition-locations mod-name
+                                                  (string->symbol word-text))))
+        (cond ((not (null? def-locs))
+               (let ((v (list->vector def-locs)))
+                 (write-log 'debug
+                            (format "$fetch-definition-locations resulted in ~a"
+                                    v))
+                 v))
+              (else
+               (write-log 'debug
+                          (format "no definitions found for ~a"
+                                  (editor-word-text editor-word)))
+               'null)))
       'null))
 
 (define-handler (text-document/did-change params)
@@ -89,7 +94,7 @@
      "\r\n"
      'infix))
   (cond ((and file-path (not (hash-table-ref/default file-table file-path #f)))
-         ($open-file! file-path)
+         ;;(generate-meta-data! file-path)
          (read-file! file-path)
          (update-file! file-path
                        (alist-ref 'contentChanges params))
@@ -117,15 +122,21 @@
 (define-handler (text-document/did-open params)
   (define file-path (get-uri-path params))
   (if file-path
-      (begin ($open-file! file-path)
+      (begin ($open-file! file-path) ;;(generate-meta-data! file-path)
              (read-file! file-path)
-             (let ((tmp-file (string-append "/tmp/" (remove-slashes file-path))))
-               (write-log 'debug
-                          (format "dumping content read into ~a" tmp-file))
-               #;
-               (with-output-to-file tmp-file
-                       (lambda ()
-                         (display (hash-table-ref (file-table) file-path)))))
+             ;; TODO first make this portable (i.e. not relying on /tmp), then
+             ;; uncomment it.
+             ;; We leave it in, since it's helpful when debugging problems
+             ;; regarding the internal document representation (out-of-index etc).
+             ;; (when (satisfies-log-level? 'debug)
+             ;;   (let ((tmp-file (string-append "/tmp/" (remove-slashes file-path))))
+             ;;     (write-log 'debug
+             ;;                (format "dumping content read into ~a" tmp-file))
+             ;;     (mutex-lock! file-table-mutex)
+             ;;     (with-output-to-file tmp-file
+             ;;       (lambda ()
+             ;;         (display (hash-table-ref file-table file-path))))
+             ;;     (mutex-unlock! file-table-mutex)))
              (write-log 'debug
                         (format "file contents read: ~a"
                                 file-path)))
@@ -144,6 +155,9 @@
   (define cur-char-number
     (alist-ref* '(position character) params))
   (define editor-word (get-word-under-cursor params))
+  (define file-path (get-uri-path params))
+  (define mod-name (and file-path
+                        (parse-library-name-from-file file-path)))
   (write-log 'debug
              (format "editor-word: ~a, start-char: ~a, end-char: ~a~%"
                      (editor-word-text editor-word)
@@ -154,37 +168,19 @@
              3))
       'null
       (let* ((word (editor-word-text editor-word))
-             (suggestions ($apropos-list word)))
+             (suggestions ($apropos-list mod-name word)))
         (write-log 'debug "getting completion suggestions for word "
                    word)
+        (write-log 'debug (format "suggestions list: ~a" suggestions))
 
-        (write-log 'debug
-                   (format "suggestions found: ~a~%"
-                           (fold (lambda (sug acc)
-                                   (format "~a ~a"
-                                           acc
-                                           (apropos-info-name sug)))
-                                 ""
-                                 suggestions)))
         `((isIncomplete . #t)
           (items .
                  ,(list->vector
-                   (map (lambda (ainfo)
-                          (let* ((ainfo-module (apropos-info-module ainfo))
-                                 (module-name
-                                  (if ainfo-module
-                                      (join-module-name ainfo-module)
-                                      ""))
-                                 (id-name
-                                  (symbol->string
-                                   (apropos-info-name ainfo)))
-                                 (label (if ainfo-module
-                                            (format "~a ~a"
-                                                    module-name
-                                                    id-name)
-                                            (format "~a" id-name)))
+                   (map (lambda (suggestion)
+                          (let* ((id-name (car suggestion))
+                                 (mod-name-str (stringify (cdr suggestion)))
                                  (start-line (alist-ref* '(position line)
-                                                         params))
+                                                            params))
                                  (start-char (editor-word-start-char
                                               editor-word))
                                  (end-char (editor-word-end-char
@@ -195,23 +191,25 @@
                                               (end . ((line . ,start-line)
                                                       (character . ,cur-char-number)))))
                                     (newText . ,id-name))))
-                            `((label . ,label)
+                            `((label . ,id-name)
                               (insertText . ,id-name)
                               (sortText . ,id-name)
                               (textEdit . ,text-edit)
-                              (data . ,(if ainfo-module
-                                           `((identifier . ,id-name)
-                                             (module . ,module-name))
-                                           `((identifier . ,id-name)))))))
+                              (data . ((identifier . ,id-name) (module . ,mod-name-str))))))
                         suggestions)))))))
+
 
 (define-handler (completion-item/resolve params)
   (define id (string->symbol
               (alist-ref* '(data identifier) params)))
+  (define file-path (get-uri-path params))
+  (define mod-name (and file-path
+                        (parse-library-name-from-file file-path)))
   (define mod (let ((m (alist-ref* '(data module) params)))
                 (if m
                     (split-module-name m)
-                    '())))
+                    mod-name)))
+  (write-log 'debug (format "params: ~a" params))
   (guard (condition
           (#t (begin
                 (write-log 'warning
@@ -225,39 +223,35 @@
                                     id)))
                     'null))))
          (begin
-           (write-log 'debug
-                      (format "Calling $fetch-documentation for mod ~a id ~a"
-                              mod id))
-           (let ((doc ($fetch-documentation mod id)))
+           (let ((doc (or ($fetch-documentation mod id)
+                          "")))
              (cons `(documentation . ,doc)
                    params)))))
 
 (define (fetch-signature-under-cursor params)
   (define editor-word
     (get-word-under-cursor params))
-  (if editor-word
-      (let* ((cur-word (editor-word-text editor-word))
-             (matches (filter (lambda (ap)
-                                (string=? (symbol->string (apropos-info-name ap))
-                                          cur-word))
-                              ($apropos-list cur-word))))
-        (if (null? matches)
-            (begin
-              (write-log 'warning
-                         (format "no signature found for: ~a" cur-word))
-              'null)
-            (guard
-             (condition
-              (#t (begin (write-log 'warning
-                                    (format "Unable to fetch signature of `~a`"
-                                            cur-word))
-                         'null)))
-             (let* ((ainfo (car matches))
-                    (signature
-                     ($fetch-signature (apropos-info-module ainfo)
-                                       (apropos-info-name ainfo))))
-               signature))))
-      ""))
+  (define file-path (get-uri-path params))
+  (define mod-name (and file-path
+                        (parse-library-name-from-file file-path)))
+
+  (if (and editor-word (not (string=? (editor-word-text editor-word)
+                                      "")))
+      (begin
+        (write-log 'info
+                   (format "calling $fetch-signature with ~s ~s"
+                           mod-name
+                           (editor-word-text editor-word)))
+        (let* ((cur-word (editor-word-text editor-word))
+               (signature ($fetch-signature mod-name
+                                            (string->symbol cur-word))))
+          (if (not signature)
+              (begin
+                (write-log 'warning
+                           (format "no signature found for: ~a" cur-word))
+                'null)
+              signature)))
+      #f))
 
 (define-handler (text-document/signature-help params)
   (let ((signature (fetch-signature-under-cursor params)))
@@ -266,6 +260,7 @@
 (define-handler (text-document/hover params)
   (write-log 'debug
              (format "hover with params: ~a" params))
+
   (let ((signature (fetch-signature-under-cursor params)))
     (if (and signature
              (not (equal? signature ""))
@@ -287,7 +282,8 @@
       ((json-rpc-log-file (lsp-server-log-file))
        (json-rpc-log-level (lsp-server-log-level))
        (log-level (lsp-server-log-level))
-       (custom-error-codes '((definition-not-found-error . -32000)))
+       (custom-error-codes '((definition-not-found-error . -32000)
+                             (load-error . -32001)))
        (json-rpc-handler-table
         `(("initialize" . ,initialize-handler)
           ("initialized" . ,initialized-handler)
@@ -314,6 +310,10 @@
    ((input-port output-port)
     (parameterize-and-run
      (lambda () (json-rpc-loop input-port output-port))))))
+
+(define (lsp-server-start/tcp port-num)
+  (parameterize-and-run
+   (lambda () (json-rpc-start-server/tcp port-num))))
 
 (define (parameterize-log-levels thunk)
   (parameterize ((log-level (lsp-server-log-level))

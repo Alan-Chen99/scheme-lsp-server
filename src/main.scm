@@ -1,13 +1,20 @@
-(import (lsp-server))
+(import (lsp-server)
+        (lsp-server private))
 
 (cond-expand
  (guile (import (except (scheme base)
                         assoc
                         cond-expand
-                        member)))
- (else (import (scheme base)
-               (scheme char) ;; string-downcase
-               (scheme process-context))))
+                        member)
+                (srfi srfi-18)
+                (srfi srfi-28)
+                (lsp-server guile)))
+ (chicken (import (scheme base)
+                  (scheme char) ;; string-downcase
+                  (scheme process-context)
+                  (srfi 18)
+                  (srfi 28)
+                  (lsp-server chicken))))
 
 (cond-expand (guile (import (only (srfi srfi-1) any)))
              (else (import (only (srfi 1) any))))
@@ -25,13 +32,17 @@
 
   (display (string-append "usage: "
                           program-name
-                          " [--log-level <log-level>] [--version]."))
+                          " [--log-level <log-level>] [--listen <port-num>] [--version]."))
   (newline)
-  (display (string-append "Example: " program-name " debug"))
+  (display (string-append "Example: " program-name " --log-level debug"))
   (newline)
   (display "Arguments: ")
   (newline)
   (display "    --log-level <level>: one of [error, warning, info, debug]. Default: error.")
+  (newline)
+  (display "    --listen <port-num>: port to listen to and spawn repl upon connection.")
+  (newline)
+  (display "    --tcp <port-num>: listen on tcp port <port-num> instead of stdio.")
   (newline)
   (display "    --help (or -h):    display this help and exit.")
   (newline)
@@ -52,31 +63,67 @@
        '("error" "warning" "info" "debug")))
 
 
-(define (process-args args)
-  (define len (length args))
-  (cond ((or (member "-v" args)
-             (member "--version" args))
-         (print-version)
-         (exit))
-        ((or (member "-h" args)
-             (member "--help" args))
-         (print-usage)
-         (exit))
-        ((and (= len 2)
-              (string=? (car args) "--log-level")
-              (valid-log-level? (cadr args)))
-         `((log-level . ,(string->symbol (cadr args)))))
-        ((or (> len 1)
-             (and (= len 1)
-                  (not (valid-log-level? (car args)))))
-         (print-usage)
-         (exit))
-        (else '((log-level . error)))))
+(define (process-args arguments)
+  (let loop ((args arguments)
+             (options '()))
+    (cond ((null? args)
+           options)
+          ((or (member "-v" args)
+               (member "--version" args))
+           (print-version)
+           (exit))
+          ((or (member "-h" args)
+               (member "--help" args))
+           (print-usage)
+           (exit))
+          ((and (>= (length args) 2)
+                (string=? (car args) "--log-level")
+                (valid-log-level? (cadr args)))
+           (loop (cddr args)
+                 (cons `(log-level . ,(string->symbol (cadr args)))
+                       options)))
+          ((and (>= (length args) 2)
+                (string=? (car args) "--listen")
+                (string->number (cadr args)))
+           => (lambda (port-num)
+                (loop (cddr args)
+                      (cons `(listen . ,port-num) options))))
+          ((and (>= (length args) 2)
+                (string=? (car args) "--tcp")
+                (string->number (cadr args)))
+           => (lambda (port-num)
+                (loop (cddr args)
+                      (cons `(tcp . ,port-num) options))))
+          (else (print-usage)
+                (exit)))))
 
 (define (main args)
   (define options (process-args args))
-  (define log-level (cdr (assoc 'log-level options)))
+  (define log-level (let ((log-level-option (assoc 'log-level options)))
+                      (if log-level-option
+                          (cdr log-level-option)
+                          'error)))
+  (define repl-port-num
+    (let ((listen-option (assoc 'listen options)))
+      (if listen-option
+          (cdr listen-option)
+          #f)))
+
+  (define tcp-port-num
+    (let ((tcp-option (assoc 'tcp options)))
+      (if tcp-option
+          (cdr tcp-option)
+          #f)))
+
+  (if repl-port-num
+      (thread-start!
+       (make-thread
+        (lambda () (spawn-repl-server repl-port-num))))
+      #f)
+
   (parameterize ((lsp-server-log-level log-level))
-    (lsp-server-start/stdio)))
+    (if tcp-port-num
+        (lsp-server-start/tcp tcp-port-num)
+        (lsp-server-start/stdio))))
 
 (main (cdr (command-line)))

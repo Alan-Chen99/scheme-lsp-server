@@ -3,6 +3,7 @@
 #:export (lsp-server-log-level
           lsp-spawner-start
           lsp-server-start/stdio
+          lsp-server-start/tcp
           lsp-server-version)
 
 #:re-export (lsp-server-log-file)
@@ -27,9 +28,13 @@
 
 #:use-module (system vm program)
 
+#:use-module (lsp-server guile util)
 #:use-module (lsp-server guile)
 #:use-module (lsp-server document)
+#:use-module (lsp-server parse)
 #:use-module (lsp-server private)
+
+#:use-module (lsp-server adapter)
 
 #:declarative? #f)
 

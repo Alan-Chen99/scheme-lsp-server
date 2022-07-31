@@ -15,7 +15,7 @@
 
         intersperse
 
-        join-module-name
+        module-name->string
         split-module-name
 
         alist-ref*
@@ -26,6 +26,7 @@
         identifier-char?
         symbols->string
         hash-table-merge-updating!
+        stringify
 
         write-log
         lsp-server-log-file
@@ -34,7 +35,10 @@
 
         $string-split
 
-        delete-lines)
+        delete-lines
+
+        compose
+        flatmap)
 
 (import scheme
         (scheme base)
@@ -55,6 +59,7 @@
 
 (cond-expand
  (chicken (import (only (chicken base) intersperse)
+                  (lsp-server chicken util)
                   r7rs))
  (else))
 

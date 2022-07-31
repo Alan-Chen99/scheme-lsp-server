@@ -12,16 +12,17 @@
              (line-number 0)
              (lines '())
              (res ""))
-    (if (eof-object? c)
-        (make-document res (list->vector (reverse lines)))
-        (if (char=? c #\newline)
+    (cond ((eof-object? c)
+           (make-document res (list->vector (reverse lines))))
+          ((char=? c #\newline)
             (loop (read-char port)
                   (+ char-number 1)
                   (+ line-number 1)
                   (cons char-number
                         lines)
-                  (string-append res (string c)))
-            (loop (read-char port)
+                  (string-append res (string c))))
+          (else
+           (loop (read-char port)
                   (+ char-number 1)
                   line-number
                   lines

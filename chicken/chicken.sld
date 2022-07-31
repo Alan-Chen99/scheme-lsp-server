@@ -9,13 +9,18 @@
         $initialize-lsp-server!
         $server-capabilities
         $server-name
+        spawn-repl-server
         $tcp-accept
         $tcp-connect
         $tcp-listen
-        $tcp-read-timeout)
+        $tcp-read-timeout
+        get-module-path
+        pathname-directory
+        pathname-join)
 
 (import (apropos)
         (chicken base)
+        (chicken condition)
         (chicken file)
         (chicken foreign)
         (chicken format)
@@ -29,37 +34,34 @@
         (chicken random)
         (only (chicken string) string-intersperse)
         (chicken tcp)
+        nrepl
         chicken-doc
         medea
         r7rs
         scheme
         srfi-1
+        srfi-18
         srfi-69
         srfi-130
 
+        (geiser)
         (srfi 18)
         (lsp-server private)
-        (lsp-server tags))
+        (lsp-server chicken util)
+        (lsp-server parse)
+        (lsp-server adapter))
 
 (begin
 
-;;; A hash table mapping modules (extensions) to eggs. This is needed
-;;; to fetch the correct documentation with chicken-doc
-  (define module-egg-mapping #f)
-
-  ;;; Maps identifiers (string) to an alist that maps the path of
-  ;;; a source file (string) to a <tag-info> record.
-  (define tags-table
-    (make-parameter (make-hash-table)))
+  ;;; A hash table mapping modules (extensions) to eggs. This is needed
+  ;;; to fetch the correct documentation with chicken-doc
+  (define module-egg-table (make-hash-table))
 
   (define eggs-path
     (make-pathname (system-cache-directory) "chicken-install"))
 
   (define chicken-source-path
     (or (get-environment-variable "CHICKEN_SOURCE_PATH") ""))
-
-  (define tags-path
-    (make-parameter #f))
 
   (define root-path
     (make-parameter #f))
@@ -68,12 +70,6 @@
 
   (define $server-name
     "CHICKEN LSP server")
-
-  (define (initialize-tags-path)
-    (when (not (tags-path))
-      (tags-path (if (eq? (root-path) 'null)
-                     (create-temporary-file)
-                     (make-pathname (root-path) "CHICKEN-TAGS")))))
 
   (define (pick-port)
     (+ (pseudo-random-integer 2000)
@@ -85,14 +81,12 @@
     (root-path (if (and root (not (equal? root 'null)))
                    root
                    "."))
-    ;;(initialize-tags-path)
-    (set! module-egg-mapping (build-module-egg-mapping))
-    ;;(generate-tags (tags-path) #t eggs-path chicken-source-path (root-path))
-    (generate-tags! eggs-path)
-    (generate-tags! chicken-source-path)
-    (generate-tags! (root-path))
+    (verify-repository) ; needed to use chicken-doc in compiled code
+    (set! module-egg-table (build-module-egg-table))
+    (generate-meta-data! eggs-path)
+    (generate-meta-data! chicken-source-path)
+    (generate-meta-data! (root-path))
 
-    ;;(tags-table (parse-tags-file (tags-path)))
     #t)
 
   ;;; An alist with implementation-specific server capabilities. See:
@@ -108,10 +102,13 @@
 
   (define $tcp-listen tcp-listen)
 
-  ;;; Return apropos instances of all functions matching IDENTIFIER (a symbol).
-  (define ($apropos-list identifier)
+  ;;; Return completion suggestions for PREFIX (a symbol).
+  ;;; MODULE is ignored for now, but belongs to the API, since other
+  ;;; implementations (e.g. guile) use it.
+  ;;; A suggestion is a pair of strings (identifier . library)
+  (define ($apropos-list module prefix)
     (define suggestions
-      (apropos-information-list identifier #:macros? #t #:imported? #f))
+      (apropos-information-list prefix #:macros? #t #:imported? #f))
     (fold (lambda (s acc)
             (let* ((mod-id-pair (car s))
                    (mod (let ((fst (car mod-id-pair)))
@@ -121,8 +118,9 @@
                                    (string-split (symbol->string fst) ".")))))
                    (id (cdr mod-id-pair))
                    (type (cdr s)))
-              (if (string-prefix? identifier (symbol->string id))
-                  (cons (make-apropos-info mod id type #f)
+              (if (string-prefix? prefix (symbol->string id))
+                  (cons (cons (symbol->string id)
+                              (module-name->chicken-string mod))
                         acc)
                   acc)))
           '()
@@ -131,75 +129,90 @@
   ;;; Return the documentation (a string) found for IDENTIFIER (a symbol) in
   ;;; MODULE (a symbol). Return #f if nothing found.
   ;;; Example call: $fetch-documentation '(srfi-1) 'map
-  (define ($fetch-documentation module identifier)
-    (define egg (or (module-egg module)
-                    module))
-    (define doc-path
-      (append (if (list? egg)
-                  egg
-                  (list egg))
-              (list identifier)))
-    (begin
-      (write-log 'debug
-                 (format "looking up doc-path: ~a" doc-path))
-      (with-output-to-string
-        (lambda ()
-          (describe (lookup-node doc-path))))))
+  (define ($fetch-documentation mod-name identifier)
+    (define match (alist-ref identifier (geiser-autodoc identifier)))
+    (define module (and match
+                        (alist-ref "module" match equal?)))
+    (define egg (or (module-egg module) module))
+    (write-log 'debug
+               (format "$fetch-documentation identifier: ~a, match: ~a, module: ~a, egg: ~a"
+                       identifier
+                       match
+                       module
+                       egg))
+    (if (and egg (not (null? egg)))
+        (let ((doc-path
+               (append (if (list? egg)
+                           egg
+                           (list egg))
+                       (list identifier))))
+          (write-log 'debug
+                     (format "looking up doc-path: ~a" doc-path))
+          (with-output-to-string
+            (lambda ()
+              (guard (condition
+                      (#t (write-log
+                           'error
+                           (format "#fetch-documentation: documentation not found: (~a ~a)"
+                                   egg
+                                   identifier))
+                          #f))
+               (describe (lookup-node doc-path))))))
+        #f))
 
-  ;;; Return the signature (a string) for IDENTIFIER (a symbol) in MODULE (a
-  ;;; symbol). Return #f if nothing found.
-  ;;; Example call: $fetch-documentation '(srfi 1) 'map
+
+  (define (find-identifier-module identifier)
+    (let* ((id-str (symbol->string identifier))
+           (suggestions ($apropos-list #f id-str)))
+      (alist-ref id-str suggestions equal?)))
+
+;;; Return the signature (a string) for IDENTIFIER (a symbol) in MODULE (a
+;;; symbol). Return #f if nothing found.
+;;; Example call: $fetch-documentation '(srfi 1) 'map
   (define ($fetch-signature module identifier)
-    (define egg (or (module-egg module)
-                    (car module)))
-    (if (not egg)
-        #f
-        (node-signature
-         (lookup-node (list egg identifier)))))
+    (define egg (find-identifier-module identifier))
+    (write-log 'debug
+               (format "$fetch-signature egg: ~a identifier: ~a"
+                       egg
+                       identifier))
+    (or (if (or (not egg)
+                (null? egg))
+            #f
+            (guard (condition
+                    (#t (write-log 'error
+                                   (format "#fetch-signature: signature not found: (~a ~a)"
+                                           egg
+                                           identifier))
+                        #f))
+                   (node-signature
+                    (lookup-node (list egg identifier)))))
+        ;;(lsp-geiser-signature identifier)
+        (fetch-signature module identifier)))
+
+  (define (load-or-import file-path)
+    (guard
+     (condition
+      (#t (write-log 'error (format "Can't load file ~a: ~a"
+                                    file-path
+                                    (with-output-to-string
+                                      (lambda ()
+                                        (print-error-message condition)))))))
+     (let ((mod-name (parse-library-name-from-file file-path)))
+
+       (if (not mod-name)
+           (lsp-geiser-load-file file-path)
+           (begin (lsp-geiser-load-file file-path)
+                  (eval `(import ,mod-name)))))))
 
   ;;; Action to execute when FILE-PATH is opened. Used for side effects only.
   (define ($open-file! file-path)
-    (generate-tags! file-path))
+    (generate-meta-data! file-path)
+    #f)
 
   ;;; Action to execute when FILE-PATH is saved. Used for side effects only.
   (define ($save-file! file-path)
-    (generate-tags! file-path))
-
-  (define (read-definitions src-path)
-    (define regex
-      (irregex '(: (* whitespace)
-                   (submatch (+ (~ whitespace)))
-                   (* whitespace)
-                   #\delete
-                   (? (: (~ numeric) (* any) #\x1))
-                   (submatch (+ numeric))
-                   #\,
-                   (submatch (+ numeric)))))
-    (let loop ((line (read-line))
-               (res (make-hash-table)))
-      (if (or (eof-object? line)
-              (string-prefix? "\f" line))
-          res
-          (let ((submatches (irregex-match regex line)))
-            (if (and submatches
-                     (>= (irregex-match-num-submatches submatches)
-                         3))
-                (let ((identifier (irregex-match-substring submatches 1))
-                      (line-number
-                       (- (string->number
-                           (irregex-match-substring submatches 2))
-                          1))
-                      (char-number
-                       (string->number (irregex-match-substring submatches 3))))
-                  (loop (read-line)
-                        (begin (hash-table-set! res
-                                                identifier
-                                                `((,src-path . ,(make-tag-info src-path line-number char-number))))
-                               res)))
-                (begin (write-log 'debug
-                                  (format  "skipping ill-formed TAGS line: ~a"
-                                           line))
-                       (loop (read-line) res)))))))
+    (generate-meta-data! file-path)
+    #f)
 
   (define (join-definition-tables! left right)
     (for-each
@@ -231,10 +244,10 @@
   ;;;             (end . ((line  . <line number>)
   ;;;                     (character . <character number))))
   ;;;
-  (define ($get-definition-locations identifier)
-    (get-definition-locations identifier))
+  (define ($get-definition-locations mod-name identifier)
+    (fetch-definition-locations identifier))
 
-  (define (build-module-egg-mapping)
+  (define (build-module-egg-table)
     (define-values (in out pid)
       (process (chicken-status) '("-c")))
     (define (egg-line? str)
@@ -270,13 +283,23 @@
                         table
                         cur-egg)))))
 
+  (define (module-name->chicken-string mod-name)
+    (cond ((not mod-name)
+           #f)
+          ((list? mod-name)
+           (let ((lib-parts (map symbol->string mod-name)))
+             (string-join lib-parts ".")))
+          (else (symbol->string mod-name))))
+
   (define (module-egg mod)
-    (hash-table-ref/default module-egg-mapping
+    (hash-table-ref/default module-egg-table
                             mod
                             #f))
 
   (define (chicken-status)
     (make-pathname
      (foreign-value "C_TARGET_BIN_HOME" c-string)
-     (foreign-value "C_CHICKEN_STATUS_PROGRAM" c-string))))
-)
+     (foreign-value "C_CHICKEN_STATUS_PROGRAM" c-string)))
+
+  (define (spawn-repl-server port-num)
+    (nrepl port-num))))

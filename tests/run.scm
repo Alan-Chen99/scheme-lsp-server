@@ -15,10 +15,11 @@
  (chicken (import (scheme base)
                   (chicken base)
                   (chicken format)
+                  (only (chicken keyword) keyword?)
                   (only (chicken port) with-input-from-string)
                   (only (srfi 130) string-replace)
                   (lsp-server chicken)
-                  (lsp-server tags)))
+                  (lsp-server trie)))
  (guile (import (except (scheme base)
                         cond-expand
                         include
@@ -30,6 +31,9 @@
 (include "../src/document.scm")
 (include "../src/file.scm")
 (include "../src/server.scm")
+
+(include "parse-tests.scm")
+(include "trie-tests.scm")
 
 (test-begin "lsp-server tests")
 

@@ -10,7 +10,8 @@
         line/char->pos
         string->document)
 
-(import (scheme base)
+(import (r7rs)
+        (scheme base)
         (scheme file)
         (scheme write)
         (lsp-server private))
