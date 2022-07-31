@@ -26,6 +26,7 @@
 #:use-module (srfi srfi-69)
 #:use-module (geiser modules)
 #:use-module (ice-9 documentation)
+#:use-module (ice-9 ftw)
 #:use-module (ice-9 optargs)
 #:use-module (ice-9 session)
 #:use-module (system vm program)
@@ -56,16 +57,29 @@
 
 ;;; Initialize LSP server to manage project at ROOT (a string). Used
 ;;; for implementation-specific side effects only. Empty for now.
-(define ($initialize-lsp-server! root)
-  (when (not (eq? root 'null))
-    (add-to-load-path root))
-  ;; (define boot-module-path (get-module-path '(ice-9 boot-9)))
-  ;; (when boot-module-path
-  ;;   (generate-meta-data! boot-module-path))
-  ;; (root-path
-  ;;  (if (and root (not (equal? root 'null)))
-  ;;      root
-  ;;      "."))
+(define ($initialize-lsp-server! root-path)
+  (when (not (eq? root-path 'null))
+    (add-to-load-path root-path)
+    (ftw root-path
+       (lambda (filename statinfo flag)
+         (write-log 'debug
+                    (format "initialize-lsp-server!: processing file ~a" filename))
+         (guard
+          (condition
+           (#t (write-log 'error
+                          "initialize-lsp-server!: error processing file ~a: ~a"
+                          filename
+                          condition)))
+          (let ((abs-filename (get-absolute-pathname filename)))
+            (when (and abs-filename
+                       (eq? flag 'regular)
+                       (irregex-search scheme-file-regex
+                                       (pathname-base abs-filename)))
+              (let ((mod-name (parse-library-name-from-file filename)))
+                (import-library-by-name mod-name)))))
+         #t)))
+  (write-log 'info (format "initializing LSP server for root ~a"
+                           root-path))
   #f)
 
 ;;; An alist with implementation-specific server capabilities. See:
@@ -191,9 +205,14 @@
 (define (import-library-by-name mod-name)
   (write-log 'debug
              (format "importing module ~a" mod-name))
-  (eval `(import ,mod-name) (interaction-environment))
-  (let ((mod (resolve-module mod-name #t #:ensure #f)))
-    (import-module-dependencies mod)))
+  (guard
+   (condition (#t (write-log 'error
+                             (format "Can't import module ~a: ~a"
+                                     mod-name
+                                     condition))))
+   (eval `(import ,mod-name) (interaction-environment))
+   (let ((mod (resolve-module mod-name #t #:ensure #f)))
+     (import-module-dependencies mod))))
 
 (define (import-module-dependencies mod)
   (for-each (lambda (m)

@@ -45,7 +45,7 @@
 
 (define-handler (initialized-handler params)
   (write-log 'info
-             "initialized")
+             "Server initialized")
   'null)
 
 (define-handler (shutdown-handler params)
@@ -93,7 +93,7 @@
                 (vector-ref (alist-ref 'contentChanges params) 0))
      "\r\n"
      'infix))
-  (cond ((and file-path (not (hash-table-ref/default file-table file-path #f)))
+  (cond ((and file-path (not (hash-table-ref/default (file-table) file-path #f)))
          ;;(generate-meta-data! file-path)
          (read-file! file-path)
          (update-file! file-path
