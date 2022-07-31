@@ -10,6 +10,7 @@
 #:use-module ((scheme base) #:select (guard))
 #:use-module ((geiser completion) #:prefix geiser-)
 #:use-module (geiser evaluation)
+#:use-module ((geiser modules) #:prefix geiser-)
 #:use-module ((geiser doc) #:prefix geiser-)
 #:use-module ((geiser xref) #:prefix geiser-)
 #:use-module (lsp-server guile util)

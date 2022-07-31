@@ -56,7 +56,7 @@
       (alist-ref "docstring" doc)
       #f))
 
-(define (lsp-geiser-symbol-location identifier)
+(define (lsp-geiser-symbol-location module identifier)
   (define loc (geiser-symbol-location identifier))
   (write-log 'debug (format "lsp-geiser-symbol-location loc: ~s" loc))
 
@@ -70,9 +70,13 @@
                     (let ((val (alist-ref "line" loc)))
                       (and (not (null? val))
                            val))))
-  (define file-path (if (and file (not (null? file)))
-                        (format "file://~a" file)
-                        #f))
+  (define file-path (cond ((and file (not (null? file)))
+                           (format "file://~a"
+                                   (if (absolute-pathname? file)
+                                       file
+                                       (get-absolute-pathname file))))
+                          (module (geiser-module-path module))
+                          (else #f)))
   (cond ((and line (< line 0))
          (write-log 'error
                     "lsp-geiser-symbol-location: line is negative")

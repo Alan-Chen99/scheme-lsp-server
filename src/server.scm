@@ -238,10 +238,6 @@
   (if (and editor-word (not (string=? (editor-word-text editor-word)
                                       "")))
       (begin
-        (write-log 'info
-                   (format "calling $fetch-signature with ~s ~s"
-                           mod-name
-                           (editor-word-text editor-word)))
         (let* ((cur-word (editor-word-text editor-word))
                (signature ($fetch-signature mod-name
                                             (string->symbol cur-word))))

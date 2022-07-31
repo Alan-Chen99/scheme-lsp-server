@@ -14,7 +14,7 @@
           $tcp-listen
           $tcp-read-timeout
           spawn-repl-server
-)
+          )
 
 #:use-module ((scheme base)
               #:select (define-record-type read-line guard))
@@ -140,10 +140,15 @@
 ;;; Return the signature (a string) for IDENTIFIER (a symbol) in MODULE (a
 ;;; symbol). Return #f if nothing found.
 ;;; Example call: $fetch-documentation '(srfi 1) 'map
-(define ($fetch-signature module identifier)
+(define ($fetch-signature mod-name identifier)
+  (write-log 'debug
+             (format "$fetch-signature ~s ~s"
+                     mod-name
+                     identifier))
+
   (or (lsp-geiser-signature identifier)
-      (execute-in-module module (lambda ()
-                                  (lsp-geiser-signature identifier)))))
+      (execute-in-module mod-name (lambda ()
+                                    (lsp-geiser-signature identifier)))))
 
 ;;; Return a list of locations found for IDENTIFIER (a symbol).
 ;;; Each location is represented by an alist
@@ -159,16 +164,16 @@
                      mod-name
                      identifier))
   (define loc
-    (lsp-geiser-symbol-location (if (symbol? identifier)
+    (lsp-geiser-symbol-location mod-name
+                                (if (symbol? identifier)
                                     identifier
                                     (string->symbol identifier))))
-  (write-log 'debug
-             (format "loc: ~a" loc))
   (cond ((and (or (not loc) (null? loc)) mod-name)
          (execute-in-module mod-name
                             (lambda ()
                               (let ((loc2
                                      (lsp-geiser-symbol-location
+                                      mod-name
                                       (if (symbol? identifier)
                                           identifier
                                           (string->symbol identifier)))))
