@@ -9,7 +9,7 @@
 6. [Existing clients](#existing-clients)
 7. [Contributing](#contributing)
 
-## <a name="introduction"></a> Introduction
+## <a name="user-content-introduction"></a> Introduction
 
 ** EXPERIMENTAL **
 
@@ -26,7 +26,7 @@ Currently only CHICKEN 5 and Guile are supported.
 *Note*: this code is still in an early development stage and the API may change.
 Change suggestions are welcome.
 
-## <a name="api"></a>API
+## <a name="user-content-api"></a>API
 
 ```
 [parameter] (lsp-server-log-level)
@@ -47,7 +47,7 @@ Start an LSP server listening on stdio.
 
 Start an LSP server listening on `tcp-port-number`.
 
-## <a name="supported-features"></a>Supported features
+## <a name="user-content-supported-features"></a>Supported features
 
 
 <table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
@@ -101,7 +101,7 @@ Start an LSP server listening on `tcp-port-number`.
 </tbody>
 </table>
 
-## <a name="specific-implementations"></a>Notes to specific implementations
+## <a name="user-content-specific-implementations"></a>Notes to specific implementations
 
 ### CHICKEN
 
@@ -120,7 +120,7 @@ Most of the current implementation relies on Geiser. We include the correspondin
 Scheme files in our repository (git submodules was discarded to simplify
 packaging and automatic installation from LSP clients).
 
-## <a name="known-issues"></a>Known issues
+## <a name="user-content-known-issues"></a>Known issues
 
 ### [Guile] Missing LSP information when library definition is missing
 
@@ -147,13 +147,13 @@ information starts to be received. LSP provides ways of giving feedback
 to the user when an operation takes a long time, we can add support to it
 in the future.
 
-## <a name="existing-clients"></a>Existing clients
+## <a name="user-content-existing-clients"></a>Existing clients
 
 - VSCodium: [https://codeberg.org/rgherdt/vscode-scheme-lsp|https://codeberg.org/rgherdt/vscode-scheme-lsp]
 
 - Emacs: [https://codeberg.org/rgherdt/emacs-lsp-scheme|https://codeberg.org/rgherdt/emacs-lsp-scheme]
 
-## <a name="contributing"></a>Contributing
+## <a name="user-content-contributing"></a>Contributing
 
 ### Creating an LSP client
 
