@@ -139,14 +139,14 @@
 
 (define (line/char->pos doc line char)
   (define newlines (document-newline-positions doc))
-  (define num-lines (vector-length newlines))
-  (cond ((or (= line 0) (= num-lines 0))
+  (define num-newlines (vector-length newlines))
+  (cond ((or (= line 0) (= num-newlines 0))
          char)
-        ((>= line num-lines)
+        ((> line num-newlines)
          (write-log 'error
-                    (format "line/char->pos: line (~a) large than number of lines (~a)"
+                    (format "line/char->pos: line (~a) exceeds number of newlines (~a)"
                             line
-                            num-lines))
+                            num-newlines))
          (- (document-length doc) 1))
         (else
          (+ char
