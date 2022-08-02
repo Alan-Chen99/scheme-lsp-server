@@ -115,11 +115,10 @@
           (cdr tcp-option)
           #f)))
 
-  (if repl-port-num
-      (thread-start!
-       (make-thread
-        (lambda () (spawn-repl-server repl-port-num))))
-      #f)
+  (when repl-port-num
+    (thread-start!
+     (make-thread
+      (lambda () (spawn-repl-server repl-port-num)))))
 
   (parameterize ((lsp-server-log-level log-level))
     (if tcp-port-num

@@ -58,28 +58,11 @@
 ;;; Initialize LSP server to manage project at ROOT (a string). Used
 ;;; for implementation-specific side effects only. Empty for now.
 (define ($initialize-lsp-server! root-path)
-  (when (not (eq? root-path 'null))
-    (add-to-load-path root-path)
-    (ftw root-path
-       (lambda (filename statinfo flag)
-         (write-log 'debug
-                    (format "initialize-lsp-server!: processing file ~a" filename))
-         (guard
-          (condition
-           (#t (write-log 'error
-                          "initialize-lsp-server!: error processing file ~a: ~a"
-                          filename
-                          condition)))
-          (let ((abs-filename (get-absolute-pathname filename)))
-            (when (and abs-filename
-                       (eq? flag 'regular)
-                       (irregex-search scheme-file-regex
-                                       (pathname-base abs-filename)))
-              (let ((mod-name (parse-library-name-from-file filename)))
-                (import-library-by-name mod-name)))))
-         #t)))
   (write-log 'info (format "initializing LSP server with root ~a"
                            root-path))
+
+  (when (not (eq? root-path 'null))
+    (add-to-load-path root-path))
   #f)
 
 ;;; An alist with implementation-specific server capabilities. See:

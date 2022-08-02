@@ -111,6 +111,33 @@ Most of the current implemention relies on Geiser. We include the corresponding
 Scheme files in our repository (git submodules was discarded to simplify
 packaging and automatic installation from LSP clients.
 
+## Known issues
+
+### [Guile] Missing LSP information when library definition was not read
+
+Currently the LSP server only compiles (and imports) files that contain a
+library definition. In Scheme it's common though to separate the library
+definition and its implementation in different files (as this same library
+does). This means that if you open an implementation file (i.e. a scheme file
+without library definition) first, LSP won't provide much information. By
+opening the corresponding library definition (doesn't matter if before of after
+opening the first file) it should work properly.
+
+I experimented with a couple of workarounds for this, but was not 100% satisfied
+by the result. One idea was to simply compile/import every single file in a
+project. But this would bloat the runtime, and in my experiments lead to weird
+behavior on some large projects. Ideally we would like to keep track which
+source files belong to which library definition, but I'm not sure what's the
+best way to achieve this.
+
+### [CHICKEN] Slow startup on large projects
+
+For CHICKEN we scan the project and parse files in order to a.o.t. fetch
+location information. On large projects, you may experience a delay until
+information starts to be displayed. LSP provides ways of giving feedback
+to the user when an operation takes a long time, we can add support to it
+in the future.
+
 ## Ideas on extending support to other Schemes
 
 Here are some ideas on how add support to other Scheme implementation without
