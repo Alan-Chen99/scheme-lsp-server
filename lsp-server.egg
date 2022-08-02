@@ -16,6 +16,41 @@
  (test-dependencies srfi-1
                     srfi-69
                     srfi-64)
+ (distribution-files
+  "lsp-server.egg"
+  "LICENSE"
+  "README.md"
+  "VERSION"
+  "chicken/chicken.sld"
+  "chicken/util.sld"
+  "chicken/lsp-server.release-info"
+  "chicken/setup-chicken-doc-for-test.sh"
+  "geiser/chicken/README.org"
+  "geiser/chicken/license"
+  "geiser/chicken/version"
+  "geiser/chicken/src/geiser/chicken5.scm"
+  "src/adapter.scm"
+  "src/adapter.sld"
+  "src/document.scm"
+  "src/document.sld"
+  "src/file.scm"
+  "src/file.sld"
+  "src/lsp-server.sld"
+  "src/main.scm"
+  "src/parse.scm"
+  "src/parse.sld"
+  "src/private.scm"
+  "src/private.sld"
+  "src/server.scm"
+  "src/trie.scm"
+  "src/trie.sld"
+  "tests/run.scm"
+  "tests/parse-tests.scm"
+  "tests/trie-tests.scm"
+  "tests/resources/sample-1.scm"
+  "tests/resources/sample-2.scm"
+  "tests/resources/sample-3-included.scm"
+  "tests/resources/sample-r7rs-lib.scm")
  (component-options
   (csc-options "-O3" "-X" "r7rs" "-R" "r7rs"))
  (components
