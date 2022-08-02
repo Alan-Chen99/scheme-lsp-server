@@ -107,40 +107,63 @@ are welcome.
 
 ### GUILE
 
-Most of the current implemention relies on Geiser. We include the corresponding
+Most of the current implementation relies on Geiser. We include the corresponding
 Scheme files in our repository (git submodules was discarded to simplify
-packaging and automatic installation from LSP clients.
+packaging and automatic installation from LSP clients).
 
 ## Known issues
 
-### [Guile] Missing LSP information when library definition was not read
+### [Guile] Missing LSP information when library definition is missing
 
 Currently the LSP server only compiles (and imports) files that contain a
 library definition. In Scheme it's common though to separate the library
 definition and its implementation in different files (as this same library
 does). This means that if you open an implementation file (i.e. a scheme file
-without library definition) first, LSP won't provide much information. By
-opening the corresponding library definition (doesn't matter if before of after
-opening the first file) it should work properly.
+without library definition) first, the LSP server won't provide much
+information. By opening the corresponding library definition (doesn't matter if
+before of after opening the first file) it should work properly.
 
 I experimented with a couple of workarounds for this, but was not 100% satisfied
-by the result. One idea was to simply compile/import every single file in a
-project. But this would bloat the runtime, and in my experiments lead to weird
-behavior on some large projects. Ideally we would like to keep track which
-source files belong to which library definition, but I'm not sure what's the
-best way to achieve this.
+by the result. One idea was to simply compile/import every single file found
+in a project that contains a library definition. But this would bloat the
+run-time, and in my experiments lead to weird behavior on some large projects.
+Ideally we would like to keep track which source files belong to which library
+definition, but I'm not sure what's the best way to achieve this.
 
 ### [CHICKEN] Slow startup on large projects
 
-For CHICKEN we scan the project and parse files in order to a.o.t. fetch
-location information. On large projects, you may experience a delay until
-information starts to be displayed. LSP provides ways of giving feedback
+For CHICKEN we scan the project and parse files in order to fetch LSP-related
+information. On large projects, you may experience a delay until
+information starts to be received. LSP provides ways of giving feedback
 to the user when an operation takes a long time, we can add support to it
 in the future.
 
+## Existing clients
+
+- VSCodium: [https://codeberg.org/rgherdt/vscode-scheme-lsp|https://codeberg.org/rgherdt/vscode-scheme-lsp]
+
+- Emacs: [https://codeberg.org/rgherdt/emacs-lsp-scheme|https://codeberg.org/rgherdt/emacs-lsp-scheme]
+
+### Creating an LSP client
+
+`scheme-lsp-server` supports two modes. It can either operate by listening
+on `stdio` (using `lsp-server-start/stdio`) or `TCP` (using
+`lsp-server-start/tcp`). A command-line tool is available that you can call
+from your client. Here an example call (analogous to `chicken-lsp-server`):
+
+```
+guile-lsp-server --tcp 4242
+```
+
+Leaving out the `--tcp` flag starts the server in `stdio` mode. More information
+can be obtained with the `guile-lsp-server --help` command as usual.
+
+If you create an LSP client using this server, please let me know so we can
+keep this list up-to-date.
+
 ## Ideas on extending support to other Schemes
 
-Here are some ideas on how add support to other Scheme implementation without
+Here are some ideas on how to add support to other Scheme implementation without
 increasing much code complexity:
 
 ### decide which build system to use.
@@ -151,13 +174,18 @@ we should come up with a solution that can be used across all supported
 implementations. Possible candidates are Snow or Akku. Alternatively we could
 consider extending the existing `autotools` based scripts.
 
-### move more code to the common session.
+Note that this may be irrelevant in some cases. Gambit, for instance, now
+supports loading libraries directly from `git` repositories.
 
-Ideally we would leave to the implementation-specific files only code needed
-to provide programming-language features (find signature, documentation etc.).
-This is unfortunately still not the case, since the server relies on
- functionalities not provided by the RnRS standards, like JSON (used by our
- JSON-RPC library) and TCP sockets.
+### create needed portable libraries
+
+This library relies on non-standardized features, like TCP support and JSON
+(indirectly through [https://codeberg.org/rgherdt/scheme-json-rpc/|scheme-json-rpc].
 It would be extremely helpful if those bits are solved by separate libraries
-or SRFIs. Guile's version for JSON-RPC already uses SRFI 180, so I would suggest
-to adopt it by other implementations.
+or SRFIs. Guile's version for JSON-RPC already uses SRFI 180, that can solve
+the JSON problem.
+
+### contribute to Geiser
+
+Since `scheme-lsp-server` uses [https://gitlab.com/emacs-geiser/geiser/|geiser],
+we can get better LSP support by help improving it.
