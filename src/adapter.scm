@@ -58,7 +58,6 @@
 
 (define (lsp-geiser-symbol-location module identifier)
   (define loc (geiser-symbol-location identifier))
-  (write-log 'debug (format "lsp-geiser-symbol-location loc: ~s" loc))
 
   (define file (and loc
                     (not (null? loc))
@@ -81,6 +80,7 @@
                                                 mod-path
                                                 (get-absolute-pathname mod-path)))))
                           (else #f)))
+
   (cond ((and line (< line 0))
          (write-log 'error
                     "lsp-geiser-symbol-location: line is negative")
