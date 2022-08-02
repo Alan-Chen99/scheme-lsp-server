@@ -1,4 +1,4 @@
-AC_INIT([guile-lsp-server], [0.1.2])
+AC_INIT([guile-lsp-server], [0.1.3])
 AC_CONFIG_SRCDIR([lsp-server.sld])
 AC_CONFIG_AUX_DIR([build-aux])
 AC_CONFIG_MACRO_DIR([m4])
