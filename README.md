@@ -1,12 +1,21 @@
 # scheme-lsp-server
 
-## Introduction
+## Table of contents
+1. [Introduction](#introduction)
+2. [API](#api)
+3. [Supported features](#supported-features)
+4. [Notes to specific implementations](#specific-implementations)
+5. [Known issues](#known-issues)
+6. [Existing clients](#existing-clients)
+7. [Contributing](#contributing)
+
+## <a name="introduction"></a> Introduction
 
 ** EXPERIMENTAL **
 
 A LSP (Language Server Protocol) server for Scheme.
 
-## Goals
+### Goals
 
 This software aims to support several Scheme implementations. To achieve this,
 the code is designed to contain as much logic as possible in R7RS Scheme,
@@ -17,7 +26,7 @@ Currently only CHICKEN 5 and Guile are supported.
 *Note*: this code is still in an early development stage and the API may change.
 Change suggestions are welcome.
 
-## API
+## <a name="api"></a>API
 
 ```
 [parameter] (lsp-server-log-level)
@@ -38,7 +47,7 @@ Start an LSP server listening on stdio.
 
 Start an LSP server listening on `tcp-port-number`.
 
-## Supported Features
+## <a name="supported-features"></a>Supported features
 
 
 <table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
@@ -92,7 +101,7 @@ Start an LSP server listening on `tcp-port-number`.
 </tbody>
 </table>
 
-## Notes to specific implementations
+## <a name="specific-implementations"></a>Notes to specific implementations
 
 ### CHICKEN
 
@@ -111,7 +120,7 @@ Most of the current implementation relies on Geiser. We include the correspondin
 Scheme files in our repository (git submodules was discarded to simplify
 packaging and automatic installation from LSP clients).
 
-## Known issues
+## <a name="known-issues"></a>Known issues
 
 ### [Guile] Missing LSP information when library definition is missing
 
@@ -138,11 +147,13 @@ information starts to be received. LSP provides ways of giving feedback
 to the user when an operation takes a long time, we can add support to it
 in the future.
 
-## Existing clients
+## <a name="existing-clients"></a>Existing clients
 
 - VSCodium: [https://codeberg.org/rgherdt/vscode-scheme-lsp|https://codeberg.org/rgherdt/vscode-scheme-lsp]
 
 - Emacs: [https://codeberg.org/rgherdt/emacs-lsp-scheme|https://codeberg.org/rgherdt/emacs-lsp-scheme]
+
+## <a name="contributing"></a>Contributing
 
 ### Creating an LSP client
 
@@ -161,12 +172,12 @@ can be obtained with the `guile-lsp-server --help` command as usual.
 If you create an LSP client using this server, please let me know so we can
 keep this list up-to-date.
 
-## Ideas on extending support to other Schemes
+### Ideas on extending support to other Schemes
 
 Here are some ideas on how to add support to other Scheme implementation without
 increasing much code complexity:
 
-### decide which build system to use.
+#### decide which build system to use.
 
 Currently we use two build systems:
 `chicken-install` with its egg definitions, and `autotools` for Guile. Ideally
@@ -177,7 +188,7 @@ consider extending the existing `autotools` based scripts.
 Note that this may be irrelevant in some cases. Gambit, for instance, now
 supports loading libraries directly from `git` repositories.
 
-### create needed portable libraries
+#### create needed portable libraries
 
 This library relies on non-standardized features, like TCP support and JSON
 (indirectly through [https://codeberg.org/rgherdt/scheme-json-rpc/|scheme-json-rpc].
@@ -185,7 +196,7 @@ It would be extremely helpful if those bits are solved by separate libraries
 or SRFIs. Guile's version for JSON-RPC already uses SRFI 180, that can solve
 the JSON problem.
 
-### contribute to Geiser
+#### contribute to Geiser
 
 Since `scheme-lsp-server` uses [https://gitlab.com/emacs-geiser/geiser/|geiser],
 we can get better LSP support by help improving it.
