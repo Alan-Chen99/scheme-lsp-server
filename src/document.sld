@@ -24,6 +24,7 @@
                (only (chicken base) case-lambda)
                (srfi 28)
                (srfi 69)
-               (srfi 130))))
+               (srfi 130)
+               (utf8))))
 (include "document.scm"))
 

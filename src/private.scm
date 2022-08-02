@@ -1,6 +1,6 @@
 ;;; Guile's string-split uses char for delim-str. Redefining it
 ;;; leads to strange behavior (i.e. string-prefix? is not found
-;;; anymore. So we export a generic one.
+;;; anymore). So we export a generic one.
 (cond-expand
  (guile
   (define ($string-split str delim-str . args)

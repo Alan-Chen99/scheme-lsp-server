@@ -78,7 +78,7 @@
               (let ((mod-name (parse-library-name-from-file filename)))
                 (import-library-by-name mod-name)))))
          #t)))
-  (write-log 'info (format "initializing LSP server for root ~a"
+  (write-log 'info (format "initializing LSP server with root ~a"
                            root-path))
   #f)
 

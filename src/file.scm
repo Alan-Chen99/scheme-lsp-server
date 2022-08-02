@@ -1,19 +1,22 @@
-(define file-table (make-parameter (make-hash-table)))
+(define file-table (make-hash-table))
+(define file-table-mutex (make-mutex "file-table"))
 
 
 (define (read-file! path)
-  (define result
-    (cond ((hash-table-exists? (file-table) path)
-           (hash-table-ref (file-table) path))
-          (else
-           (let ((doc (call-with-input-file path read-document)))
-             (hash-table-update!/default (file-table)
-                                         path
-                                         (lambda (v)
-                                           doc)
-                                         doc)
-             doc))))
-  result)
+  (mutex-lock! file-table-mutex)
+  (let ((result
+         (cond ((hash-table-exists? file-table path)
+                (hash-table-ref file-table path))
+               (else
+                (let ((doc (call-with-input-file path read-document)))
+                  (hash-table-update!/default file-table
+                                              path
+                                              (lambda (v)
+                                                doc)
+                                              doc)
+                  doc)))))
+    (mutex-unlock! file-table-mutex)
+    result))
 
 
 (define (update-file! path . args)
@@ -21,54 +24,59 @@
                               #f
                               (parse-change-contents (car args))))
 
-  (if change-contents
-      (begin
-        (write-log 'info
-                   (format "~s" (change-contents-text change-contents)))
-        (let ((result (cond ((change-contents-range change-contents)
-                             (if (hash-table-exists? (file-table) path)
-                                 (hash-table-update! (file-table)
-                                                     path
-                                                     (lambda (contents)
-                                                       (let ((new-contents (apply-change change-contents contents)))
-                                                         new-contents)))
-                                 (hash-table-set! (file-table)
-                                                  path
-                                                  (begin
-                                                    (write-log 'debug
-                                                               (format "reading file from disk: ~a" path))
-                                                    (call-with-input-file path
-                                                      (lambda (p)
-                                                        (apply-change change-contents
-                                                                      (read-document p))))))))
-                            ;; if range is not set (#f), the client will send the complete file.
-                            (else
-                             (let ((contents (change-contents-text change-contents)))
-                               ;; TODO is this according to the protocol possible?
-                               (when (hash-table-exists? (file-table) path)
-                                 (write-log 'warning
-                                            (format "Replacing contents for file ~a"
-                                                    path)))
-                               (hash-table-set! (file-table)
-                                                path
-                                                (lambda (v)
-                                                  contents))
-                               contents)))))
-          result))
-      #f))
+  (cond (change-contents
+         (write-log 'info
+                    (format "~s" (change-contents-text change-contents)))
+         (mutex-lock! file-table-mutex)
+         (let ((result (cond ((change-contents-range change-contents)
+                              (if (hash-table-exists? file-table path)
+                                  (hash-table-update! file-table
+                                                      path
+                                                      (lambda (contents)
+                                                        (let ((new-contents (apply-change change-contents contents)))
+                                                          new-contents)))
+                                  (hash-table-set! file-table
+                                                   path
+                                                   (begin
+                                                     (write-log 'debug
+                                                                (format "reading file from disk: ~a" path))
+                                                     (call-with-input-file path
+                                                       (lambda (p)
+                                                         (apply-change change-contents
+                                                                       (read-document p))))))))
+                             ;; if range is not set (#f), the client will send the complete file.
+                             (else
+                              (let ((contents (change-contents-text change-contents)))
+                                ;; TODO is this according to the protocol possible?
+                                (when (hash-table-exists? file-table path)
+                                  (write-log 'warning
+                                             (format "Replacing contents for file ~a"
+                                                     path)))
+                                (hash-table-set! file-table
+                                                 path
+                                                 (lambda (v)
+                                                   contents))
+                                contents)))))
+           (mutex-unlock! file-table-mutex)
+           result))
+        (else #f)))
 
 (define (free-file! path)
-  (define file (hash-table-ref/default (file-table) path #f))
-  (let ((result (if (not file)
-                    (begin (write-log 'warning
-                                      "trying to freeing a non-existing file"
-                                      path)
-                           #f)
-                    (begin (hash-table-delete! (file-table) path)
-                           #t))))
+  (mutex-lock! file-table-mutex)
+  (define file (hash-table-ref/default file-table path #f))
+  (let ((result (cond ((not file)
+                       (write-log 'warning
+                                  "trying to freeing a non-existing file"
+                                  path)
+                       #f)
+                      (else (hash-table-delete! file-table path)
+                            #t))))
+    (mutex-unlock! file-table-mutex)
     result))
 
 (define (get-word-under-cursor params)
+  (write-log 'debug (format "get-word-under-cursor: params: ~a"
+                            params))
   (define file-path (get-uri-path params))
   (define doc (read-file! file-path))
   (define contents (document-contents doc))

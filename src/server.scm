@@ -93,7 +93,13 @@
                 (vector-ref (alist-ref 'contentChanges params) 0))
      "\r\n"
      'infix))
-  (cond ((and file-path (not (hash-table-ref/default (file-table) file-path #f)))
+  (define file-already-read?
+    (begin
+      (mutex-lock! file-table-mutex)
+      (let ((res (hash-table-exists? file-table file-path)))
+        (mutex-unlock! file-table-mutex)
+        res)))
+  (cond ((and file-path file-already-read?)
          ;;(generate-meta-data! file-path)
          (read-file! file-path)
          (update-file! file-path
@@ -158,11 +164,6 @@
   (define file-path (get-uri-path params))
   (define mod-name (and file-path
                         (parse-library-name-from-file file-path)))
-  (write-log 'debug
-             (format "editor-word: ~a, start-char: ~a, end-char: ~a~%"
-                     (editor-word-text editor-word)
-                     (editor-word-start-char editor-word)
-                     (editor-word-end-char editor-word)))
   (if (or (not editor-word)
           (< (string-length (editor-word-text editor-word))
              3))
