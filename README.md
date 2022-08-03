@@ -188,9 +188,9 @@ in the future.
 
 ## <a name="user-content-existing-clients"></a>Existing clients
 
-- VSCodium: [https://codeberg.org/rgherdt/vscode-scheme-lsp|https://codeberg.org/rgherdt/vscode-scheme-lsp]
+- VSCodium: https://codeberg.org/rgherdt/vscode-scheme-lsp
 
-- Emacs: [https://codeberg.org/rgherdt/emacs-lsp-scheme|https://codeberg.org/rgherdt/emacs-lsp-scheme]
+- Emacs: https://codeberg.org/rgherdt/emacs-lsp-scheme
 
 ## <a name="user-content-contributing"></a>Contributing
 
@@ -230,12 +230,11 @@ supports loading libraries directly from `git` repositories.
 #### create needed portable libraries
 
 This library relies on non-standardized features, like TCP support and JSON
-(indirectly through [https://codeberg.org/rgherdt/scheme-json-rpc/|scheme-json-rpc].
+(indirectly through `scheme-json-rpc` (https://codeberg.org/rgherdt/scheme-json-rpc/).
 It would be extremely helpful if those bits are solved by separate libraries
 or SRFIs. Guile's version for JSON-RPC already uses SRFI 180, that can solve
 the JSON problem.
 
 #### contribute to Geiser
 
-Since `scheme-lsp-server` uses [https://gitlab.com/emacs-geiser/geiser/|geiser],
-we can get better LSP support by help improving it.
+Since `scheme-lsp-server` uses Geiser, we can get better LSP support by help improving it.
