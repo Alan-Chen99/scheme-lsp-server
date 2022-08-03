@@ -2,12 +2,13 @@
 
 ## Table of contents
 1. [Introduction](#introduction)
-2. [API](#api)
-3. [Supported features](#supported-features)
-4. [Notes to specific implementations](#specific-implementations)
-5. [Known issues](#known-issues)
-6. [Existing clients](#existing-clients)
-7. [Contributing](#contributing)
+2. [Installing](#installing)
+3. [API](#api)
+4. [Supported features](#supported-features)
+5. [Notes to specific implementations](#specific-implementations)
+6. [Known issues](#known-issues)
+7. [Existing clients](#existing-clients)
+8. [Contributing](#contributing)
 
 ## <a name="user-content-introduction"></a> Introduction
 
@@ -25,6 +26,44 @@ Currently only CHICKEN 5 and Guile are supported.
 
 *Note*: this code is still in an early development stage and the API may change.
 Change suggestions are welcome.
+
+## <a name="user-content-installing"></a> Installing
+
+First a remark. Some LSP clients (currently both of them) will
+install an LSP server automatically. If anything goes wrong (or you want
+to integrate the LSP server with a new client), please follow the
+instructions below.
+
+### CHICKEN
+
+First install some dependencies, including chicken-doc's documentation:
+
+```
+$ chicken-install -s apropos chicken-doc srfi-18
+$ cd `csi -p '(chicken-home)'`
+$ curl http://3e8.org/pub/chicken-doc/chicken-doc-repo.tgz | sudo tar zx
+```
+
+Then install the LSP server with
+
+```
+chicken-install -s lsp-server
+```
+
+### GUILE
+Guile's version of the LSP server is packaged using automake. Make
+sure Guile 3 **AND** its development libraries are installed. On Debian
+you can install it using:
+```
+# apt install guile-3.0 guile-3.0-dev
+```
+
+Now switch to the `./guile` folder and run:
+
+```
+./configure && make && sudo make install
+```
+
 
 ## <a name="user-content-api"></a>API
 
