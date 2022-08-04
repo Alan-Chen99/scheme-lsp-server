@@ -28,4 +28,4 @@
 
 #:declarative? #f)
 
-(include "document.scm")
+(load "document.scm")

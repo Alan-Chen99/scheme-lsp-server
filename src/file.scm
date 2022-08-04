@@ -54,8 +54,7 @@
                                                      path)))
                                 (hash-table-set! file-table
                                                  path
-                                                 (lambda (v)
-                                                   contents))
+                                                 contents)
                                 contents)))))
            (mutex-unlock! file-table-mutex)
            result))

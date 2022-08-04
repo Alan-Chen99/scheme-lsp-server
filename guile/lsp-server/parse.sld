@@ -29,5 +29,5 @@
 
 #:declarative? #f)
 
-(include "../irregex.scm")
-(include "parse.scm")
+(load "../irregex.scm")
+(load "parse.scm")

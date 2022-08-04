@@ -52,4 +52,4 @@
 
 #:declarative? #f)
 
-(include "private.scm")
+(load "private.scm")

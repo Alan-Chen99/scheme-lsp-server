@@ -38,5 +38,5 @@
 
 #:declarative? #f)
 
-(include "lsp-server/file.scm")
-(include "lsp-server/server.scm")
+(load "lsp-server/file.scm")
+(load "lsp-server/server.scm")

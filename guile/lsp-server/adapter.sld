@@ -19,4 +19,4 @@
 #:use-module (srfi srfi-28)
 #:declarative? #f)
 
-(include "adapter.scm")
+(load "adapter.scm")
