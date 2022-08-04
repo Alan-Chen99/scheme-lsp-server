@@ -74,12 +74,19 @@
                                    (if (absolute-pathname? file)
                                        file
                                        (get-absolute-pathname file))))
-                          (module (format "file://~a"
-                                          (let ((mod-path (geiser-module-path module)))
-                                            (if (absolute-pathname? mod-path)
-                                                mod-path
-                                                (get-absolute-pathname mod-path)))))
+                          (module (cond-expand
+                                   (guile (format "file://~a"
+                                                  (let* ((mod-name (geiser-symbol-module identifier))
+                                                         (mod-path (and mod-name
+                                                                        (geiser-module-path mod-name))))
+                                                    (if (absolute-pathname? mod-path)
+                                                        mod-path
+                                                        (get-absolute-pathname mod-path)))))
+                                   (else #f)))
                           (else #f)))
+  (write-log 'debug
+             (format "lsp-geiser-symbol-location loc: ~a, file: ~a, line: ~a, file-path: ~a"
+                     loc file line file-path))
 
   (cond ((and line (< line 0))
          (write-log 'error
