@@ -271,7 +271,7 @@ AC_DEFUN([GUILE_PROGS],
 #
 AC_DEFUN([GUILE_CHECK],
  [AC_REQUIRE([GUILE_PROGS])
-  $GUILE -c "$2" > /dev/null 2>&1
+  $GUILE -x ".sld" -c "$2" > /dev/null 2>&1
   $1=$?
  ])
 

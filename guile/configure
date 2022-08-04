@@ -2740,7 +2740,7 @@ ac_config_links="$ac_config_links lsp-server/private.scm:../src/private.scm lsp-
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking if (json-rpc) is available" >&5
 $as_echo_n "checking if (json-rpc) is available... " >&6; }
 
-  $GUILE -c "(use-modules (json-rpc)) (exit ((lambda () 0)))" > /dev/null 2>&1
+  $GUILE -x ".sld" -c "(use-modules (json-rpc)) (exit ((lambda () 0)))" > /dev/null 2>&1
   ac_guile_module_required=$?
 
 	  if test "$ac_guile_module_required" = "0" ; then ac_guile_module_required=yes ; else ac_guile_module_required=no ; fi

@@ -201,8 +201,9 @@ am__DIST_COMMON = $(srcdir)/Makefile.in $(srcdir)/guile.am \
 	$(top_srcdir)/lsp-server/guile/util.sld \
 	$(top_srcdir)/lsp-server/parse.sld \
 	$(top_srcdir)/lsp-server/private.sld \
-	$(top_srcdir)/lsp-server/trie.sld build-aux/install-sh \
-	build-aux/missing
+	$(top_srcdir)/lsp-server/trie.sld build-aux/compile \
+	build-aux/config.guess build-aux/config.sub \
+	build-aux/install-sh build-aux/missing
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
 distdir = $(PACKAGE)-$(VERSION)
 top_distdir = $(distdir)
@@ -855,7 +856,7 @@ distclean-local:
 	rm -Rf src/ geiser/
 
 .sld.go:
-	$(PREFIX) $(GUILE_TOOLS) compile $(GUILE_WARNINGS) -O0 --r7rs -o "$@" "$<"
+	$(PREFIX) $(GUILE_TOOLS) compile $(GUILE_WARNINGS) -x ".sld" -O0 --r7rs -o "$@" "$<"
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
