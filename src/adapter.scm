@@ -75,13 +75,14 @@
                                        file
                                        (get-absolute-pathname file))))
                           (module (cond-expand
-                                   (guile (format "file://~a"
-                                                  (let* ((mod-name (geiser-symbol-module identifier))
-                                                         (mod-path (and mod-name
-                                                                        (geiser-module-path mod-name))))
-                                                    (if (absolute-pathname? mod-path)
-                                                        mod-path
-                                                        (get-absolute-pathname mod-path)))))
+                                   (guile (let* ((mod-name (geiser-symbol-module identifier))
+                                                 (mod-path (and mod-name
+                                                                (geiser-module-path mod-name))))
+                                            (and mod-path
+                                                 (format "file://~a"
+                                                         (if (absolute-pathname? mod-path)
+                                                             mod-path
+                                                             (get-absolute-pathname mod-path))))))
                                    (else #f)))
                           (else #f)))
   (write-log 'debug
