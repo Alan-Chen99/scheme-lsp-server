@@ -1,6 +1,20 @@
 (define file-table (make-hash-table))
 (define file-table-mutex (make-mutex "file-table"))
 
+(define-record-type <change-contents>
+  (make-change-contents range text)
+  change-contents?
+  (range change-contents-range)
+  (text change-contents-text))
+
+(define-record-type <range>
+  (make-range start-line start-char end-line end-char length)
+  range?
+  (start-line range-start-line)
+  (start-char range-start-char)
+  (end-line range-end-line)
+  (end-char range-end-char)
+  (length range-length))
 
 (define (read-file! path)
   (mutex-lock! file-table-mutex)
@@ -151,21 +165,6 @@
                                       line-number
                                       word-start
                                       word-end))))))))
-
-(define-record-type <change-contents>
-  (make-change-contents range text)
-  change-contents?
-  (range change-contents-range)
-  (text change-contents-text))
-
-(define-record-type <range>
-  (make-range start-line start-char end-line end-char length)
-  range?
-  (start-line range-start-line)
-  (start-char range-start-char)
-  (end-line range-end-line)
-  (end-char range-end-char)
-  (length range-length))
 
 (define (parse-change-contents contents)
   (define change-contents (vector-ref contents 0))
