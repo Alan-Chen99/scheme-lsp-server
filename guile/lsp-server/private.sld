@@ -51,5 +51,3 @@
 
 
 #:declarative? #f)
-
-(load "private.scm")

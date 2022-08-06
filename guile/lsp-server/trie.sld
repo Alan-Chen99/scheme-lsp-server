@@ -14,4 +14,3 @@
 #:use-module (srfi srfi-69)
 #:use-module (lsp-server guile util))
 
-(load "trie.scm")

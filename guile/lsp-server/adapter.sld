@@ -18,5 +18,3 @@
 #:use-module (lsp-server private)
 #:use-module (srfi srfi-28)
 #:declarative? #f)
-
-(load "adapter.scm")

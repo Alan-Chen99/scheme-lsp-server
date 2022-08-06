@@ -99,14 +99,15 @@ DIST_COMMON = $(srcdir)/Makefile.am $(top_srcdir)/configure \
 am__CONFIG_DISTCLEAN_FILES = config.status config.cache config.log \
  configure.lineno config.status.lineno
 mkinstalldirs = $(install_sh) -d
-CONFIG_CLEAN_FILES = lsp-server/private.scm lsp-server/document.scm \
-	lsp-server/file.scm lsp-server/main.scm lsp-server/server.scm \
-	lsp-server/trie.scm lsp-server/adapter.scm \
-	lsp-server/parse.scm geiser/modules.sld geiser/utils.sld \
-	geiser/doc.sld geiser/completion.sld geiser/evaluation.sld \
-	geiser/xref.sld irregex.scm README.md
-CONFIG_CLEAN_VPATH_FILES = lsp-server/guile.sld \
-	lsp-server/guile/util.sld lsp-server/adapter.sld \
+CONFIG_CLEAN_FILES = lsp-server/private-impl.scm \
+	lsp-server/document-impl.scm lsp-server/file.scm \
+	lsp-server/main.scm lsp-server/server.scm \
+	lsp-server/trie-impl.scm lsp-server/adapter-impl.scm \
+	lsp-server/parse-impl.scm geiser/modules.scm geiser/utils.scm \
+	geiser/doc.scm geiser/completion.scm geiser/evaluation.scm \
+	geiser/xref.scm README.md
+CONFIG_CLEAN_VPATH_FILES = lsp-server/guile.scm \
+	lsp-server/guile/util.scm lsp-server/adapter.sld \
 	lsp-server/document.sld lsp-server/private.sld \
 	lsp-server/trie.sld lsp-server/parse.sld lsp-server.sld
 am__vpath_adj_setup = srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`;
@@ -189,16 +190,16 @@ am__DIST_COMMON = $(srcdir)/Makefile.in $(srcdir)/guile.am \
 	$(top_srcdir)/../geiser/guile/src/geiser/xref.scm \
 	$(top_srcdir)/../src/adapter.scm \
 	$(top_srcdir)/../src/document.scm \
-	$(top_srcdir)/../src/file.scm $(top_srcdir)/../src/irregex.scm \
-	$(top_srcdir)/../src/main.scm $(top_srcdir)/../src/parse.scm \
+	$(top_srcdir)/../src/file.scm $(top_srcdir)/../src/main.scm \
+	$(top_srcdir)/../src/parse.scm \
 	$(top_srcdir)/../src/private.scm \
 	$(top_srcdir)/../src/server.scm $(top_srcdir)/../src/trie.scm \
 	$(top_srcdir)/build-aux/install-sh \
 	$(top_srcdir)/build-aux/missing \
 	$(top_srcdir)/lsp-server/adapter.sld \
 	$(top_srcdir)/lsp-server/document.sld \
-	$(top_srcdir)/lsp-server/guile.sld \
-	$(top_srcdir)/lsp-server/guile/util.sld \
+	$(top_srcdir)/lsp-server/guile.scm \
+	$(top_srcdir)/lsp-server/guile/util.scm \
 	$(top_srcdir)/lsp-server/parse.sld \
 	$(top_srcdir)/lsp-server/private.sld \
 	$(top_srcdir)/lsp-server/trie.sld build-aux/compile \
@@ -307,9 +308,10 @@ top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 moddir = $(datadir)/guile/site/$(GUILE_EFFECTIVE_VERSION)
 godir = $(libdir)/guile/$(GUILE_EFFECTIVE_VERSION)/site-ccache
-GOBJECTS = $(SOURCES:%.sld=%.go)
+SOURCES = $(LIBRARY_DEFINITIONS:%.sld=%.scm)
+GOBJECTS = $(DEPENDENCIES:%.scm=%.go) $(SOURCES:%.scm=%.go) $(GUILE_SPECIFIC_SOURCES:%.scm=%.go)
 EXECUTABLE = lsp-server/guile-lsp-server
-nobase_dist_mod_DATA = $(SOURCES) $(NOCOMP_SOURCES)
+nobase_dist_mod_DATA = $(SOURCES) $(GUILE_SPECIFIC_SOURCES) $(DEPENDENCIES)
 nobase_go_DATA = $(GOBJECTS)
 bin_SCRIPTS = $(EXECUTABLE)
 
@@ -319,41 +321,36 @@ bin_SCRIPTS = $(EXECUTABLE)
 # <http://lists.gnu.org/archive/html/guile-devel/2010-07/msg00125.html>
 # for details.
 guile_install_go_files = install-nobase_goDATA
-CLEANFILES = $(GOBJECTS) $(EXECUTABLE)
+CLEANFILES = $(GOBJECTS) $(EXECUTABLE) $(SOURCES)
 GUILE_WARNINGS = -Wunbound-variable -Warity-mismatch -Wformat
 SUFFIXES = .scm .sld .go
 PREFIX = $(AM_V_GEN)GUILE_LOAD_COMPILED_PATH="@abs_top_builddir@/:$(GUILE_LOAD_COMPILED_PATH)"; \
       GUILE_LOAD_PATH="@abs_top_builddir@/:@abs_top_srcdir@/:$(GUILE_LOAD_PATH)"
 
-NOCOMP_SOURCES = \
-  lsp-server/private.scm  \
-  lsp-server/document.scm \
-  lsp-server/file.scm     \
-  lsp-server/parse.scm    \
-  lsp-server/trie.scm    \
-  lsp-server/server.scm   \
-  lsp-server/adapter.scm  \
-  irregex.scm
+DEPENDENCIES = \
+  geiser/utils.scm          \
+  geiser/modules.scm        \
+  geiser/completion.scm     \
+  geiser/doc.scm            \
+  geiser/evaluation.scm     \
+  geiser/xref.scm
 
-SOURCES = \
+LIBRARY_DEFINITIONS = \
   lsp-server/private.sld    \
   lsp-server/document.sld   \
   lsp-server/trie.sld       \
   lsp-server/parse.sld      \
-  lsp-server/adapter.sld \
-  geiser/utils.sld          \
-  geiser/modules.sld        \
-  geiser/completion.sld     \
-  geiser/doc.sld            \
-  geiser/evaluation.sld     \
-  geiser/xref.sld           \
-  lsp-server/guile/util.sld \
-  lsp-server/guile.sld      \
+  lsp-server/adapter.sld    \
   lsp-server.sld
+
+GUILE_SPECIFIC_SOURCES = \
+  lsp-server/guile/util.scm \
+  lsp-server/guile.scm
 
 EXTRA_DIST = \
   README.md             \
-  bootstrap
+  bootstrap             \
+  configure
 
 all: all-am
 
@@ -852,10 +849,42 @@ uninstall-hook:
 	rm -f $(DESTDIR)$(godir)/$(GOBJECTS)
 	rm -f $(DESTDIR)$(bindir)/$(EXECUTABLE)
 
-distclean-local:
-	rm -Rf src/ geiser/
+lsp-server.scm: lsp-server.sld lsp-server/file.scm lsp-server/server.scm
+	cat $< > $@
+	echo "" >> $@
+	cat lsp-server/file.scm >> $@
+	echo "" >> $@
+	cat lsp-server/server.scm >> $@
 
-.sld.go:
+lsp-server/private.scm: lsp-server/private.sld lsp-server/private-impl.scm
+	cat $< > $@
+	echo "" >> $@
+	cat lsp-server/private-impl.scm >> $@
+
+lsp-server/document.scm: lsp-server/document.sld lsp-server/document-impl.scm
+	cat $< > $@
+	echo "" >> $@
+	cat lsp-server/document-impl.scm >> $@
+
+lsp-server/trie.scm: lsp-server/trie.sld lsp-server/trie-impl.scm
+	cat $< > $@
+	echo "" >> $@
+	cat lsp-server/trie-impl.scm >> $@
+
+lsp-server/parse.scm: lsp-server/parse.sld lsp-server/parse-impl.scm
+	cat $< > $@
+	echo "" >> $@
+	cat lsp-server/parse-impl.scm >> $@
+
+lsp-server/adapter.scm: lsp-server/adapter.sld lsp-server/adapter-impl.scm
+	cat $< > $@
+	echo "" >> $@
+	cat lsp-server/adapter-impl.scm >> $@
+
+distclean-local:
+	rm -Rf src/ geiser/ $(SOURCES)
+
+.scm.go:
 	$(PREFIX) $(GUILE_TOOLS) compile $(GUILE_WARNINGS) -x ".sld" -O0 --r7rs -o "$@" "$<"
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.

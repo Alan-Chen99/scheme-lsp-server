@@ -27,5 +27,3 @@
 #:use-module (srfi srfi-69)
 
 #:declarative? #f)
-
-(load "document.scm")

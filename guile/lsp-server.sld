@@ -37,6 +37,3 @@
 #:use-module (lsp-server adapter)
 
 #:declarative? #f)
-
-(load "lsp-server/file.scm")
-(load "lsp-server/server.scm")

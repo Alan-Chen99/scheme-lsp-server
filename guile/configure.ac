@@ -1,4 +1,4 @@
-AC_INIT([guile-lsp-server], [0.1.10])
+AC_INIT([guile-lsp-server], [0.1.11])
 AC_CONFIG_SRCDIR([lsp-server.sld])
 AC_CONFIG_AUX_DIR([build-aux])
 AC_CONFIG_MACRO_DIR([m4])
@@ -12,17 +12,17 @@ fi
 
 AC_CONFIG_FILES([Makefile])
 
-AC_CONFIG_LINKS([lsp-server/private.scm:../src/private.scm
-                 lsp-server/document.scm:../src/document.scm
+AC_CONFIG_LINKS([lsp-server/private-impl.scm:../src/private.scm
+                 lsp-server/document-impl.scm:../src/document.scm
                  lsp-server/file.scm:../src/file.scm
                  lsp-server/main.scm:../src/main.scm
                  lsp-server/server.scm:../src/server.scm
-                 lsp-server/trie.scm:../src/trie.scm
-                 lsp-server/adapter.scm:../src/adapter.scm
-                 lsp-server/parse.scm:../src/parse.scm
+                 lsp-server/trie-impl.scm:../src/trie.scm
+                 lsp-server/adapter-impl.scm:../src/adapter.scm
+                 lsp-server/parse-impl.scm:../src/parse.scm
 
-                 lsp-server/guile.sld:lsp-server/guile.sld
-                 lsp-server/guile/util.sld:lsp-server/guile/util.sld
+                 lsp-server/guile.scm:lsp-server/guile.scm
+                 lsp-server/guile/util.scm:lsp-server/guile/util.scm
                  lsp-server/adapter.sld:lsp-server/adapter.sld
                  lsp-server/document.sld:lsp-server/document.sld
                  lsp-server/private.sld:lsp-server/private.sld
@@ -30,14 +30,12 @@ AC_CONFIG_LINKS([lsp-server/private.scm:../src/private.scm
                  lsp-server/parse.sld:lsp-server/parse.sld
                  lsp-server.sld:lsp-server.sld
 
-                 geiser/modules.sld:../geiser/guile/src/geiser/modules.scm
-                 geiser/utils.sld:../geiser/guile/src/geiser/utils.scm
-                 geiser/doc.sld:../geiser/guile/src/geiser/doc.scm
-                 geiser/completion.sld:../geiser/guile/src/geiser/completion.scm
-                 geiser/evaluation.sld:../geiser/guile/src/geiser/evaluation.scm
-                 geiser/xref.sld:../geiser/guile/src/geiser/xref.scm
-
-                 irregex.scm:../src/irregex.scm
+                 geiser/modules.scm:../geiser/guile/src/geiser/modules.scm
+                 geiser/utils.scm:../geiser/guile/src/geiser/utils.scm
+                 geiser/doc.scm:../geiser/guile/src/geiser/doc.scm
+                 geiser/completion.scm:../geiser/guile/src/geiser/completion.scm
+                 geiser/evaluation.scm:../geiser/guile/src/geiser/evaluation.scm
+                 geiser/xref.scm:../geiser/guile/src/geiser/xref.scm
 
                  README.md:../README.md])
 

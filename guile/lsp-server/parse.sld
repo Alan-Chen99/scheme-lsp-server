@@ -8,9 +8,10 @@
           list-completions
           parse-file
           parse-library-name-from-file
-          source-meta-data-imports
-          irregex
-          irregex-search)
+          source-meta-data-imports)
+
+#:re-export (irregex
+             irregex-search)
 
 #:use-module (srfi srfi-1)
 #:use-module (srfi srfi-28)
@@ -28,6 +29,3 @@
 #:use-module (ice-9 ftw)
 
 #:declarative? #f)
-
-(load "../irregex.scm")
-(load "parse.scm")
