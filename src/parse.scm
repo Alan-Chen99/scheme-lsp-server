@@ -466,8 +466,12 @@
   (when abs-source-path
     (guard (condition
             (#t (write-log 'error
-                           (format "parse-and-update-table!: error parsing file ~a"
-                                   abs-source-path))
+                           (format "parse-and-update-table!: error parsing file ~a: ~a"
+                                   abs-source-path
+                                   (cond ((error-object? condition)
+                                          (error-object-message condition))
+                                         (else
+                                          condition))))
                 #f))
            (let ((meta-data (parse-file abs-source-path)))
              (update-identifier-to-source-meta-data-table! abs-source-path meta-data)
