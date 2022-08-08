@@ -19,6 +19,7 @@
 #:use-module (srfi srfi-13)
 #:use-module (srfi srfi-18)
 #:use-module (srfi srfi-28) ;; simple-format
+#:use-module (srfi srfi-43)
 #:use-module (srfi srfi-69)
 
 #:use-module (json-rpc)

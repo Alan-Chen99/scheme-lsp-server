@@ -106,7 +106,22 @@
                        (alist-ref 'contentChanges params))
          (write-log 'debug
                     (format "file contents read: ~a"
-                            file-path)))
+                            file-path))
+         ;; TODO first make this portable (i.e. not relying on /tmp), then
+         ;; uncomment it.
+         ;; We leave it in, since it's helpful when debugging problems
+         ;; regarding the internal document representation (out-of-index etc).
+         (when (satisfies-log-level? 'debug)
+           (let ((tmp-file (string-append "/tmp/" (remove-slashes file-path))))
+             (write-log 'debug
+                        (format "dumping content read into ~a" tmp-file))
+             (mutex-lock! file-table-mutex)
+             (with-output-to-file tmp-file
+               (lambda ()
+                 (let ((doc (hash-table-ref file-table file-path)))
+                   (display (document-contents doc)))))
+             (mutex-unlock! file-table-mutex))))
+
         (file-path
          (update-file! file-path
                        (alist-ref 'contentChanges params))
@@ -130,19 +145,6 @@
   (if file-path
       (begin ($open-file! file-path) ;;(generate-meta-data! file-path)
              (read-file! file-path)
-             ;; TODO first make this portable (i.e. not relying on /tmp), then
-             ;; uncomment it.
-             ;; We leave it in, since it's helpful when debugging problems
-             ;; regarding the internal document representation (out-of-index etc).
-             ;; (when (satisfies-log-level? 'debug)
-             ;;   (let ((tmp-file (string-append "/tmp/" (remove-slashes file-path))))
-             ;;     (write-log 'debug
-             ;;                (format "dumping content read into ~a" tmp-file))
-             ;;     (mutex-lock! file-table-mutex)
-             ;;     (with-output-to-file tmp-file
-             ;;       (lambda ()
-             ;;         (display (hash-table-ref file-table file-path))))
-             ;;     (mutex-unlock! file-table-mutex)))
              (write-log 'debug
                         (format "file contents read: ~a"
                                 file-path)))
@@ -246,13 +248,15 @@
               (begin
                 (write-log 'warning
                            (format "no signature found for: ~a" cur-word))
-                'null)
+                "")
               signature)))
-      #f))
+      ""))
 
 (define-handler (text-document/signature-help params)
   (let ((signature (fetch-signature-under-cursor params)))
-    `((signatures . ,(vector `((label . ,signature)))))))
+    (if signature
+        `((signatures . ,(vector `((label . ,signature)))))
+        `((signatures . ,(vector))))))
 
 (define-handler (text-document/hover params)
   (write-log 'debug
@@ -286,6 +290,7 @@
           ("initialized" . ,initialized-handler)
           ("textDocument/definition" . ,text-document/definition)
           ("textDocument/didChange" . ,text-document/did-change)
+          ("workspace/didChangeConfiguration" . ,ignore-request)
           ("textDocument/didClose" . ,text-document/did-close)
           ("textDocument/didOpen" . ,text-document/did-open)
           ("textDocument/didSave" . ,text-document/did-save)
