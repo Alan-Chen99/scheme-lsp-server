@@ -188,12 +188,12 @@ in the future.
 
 ## <a name="user-content-existing-clients"></a>Existing clients
 
-- VSCodium: https://codeberg.org/rgherdt/vscode-scheme-lsp
+### VSCodium: https://codeberg.org/rgherdt/vscode-scheme-lsp
 
-- Emacs lsp-mode: https://codeberg.org/rgherdt/emacs-lsp-scheme
+### Emacs lsp-mode: https://codeberg.org/rgherdt/emacs-lsp-scheme
 
-- Emacs Eglot: https://github.com/joaotavora/eglot
-  Add the following to your `.emacs` configuration:
+### Emacs Eglot: https://github.com/joaotavora/eglot
+Add the following to your `.emacs` configuration:
 
 ```
 (require 'eglot)
