@@ -190,7 +190,19 @@ in the future.
 
 - VSCodium: https://codeberg.org/rgherdt/vscode-scheme-lsp
 
-- Emacs: https://codeberg.org/rgherdt/emacs-lsp-scheme
+- Emacs lsp-mode: https://codeberg.org/rgherdt/emacs-lsp-scheme
+
+- Emacs Eglot: https://github.com/joaotavora/eglot
+  Add the following to your `.emacs` configuration:
+
+```
+(require 'eglot)
+(add-to-list 'eglot-server-programs
+             `(scheme-mode . ("guile-lsp-server")))
+(add-hook 'scheme-mode-hook 'eglot-ensure)
+```
+
+Replace `"guile-lsp-server"` by your chosen scheme implementation.
 
 ## <a name="user-content-contributing"></a>Contributing
 
