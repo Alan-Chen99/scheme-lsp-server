@@ -17,6 +17,8 @@
 #:use-module (srfi srfi-28)
 #:use-module (srfi srfi-69)
 #:use-module ((scheme base) #:select (define-record-type
+                                      error-object?
+                                      error-object-message
                                       features
                                       guard
                                       read-line))

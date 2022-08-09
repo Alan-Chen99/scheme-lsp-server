@@ -34,42 +34,30 @@
 
 
 (define (update-file! path . args)
-  (define change-contents (if (null? args)
+  (define raw-change-contents (if (null? args)
                               #f
-                              (parse-change-contents (car args))))
+                              (car args)))
 
-  (cond (change-contents
-         (write-log 'info
-                    (format "~s" (change-contents-text change-contents)))
+  (cond (raw-change-contents
          (mutex-lock! file-table-mutex)
-         (let ((result (cond ((change-contents-range change-contents)
-                              (if (hash-table-exists? file-table path)
-                                  (hash-table-update! file-table
-                                                      path
-                                                      (lambda (contents)
-                                                        (let ((new-contents (apply-change change-contents contents)))
-                                                          new-contents)))
-                                  (hash-table-set! file-table
-                                                   path
-                                                   (begin
-                                                     (write-log 'debug
-                                                                (format "reading file from disk: ~a" path))
-                                                     (call-with-input-file path
-                                                       (lambda (p)
-                                                         (apply-change change-contents
-                                                                       (read-document p))))))))
-                             ;; if range is not set (#f), the client will send the complete file.
-                             (else
-                              (let ((contents (change-contents-text change-contents)))
-                                ;; TODO is this according to the protocol possible?
-                                (when (hash-table-exists? file-table path)
-                                  (write-log 'warning
-                                             (format "Replacing contents for file ~a"
-                                                     path)))
-                                (hash-table-set! file-table
-                                                 path
-                                                 contents)
-                                contents)))))
+         (let ((result
+                (if (hash-table-exists? file-table path)
+                    (hash-table-update! file-table
+                                        path
+                                        (lambda (old-doc)
+                                          (apply-all-changes
+                                           raw-change-contents
+                                           old-doc)))
+                    (hash-table-set! file-table
+                                     path
+                                     (begin
+                                       (write-log 'debug
+                                                  (format "reading file from disk: ~a" path))
+                                       (call-with-input-file path
+                                         (lambda (p)
+                                           (apply-all-changes
+                                            raw-change-contents
+                                            (read-document p)))))))))
            (mutex-unlock! file-table-mutex)
            result))
         (else #f)))
@@ -166,8 +154,7 @@
                                       word-start
                                       word-end))))))))
 
-(define (parse-change-contents contents)
-  (define change-contents (vector-ref contents 0))
+(define (parse-change-contents change-contents)
   (define range-contents (alist-ref 'range change-contents))
   (define range-start (and range-contents
                            (alist-ref 'start range-contents)))
@@ -190,37 +177,45 @@
 (define (apply-change change doc)
   (define text (change-contents-text change))
   (define range (change-contents-range change))
-  (define normalized-range (normalize-range range))
-
-  (define start-pos
-    (line/char->pos doc
+  (cond ((not range)
+         ;; if range is not set (#f), the client will send the complete file.
+         text)
+        (else
+         (let* ((normalized-range (normalize-range range))
+                (start-pos
+                  (line/char->pos doc
+                                  (range-start-line normalized-range)
+                                  (range-start-char normalized-range)))
+                (end-pos
+                 (line/char->pos doc
+                                 (range-end-line normalized-range)
+                                 (range-end-char normalized-range)))
+                (old-len (- end-pos start-pos))
+                (new-len (string-length text))
+                (contracted-doc
+                 (document-contract doc
+                                    (min start-pos end-pos)
+                                    (max start-pos end-pos))))
+           (write-log
+            'debug
+            (format "apply-change text: ~a, start-line: ~a, start-char: ~a, end-line: ~a, end-char: ~a, start-pos: ~a end-pos: ~a~%"
+                    text
                     (range-start-line normalized-range)
-                    (range-start-char normalized-range)))
-
-  (define end-pos
-    (line/char->pos doc
+                    (range-start-char normalized-range)
                     (range-end-line normalized-range)
-                    (range-end-char normalized-range)))
-  (define old-len (- end-pos start-pos))
-  (define new-len (string-length text))
-  (write-log
-   'debug
-   (format "apply-change text: ~a, start-line: ~a, start-char: ~a, end-line: ~a, end-char: ~a, start-pos: ~a end-pos: ~a~%"
-           text
-           (range-start-line normalized-range)
-           (range-start-char normalized-range)
-           (range-end-line normalized-range)
-           (range-end-char normalized-range)
-           start-pos
-           end-pos))
+                    (range-end-char normalized-range)
+                    start-pos
+                    end-pos))
+           (document-insert contracted-doc
+                            text
+                            (min start-pos end-pos))))))
 
-  (let ((contracted-doc
-         (document-contract doc
-                            (min start-pos end-pos)
-                            (max start-pos end-pos))))
-    (document-insert contracted-doc
-                     text
-                     (min start-pos end-pos))))
+(define (apply-all-changes raw-changes doc)
+  (vector-fold (lambda (i doc change)
+                 (apply-change (parse-change-contents change)
+                               doc))
+               doc
+               raw-changes))
 
 (define (invert-range range)
   (make-range (range-end-line range)

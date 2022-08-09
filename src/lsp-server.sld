@@ -26,6 +26,7 @@
         (srfi 69)
         (srfi 130) ;; string-upcase
         (only (srfi 13) string-tokenize)
+        (only (vector-lib) vector-fold)
         utf8
 
         (json-rpc)
