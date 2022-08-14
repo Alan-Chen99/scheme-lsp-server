@@ -1,8 +1,14 @@
-(import (srfi 1)
-        (srfi 18)
-        (srfi 28)
-        (srfi 69)
-        (srfi 64))
+(cond-expand
+ (guile (import (srfi srfi-1)
+                (srfi srfi-18)
+                (srfi srfi-28)
+                (srfi srfi-69)
+                (srfi srfi-64)))
+ (else (import (srfi 1)
+               (srfi 18)
+               (srfi 28)
+               (srfi 69)
+               (srfi 64))))
 
 (import (json-rpc)
         (json-rpc lolevel))
@@ -28,12 +34,45 @@
                         map)
                 (lsp-server guile))))
 
-(include "../lsp-server/document.scm")
-(include "../lsp-server/file.scm")
-(include "../lsp-server/server.scm")
+;; (include "../lsp-server/file.scm")
+;; (include "../lsp-server/server.scm")
 
-(include "parse-tests.scm")
-(include "trie-tests.scm")
+;; (include "parse-tests.scm")
+;; (include "trie-tests.scm")
+
+(cond-expand
+ (chicken (import-for-syntax (only (scheme base) string->symbol)
+                             (only (srfi 13) string-join)
+                             (only (chicken string) conc ->string))
+          (define-syntax @@
+            (er-macro-transformer
+             (lambda (form rename compare?)
+               (let* ((lib-name (cadr form))
+                      (identifier (caddr form))
+                      (%eval (rename 'eval))
+                      (%string->symbol (rename 'string->symbol))
+                      (%string-append (rename 'string-append))
+                      (%string-join (rename 'string-join))
+                      (lib-name-str (if (pair? lib-name)
+                                        (string-join (map ->string lib-name) ".")
+                                        (->string lib-name)))
+                      (internal-name-str (conc lib-name-str
+                                               "#"
+                                               identifier))
+                      (internal-name (string->symbol internal-name-str)))
+                 internal-name)))))
+ (else))
+
+(define document-append (@@ (lsp-server document) document-append))
+(define document-copy (@@ (lsp-server document) document-copy))
+(define document-newline-positions (@@ (lsp-server document) document-newline-positions))
+(define line/char->pos (@@ (lsp-server document) line/char->pos))
+
+(define parse-definition-line (@@ (lsp-server parse) parse-definition-line))
+
+(define apply-change (@@ (lsp-server) apply-change))
+(define make-change-contents (@@ (lsp-server) make-change-contents))
+(define make-range (@@ (lsp-server) make-range))
 
 (test-begin "lsp-server tests")
 
