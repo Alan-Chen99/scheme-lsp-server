@@ -54,6 +54,7 @@
   (cond-expand
    (chicken (or (r7rs-library-definition-form? expr)
                 (chicken-library-definition-form? expr)))
+   (gambit (r7rs-library-definition-form? expr))
    (guile (or (r6rs-library-definition-form? expr)
               (r7rs-library-definition-form? expr)
               (guile-library-definition-form? expr)))))
@@ -458,9 +459,10 @@
                    (procedure-info-module pinfo)))))
 
 (define (parse-and-update-table! source-path)
+  (define abs-source-path (get-absolute-pathname source-path))
   (write-log 'debug
              (format "parse-and-update-table!: ~s~%" source-path))
-  (define abs-source-path (get-absolute-pathname source-path))
+
   (write-log 'debug
              (format "parse-and-update-table!: absolute path ~s~%" abs-source-path))
   (when abs-source-path
@@ -501,6 +503,8 @@
                eol)))
 
 (cond-expand
+ (gambit (define (generate-meta-data! . files)
+           #f))
  (guile (define (generate-meta-data! . files)
           (write-log 'debug
                      (format "generate-meta-data! for files ~a" files))
@@ -582,13 +586,14 @@
 ;;;             (end . ((line  . <line number>)
 ;;;                     (character . <character number))))
 (define (fetch-definition-locations identifier)
-  (write-log 'debug
-             (format "fetch-definition-locations: ~s" identifier))
   (define locations
     (hash-table->alist
      (hash-table-ref/default (identifier-to-source-meta-data-table)
                              identifier
                              (make-hash-table))))
+  (write-log 'debug
+             (format "fetch-definition-locations: ~s" identifier))
+
   (cond ((not (null? locations))
          (write-log 'debug
                     (format "locations for identifier ~a found: ~a"

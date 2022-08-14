@@ -9,19 +9,22 @@
                 (srfi srfi-18)
                 (srfi srfi-28)
                 (lsp-server guile)))
- (chicken (import (scheme base)
-                  (scheme char) ;; string-downcase
-                  (scheme process-context)
-                  (srfi 18)
-                  (srfi 28)
-                  (lsp-server chicken))))
+ ((or chicken gambit)
+  (import (scheme base)
+          (scheme char) ;; string-downcase
+          (scheme process-context)
+          (srfi 28))))
 
-(cond-expand (guile (import (only (srfi srfi-1) any)))
+(cond-expand (chicken (import (lsp-server chicken)
+                              (srfi 18)))
+             (gambit (import (lsp-server gambit)))
+             (guile (import (only (srfi srfi-1) any)))
              (else (import (only (srfi 1) any))))
 
 (define implementation-name
   (cond-expand
    (chicken "CHICKEN")
+   (gambit "Gambit")
    (guile "Guile")
    (else (error "Your Scheme implementation is not supported (yet)."))))
 

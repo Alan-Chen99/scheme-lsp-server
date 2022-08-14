@@ -106,12 +106,11 @@
     (error (format "invalid start-pos: ~a. Document length is ~a~%"
                    start-pos
                    (document-length doc))))
-  (define prefix (document-copy doc 0 start-pos))
-  (define suffix (document-copy doc start-pos))
-
-  (document-append (document-append prefix
-                                    (string->document text))
-                   suffix))
+  (let ((prefix (document-copy doc 0 start-pos))
+        (suffix (document-copy doc start-pos)))
+    (document-append (document-append prefix
+                                      (string->document text))
+                     suffix)))
 
 (define (document-contract doc start-pos end-pos)
   (unless (<= end-pos (document-length doc))

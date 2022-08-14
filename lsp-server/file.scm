@@ -34,9 +34,10 @@
 
 
 (define (update-file! path . args)
-  (define raw-change-contents (if (null? args)
-                              #f
-                              (car args)))
+  (define raw-change-contents
+    (if (null? args)
+        #f
+        (car args)))
 
   (cond (raw-change-contents
          (mutex-lock! file-table-mutex)
@@ -64,8 +65,8 @@
 
 (define (free-file! path)
   (mutex-lock! file-table-mutex)
-  (define file (hash-table-ref/default file-table path #f))
-  (let ((result (cond ((not file)
+  (let* ((file (hash-table-ref/default file-table path #f))
+         (result (cond ((not file)
                        (write-log 'warning
                                   "trying to freeing a non-existing file"
                                   path)
@@ -76,20 +77,19 @@
     result))
 
 (define (get-word-under-cursor params)
-  (write-log 'debug (format "get-word-under-cursor: params: ~a"
-                            params))
   (define file-path (get-uri-path params))
   (define doc (read-file! file-path))
   (define contents (document-contents doc))
   (define contents-length (document-length doc))
   (define line-number (alist-ref* '(position line) params))
   (define char-number (alist-ref* '(position character) params))
-  (write-log 'debug
-             "get-word-under-cursor: computing text-pos")
   (define text-pos
     (min (line/char->pos doc line-number char-number)
          (max (- (document-length doc) 1)
               0)))
+  (write-log 'debug (format "get-word-under-cursor: params: ~a"
+                            params))
+
   (write-log 'debug
              (format "contents-length: ~a; text-pos: ~a"
                      contents-length

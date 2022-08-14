@@ -34,14 +34,14 @@
     (signatureHelpProvider . ())))
 
 (define-handler (initialize-handler params)
-  (define root-path (get-root-path params))
-  (when ($initialize-lsp-server! root-path)
-    (write-log 'info "LSP server initialized"))
-  (set! lsp-server-state 'on)
-  `((capabilities . ,(append mandatory-capabilities
-                             $server-capabilities))
-    (serverInfo . ((name . ,$server-name)
-                   (version . ,lsp-server-version)))))
+  (let ((root-path (get-root-path params)))
+    (when ($initialize-lsp-server! root-path)
+      (write-log 'info "LSP server initialized"))
+    (set! lsp-server-state 'on)
+    `((capabilities . ,(append mandatory-capabilities
+                               $server-capabilities))
+      (serverInfo . ((name . ,$server-name)
+                     (version . ,lsp-server-version))))))
 
 (define-handler (initialized-handler params)
   (write-log 'info
@@ -63,194 +63,192 @@
   #f)
 
 (define-handler (text-document/definition params)
-  (define editor-word (get-word-under-cursor params))
-  (define file-path (get-uri-path params))
-  (define mod-name (and file-path
-                        (parse-library-name-from-file file-path)))
-
-  (if editor-word
-      (let* ((word-text (editor-word-text editor-word))
-             (def-locs ($get-definition-locations mod-name
-                                                  (string->symbol word-text))))
-        (cond ((not (null? def-locs))
-               (let ((v (list->vector def-locs)))
+  (let* ((editor-word (get-word-under-cursor params))
+         (file-path (get-uri-path params))
+         (mod-name (and file-path
+                        (parse-library-name-from-file file-path))))
+    (if editor-word
+        (let* ((word-text (editor-word-text editor-word))
+               (def-locs ($get-definition-locations mod-name
+                                                    (string->symbol word-text))))
+          (cond ((not (null? def-locs))
+                 (let ((v (list->vector def-locs)))
+                   (write-log 'debug
+                              (format "$get-definition-locations resulted in ~a"
+                                      v))
+                   v))
+                (else
                  (write-log 'debug
-                            (format "$get-definition-locations resulted in ~a"
-                                    v))
-                 v))
-              (else
-               (write-log 'debug
-                          (format "no definitions found for ~a"
-                                  (editor-word-text editor-word)))
-               'null)))
-      'null))
+                            (format "no definitions found for ~a"
+                                    (editor-word-text editor-word)))
+                 'null)))
+        'null)))
 
 (define-handler (text-document/did-change params)
-  (define file-path (get-uri-path params))
-  (define changes
-    ($string-split
-     (alist-ref 'text
-                (vector-ref (alist-ref 'contentChanges params) 0))
-     "\r\n"
-     'infix))
-  (define file-already-read?
-    (begin
-      (mutex-lock! file-table-mutex)
-      (let ((res (hash-table-exists? file-table file-path)))
-        (mutex-unlock! file-table-mutex)
-        res)))
-  (cond ((and file-path file-already-read?)
-         ;;(generate-meta-data! file-path)
-         (read-file! file-path)
-         (update-file! file-path
-                       (alist-ref 'contentChanges params))
-         (write-log 'debug
-                    (format "file contents read: ~a"
-                            file-path))
-         ;; TODO first make this portable (i.e. not relying on /tmp), then
-         ;; uncomment it.
-         ;; We leave it in, since it's helpful when debugging problems
-         ;; regarding the internal document representation (out-of-index etc).
-         (when (satisfies-log-level? 'debug)
-           (let ((tmp-file (string-append "/tmp/" (remove-slashes file-path))))
-             (write-log 'debug
-                        (format "dumping content read into ~a" tmp-file))
-             (mutex-lock! file-table-mutex)
-             (with-output-to-file tmp-file
-               (lambda ()
-                 (let ((doc (hash-table-ref file-table file-path)))
-                   (display (document-contents doc)))))
-             (mutex-unlock! file-table-mutex))))
+  (let* ((file-path (get-uri-path params))
+         (changes
+          (string-tokenize
+           (alist-ref 'text
+                      (vector-ref (alist-ref 'contentChanges params) 0))
+           (char-set #\newline #\return)))
+         (file-already-read?
+          (begin
+            (mutex-lock! file-table-mutex)
+            (let ((res (hash-table-exists? file-table file-path)))
+              (mutex-unlock! file-table-mutex)
+              res))))
+    (cond ((and file-path file-already-read?)
+           ;;(generate-meta-data! file-path)
+           (read-file! file-path)
+           (update-file! file-path
+                         (alist-ref 'contentChanges params))
+           (write-log 'debug
+                      (format "file contents read: ~a"
+                              file-path))
+           ;; TODO first make this portable (i.e. not relying on /tmp), then
+           ;; uncomment it.
+           ;; We leave it in, since it's helpful when debugging problems
+           ;; regarding the internal document representation (out-of-index etc).
+           (when (satisfies-log-level? 'debug)
+             (let ((tmp-file (string-append "/tmp/" (remove-slashes file-path))))
+               (write-log 'debug
+                          (format "dumping content read into ~a" tmp-file))
+               (mutex-lock! file-table-mutex)
+               (with-output-to-file tmp-file
+                 (lambda ()
+                   (let ((doc (hash-table-ref file-table file-path)))
+                     (display (document-contents doc)))))
+               (mutex-unlock! file-table-mutex))))
 
-        (file-path
-         (update-file! file-path
-                       (alist-ref 'contentChanges params))
-         (write-log 'debug
-                    (format "file contents updated: ~a"
-                            file-path)))
-        (else
-         (write-log 'debug
-                    (format "file-path not found: ~a"
-                            file-path))))
+          (file-path
+           (update-file! file-path
+                         (alist-ref 'contentChanges params))
+           (write-log 'debug
+                      (format "file contents updated: ~a"
+                              file-path)))
+          (else
+           (write-log 'debug
+                      (format "file-path not found: ~a"
+                              file-path)))))
   #f)
 
 (define-handler (text-document/did-close params)
-  (define file-path (get-uri-path params))
-  (when (free-file! file-path)
-    (write-log 'info "file closed" file-path))
-  #f)
+  (let ((file-path (get-uri-path params)))
+    (when (free-file! file-path)
+      (write-log 'info "file closed" file-path))
+    #f))
 
 (define-handler (text-document/did-open params)
-  (define file-path (get-uri-path params))
-  (if file-path
-      (begin ($open-file! file-path) ;;(generate-meta-data! file-path)
-             (read-file! file-path)
-             (write-log 'debug
-                        (format "file contents read: ~a"
-                                file-path)))
-      (write-log 'debug
-                 (format "file-path not found: ~a"
-                         file-path)))
-  #f)
+  (let ((file-path (get-uri-path params)))
+    (if file-path
+        (begin ($open-file! file-path) ;;(generate-meta-data! file-path)
+               (read-file! file-path)
+               (write-log 'debug
+                          (format "file contents read: ~a"
+                                  file-path)))
+        (write-log 'debug
+                   (format "file-path not found: ~a"
+                           file-path)))
+    #f))
 
 (define-handler (text-document/did-save params)
-  (define file-path (get-uri-path params))
-  (write-log 'info "file saved.")
-  ($save-file! file-path)
-  #f)
+  (let ((file-path (get-uri-path params)))
+    (write-log 'info "file saved.")
+    ($save-file! file-path)
+    #f))
 
 (define-handler (text-document/completion params)
-  (define cur-char-number
-    (alist-ref* '(position character) params))
-  (define editor-word (get-word-under-cursor params))
-  (define file-path (get-uri-path params))
-  (define mod-name (and file-path
-                        (parse-library-name-from-file file-path)))
-  (if (or (not editor-word)
-          (< (string-length (editor-word-text editor-word))
-             3))
-      'null
-      (let* ((word (editor-word-text editor-word))
-             (suggestions ($apropos-list mod-name word)))
-        (write-log 'debug "getting completion suggestions for word "
-                   word)
-        (write-log 'debug (format "suggestions list: ~a" suggestions))
+  (let* ((cur-char-number
+          (alist-ref* '(position character) params))
+         (editor-word (get-word-under-cursor params))
+         (file-path (get-uri-path params))
+         (mod-name (and file-path
+                        (parse-library-name-from-file file-path))))
+    (if (or (not editor-word)
+            (< (string-length (editor-word-text editor-word))
+               3))
+        'null
+        (let* ((word (editor-word-text editor-word))
+               (suggestions ($apropos-list mod-name word)))
+          (write-log 'debug "getting completion suggestions for word "
+                     word)
+          (write-log 'debug (format "suggestions list: ~a" suggestions))
 
-        `((isIncomplete . #t)
-          (items .
-                 ,(list->vector
-                   (map (lambda (suggestion)
-                          (let* ((id-name (car suggestion))
-                                 (mod-name-str (stringify (cdr suggestion)))
-                                 (start-line (alist-ref* '(position line)
-                                                            params))
-                                 (start-char (editor-word-start-char
+          `((isIncomplete . #t)
+            (items .
+                   ,(list->vector
+                     (map (lambda (suggestion)
+                            (let* ((id-name (car suggestion))
+                                   (mod-name-str (stringify (cdr suggestion)))
+                                   (start-line (alist-ref* '(position line)
+                                                           params))
+                                   (start-char (editor-word-start-char
+                                                editor-word))
+                                   (end-char (editor-word-end-char
                                               editor-word))
-                                 (end-char (editor-word-end-char
-                                            editor-word))
-                                 (text-edit
-                                  `((range . ((start . ((line . ,start-line)
-                                                        (character . ,start-char)))
-                                              (end . ((line . ,start-line)
-                                                      (character . ,cur-char-number)))))
-                                    (newText . ,id-name))))
-                            `((label . ,id-name)
-                              (insertText . ,id-name)
-                              (sortText . ,id-name)
-                              (textEdit . ,text-edit)
-                              (data . ((identifier . ,id-name) (module . ,mod-name-str))))))
-                        suggestions)))))))
+                                   (text-edit
+                                    `((range . ((start . ((line . ,start-line)
+                                                          (character . ,start-char)))
+                                                (end . ((line . ,start-line)
+                                                        (character . ,cur-char-number)))))
+                                      (newText . ,id-name))))
+                              `((label . ,id-name)
+                                (insertText . ,id-name)
+                                (sortText . ,id-name)
+                                (textEdit . ,text-edit)
+                                (data . ((identifier . ,id-name) (module . ,mod-name-str))))))
+                          suggestions))))))))
 
 
 (define-handler (completion-item/resolve params)
-  (define id (string->symbol
-              (alist-ref* '(data identifier) params)))
-  (define file-path (get-uri-path params))
-  (define mod-name (and file-path
-                        (parse-library-name-from-file file-path)))
-  (define mod (let ((m (alist-ref* '(data module) params)))
-                (if m
-                    (split-module-name m)
-                    mod-name)))
-  (write-log 'debug (format "params: ~a" params))
-  (guard (condition
-          (#t (begin
-                (write-log 'warning
-                           "error resolving "
-                           mod
-                           id)
-                (if (satisfies-log-level? 'info)
-                    (raise (make-json-rpc-internal-error
-                            (format "Error resolving ~a ~a"
-                                    mod
-                                    id)))
-                    'null))))
-         (begin
-           (let ((doc (or ($fetch-documentation mod id)
-                          "")))
-             (cons `(documentation . ,doc)
-                   params)))))
+  (let* ((id (string->symbol
+             (alist-ref* '(data identifier) params)))
+        (file-path (get-uri-path params))
+        (mod-name (and file-path
+                       (parse-library-name-from-file file-path)))
+        (mod (let ((m (alist-ref* '(data module) params)))
+               (if m
+                   (split-module-name m)
+                   mod-name))))
+    (write-log 'debug (format "params: ~a" params))
+    (guard (condition
+            (#t (begin
+                  (write-log 'warning
+                             "error resolving "
+                             mod
+                             id)
+                  (if (satisfies-log-level? 'info)
+                      (raise (make-json-rpc-internal-error
+                              (format "Error resolving ~a ~a"
+                                      mod
+                                      id)))
+                      'null))))
+           (begin
+             (let ((doc (or ($fetch-documentation mod id)
+                            "")))
+               (cons `(documentation . ,doc)
+                     params))))))
 
 (define (fetch-signature-under-cursor params)
-  (define editor-word
-    (get-word-under-cursor params))
-  (define file-path (get-uri-path params))
-  (define mod-name (and file-path
-                        (parse-library-name-from-file file-path)))
+  (let* ((editor-word
+          (get-word-under-cursor params))
+         (file-path (get-uri-path params))
+         (mod-name (and file-path
+                        (parse-library-name-from-file file-path))))
 
-  (if (and editor-word (not (string=? (editor-word-text editor-word)
-                                      "")))
-      (begin
-        (let* ((cur-word (editor-word-text editor-word))
-               (signature ($fetch-signature mod-name
-                                            (string->symbol cur-word))))
-          (if (not signature)
-              (begin
-                (write-log 'warning
-                           (format "no signature found for: ~a" cur-word))
-                "")
-              signature)))
-      ""))
+    (if (and editor-word (not (string=? (editor-word-text editor-word)
+                                        "")))
+        (begin
+          (let* ((cur-word (editor-word-text editor-word))
+                 (signature ($fetch-signature mod-name
+                                              (string->symbol cur-word))))
+            (if (not signature)
+                (begin
+                  (write-log 'warning
+                             (format "no signature found for: ~a" cur-word))
+                  "")
+                signature)))
+        "")))
 
 (define-handler (text-document/signature-help params)
   (let ((signature (fetch-signature-under-cursor params)))
@@ -271,12 +269,12 @@
         'null)))
 
 (define-handler (custom/load-file params)
-  (define file-path (get-uri-path params))
-  (write-log 'debug "loading file: " file-path)
-  (guard (condition
-          (#t (write-log 'warning "error loading file")))
-         (load file-path))
-  #f)
+  (let ((file-path (get-uri-path params)))
+    (write-log 'debug "loading file: " file-path)
+    (guard (condition
+            (#t (write-log 'warning "error loading file")))
+           (load file-path))
+    #f))
 
 (define (parameterize-and-run thunk)
   (parameterize
