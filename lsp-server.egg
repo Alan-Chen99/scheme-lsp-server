@@ -29,21 +29,21 @@
   "geiser/chicken/license"
   "geiser/chicken/version"
   "geiser/chicken/src/geiser/chicken5.scm"
-  "src/adapter.scm"
-  "src/adapter.sld"
-  "src/document.scm"
-  "src/document.sld"
-  "src/file.scm"
-  "src/file.sld"
-  "src/lsp-server.sld"
-  "src/main.scm"
-  "src/parse.scm"
-  "src/parse.sld"
-  "src/private.scm"
-  "src/private.sld"
-  "src/server.scm"
-  "src/trie.scm"
-  "src/trie.sld"
+  "lsp-server/adapter.scm"
+  "lsp-server/adapter.sld"
+  "lsp-server/document.scm"
+  "lsp-server/document.sld"
+  "lsp-server/file.scm"
+  "lsp-server/file.sld"
+  "lsp-server/lsp-server.sld"
+  "lsp-server/main.scm"
+  "lsp-server/parse.scm"
+  "lsp-server/parse.sld"
+  "lsp-server/private.scm"
+  "lsp-server/private.sld"
+  "lsp-server/server.scm"
+  "lsp-server/trie.scm"
+  "lsp-server/trie.sld"
   "tests/run.scm"
   "tests/parse-tests.scm"
   "tests/trie-tests.scm"
@@ -55,13 +55,13 @@
   (csc-options "-O3" "-X" "r7rs" "-R" "r7rs"))
  (components
   (program chicken-lsp-server
-           (source "src/main.scm")
+           (source "lsp-server/main.scm")
            (component-dependencies lsp-server))
   (generated-source-file lsp-dummy-chicken-doc
                          (custom-build "chicken/setup-chicken-doc-for-test.sh"))
   (extension lsp-server.private
-             (source "src/private.sld")
-             (source-dependencies "src/private.scm")
+             (source "lsp-server/private.sld")
+             (source-dependencies "lsp-server/private.scm")
              (component-dependencies lsp-server.chicken.util))
   (extension lsp-server.chicken.util
              (source "chicken/util.sld"))
@@ -74,24 +74,24 @@
                                      lsp-server.private
                                      lsp-server.chicken.util))
   (extension lsp-server.adapter
-             (source "src/adapter.sld")
-             (source-dependencies "src/adapter.scm")
+             (source "lsp-server/adapter.sld")
+             (source-dependencies "lsp-server/adapter.scm")
              (component-dependencies geiser
                                      lsp-server.parse))
   (extension lsp-server.document
-             (source "src/document.sld")
-             (source-dependencies "src/document.scm"))
+             (source "lsp-server/document.sld")
+             (source-dependencies "lsp-server/document.scm"))
   (extension lsp-server.trie
-             (source "src/trie.sld")
-             (source-dependencies "src/trie.scm"))
+             (source "lsp-server/trie.sld")
+             (source-dependencies "lsp-server/trie.scm"))
   (extension lsp-server.parse
-             (source "src/parse.sld")
-             (source-dependencies "src/parse.scm")
+             (source "lsp-server/parse.sld")
+             (source-dependencies "lsp-server/parse.scm")
              (component-dependencies lsp-server.trie
                                      lsp-server.chicken.util))
   (extension lsp-server
-             (source "src/lsp-server.sld")
-             (source-dependencies "src/file.scm"
-                                  "src/server.scm")
+             (source "lsp-server/lsp-server.sld")
+             (source-dependencies "lsp-server/file.scm"
+                                  "lsp-server/server.scm")
              (component-dependencies lsp-server.chicken
                                      lsp-server.document))))

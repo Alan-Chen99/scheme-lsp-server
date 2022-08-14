@@ -9,7 +9,7 @@
                (srfi 64)
                (srfi 69))))
 
-(include "../src/trie.scm")
+(include "../lsp-server/trie.scm")
 
 (test-begin "trie tests")
 

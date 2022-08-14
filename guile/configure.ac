@@ -12,14 +12,14 @@ fi
 
 AC_CONFIG_FILES([Makefile])
 
-AC_CONFIG_LINKS([lsp-server/private-impl.scm:../src/private.scm
-                 lsp-server/document-impl.scm:../src/document.scm
-                 lsp-server/file.scm:../src/file.scm
-                 lsp-server/main.scm:../src/main.scm
-                 lsp-server/server.scm:../src/server.scm
-                 lsp-server/trie-impl.scm:../src/trie.scm
-                 lsp-server/adapter-impl.scm:../src/adapter.scm
-                 lsp-server/parse-impl.scm:../src/parse.scm
+AC_CONFIG_LINKS([lsp-server/private-impl.scm:../lsp-server/private.scm
+                 lsp-server/document-impl.scm:../lsp-server/document.scm
+                 lsp-server/file.scm:../lsp-server/file.scm
+                 lsp-server/main.scm:../lsp-server/main.scm
+                 lsp-server/server.scm:../lsp-server/server.scm
+                 lsp-server/trie-impl.scm:../lsp-server/trie.scm
+                 lsp-server/adapter-impl.scm:../lsp-server/adapter.scm
+                 lsp-server/parse-impl.scm:../lsp-server/parse.scm
 
                  lsp-server/guile.scm:lsp-server/guile.scm
                  lsp-server/guile/util.scm:lsp-server/guile/util.scm

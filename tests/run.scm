@@ -28,9 +28,9 @@
                         map)
                 (lsp-server guile))))
 
-(include "../src/document.scm")
-(include "../src/file.scm")
-(include "../src/server.scm")
+(include "../lsp-server/document.scm")
+(include "../lsp-server/file.scm")
+(include "../lsp-server/server.scm")
 
 (include "parse-tests.scm")
 (include "trie-tests.scm")
