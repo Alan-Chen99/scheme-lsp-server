@@ -23,8 +23,8 @@
                   (srfi 18)
                   utf8))
  (gambit (import (except (gambit) string-upcase)
-                 (lsp-server gambit)
-                 (lsp-server gambit util))))
+                 (lsp-server gambit util)
+                 (lsp-server gambit))))
 
 
 (import (scheme base)

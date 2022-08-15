@@ -217,7 +217,7 @@
                              "error resolving "
                              mod
                              id)
-                  (if (satisfies-log-level? 'info)
+                  (if (satisfies-log-level? 'debug)
                       (raise (make-json-rpc-internal-error
                               (format "Error resolving ~a ~a"
                                       mod

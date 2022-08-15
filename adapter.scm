@@ -1,6 +1,6 @@
 (cond-expand
  (gambit
-  (define geiser-completions geiser:completions)
+  (define geiser-completions geiser:module-completions)
   (define geiser-autodoc geiser:autodoc)
   (define geiser-symbol-documentation (lambda (x) (error "not implemented")))
   (define geiser-symbol-location (lambda (x) (error "not implemented")))
