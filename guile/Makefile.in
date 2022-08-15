@@ -182,21 +182,17 @@ CSCOPE = cscope
 AM_RECURSIVE_TARGETS = cscope
 am__DIST_COMMON = $(srcdir)/Makefile.in $(srcdir)/guile.am \
 	$(srcdir)/lsp-server.sld $(top_srcdir)/../README.md \
+	$(top_srcdir)/../adapter.scm $(top_srcdir)/../document.scm \
+	$(top_srcdir)/../file.scm \
 	$(top_srcdir)/../geiser/guile/src/geiser/completion.scm \
 	$(top_srcdir)/../geiser/guile/src/geiser/doc.scm \
 	$(top_srcdir)/../geiser/guile/src/geiser/evaluation.scm \
 	$(top_srcdir)/../geiser/guile/src/geiser/modules.scm \
 	$(top_srcdir)/../geiser/guile/src/geiser/utils.scm \
 	$(top_srcdir)/../geiser/guile/src/geiser/xref.scm \
-	$(top_srcdir)/../lsp-server/adapter.scm \
-	$(top_srcdir)/../lsp-server/document.scm \
-	$(top_srcdir)/../lsp-server/file.scm \
-	$(top_srcdir)/../lsp-server/main.scm \
-	$(top_srcdir)/../lsp-server/parse.scm \
-	$(top_srcdir)/../lsp-server/private.scm \
-	$(top_srcdir)/../lsp-server/server.scm \
-	$(top_srcdir)/../lsp-server/trie.scm \
-	$(top_srcdir)/build-aux/install-sh \
+	$(top_srcdir)/../main.scm $(top_srcdir)/../parse.scm \
+	$(top_srcdir)/../private.scm $(top_srcdir)/../server.scm \
+	$(top_srcdir)/../trie.scm $(top_srcdir)/build-aux/install-sh \
 	$(top_srcdir)/build-aux/missing \
 	$(top_srcdir)/lsp-server/adapter.sld \
 	$(top_srcdir)/lsp-server/document.sld \

@@ -129,3 +129,4 @@
         (lsp-server-start/stdio))))
 
 (main (cdr (command-line)))
+
