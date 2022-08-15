@@ -16,7 +16,7 @@
 
                   (except (chicken io) read-string)
                   (only (chicken base) alist-ref)
-                  (only (vector-lib) vector-fold)
+                  (only (srfi 133) vector-fold)
                   (chicken tcp)
                   apropos
                   medea

@@ -10,6 +10,7 @@
                r7rs
                srfi-1
                srfi-130
+               srfi-133 ;;vector
                srfi-18
                srfi-69
                utf8)

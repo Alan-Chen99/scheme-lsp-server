@@ -34,34 +34,34 @@
 
 
 (define (update-file! path . args)
-  (define raw-change-contents
-    (if (null? args)
-        #f
-        (car args)))
+  (let ((raw-change-contents
+         (if (null? args)
+             #f
+             (car args))))
 
-  (cond (raw-change-contents
-         (mutex-lock! file-table-mutex)
-         (let ((result
-                (if (hash-table-exists? file-table path)
-                    (hash-table-update! file-table
-                                        path
-                                        (lambda (old-doc)
-                                          (apply-all-changes
-                                           raw-change-contents
-                                           old-doc)))
-                    (hash-table-set! file-table
-                                     path
-                                     (begin
-                                       (write-log 'debug
-                                                  (format "reading file from disk: ~a" path))
-                                       (call-with-input-file path
-                                         (lambda (p)
-                                           (apply-all-changes
-                                            raw-change-contents
-                                            (read-document p)))))))))
-           (mutex-unlock! file-table-mutex)
-           result))
-        (else #f)))
+    (cond (raw-change-contents
+           (mutex-lock! file-table-mutex)
+           (let ((result
+                  (if (hash-table-exists? file-table path)
+                      (hash-table-update! file-table
+                                          path
+                                          (lambda (old-doc)
+                                            (apply-all-changes
+                                             raw-change-contents
+                                             old-doc)))
+                      (hash-table-set! file-table
+                                       path
+                                       (begin
+                                         (write-log 'debug
+                                                    (format "reading file from disk: ~a" path))
+                                         (call-with-input-file path
+                                           (lambda (p)
+                                             (apply-all-changes
+                                              raw-change-contents
+                                              (read-document p)))))))))
+             (mutex-unlock! file-table-mutex)
+             result))
+          (else #f))))
 
 (define (free-file! path)
   (mutex-lock! file-table-mutex)
@@ -211,7 +211,7 @@
                             (min start-pos end-pos))))))
 
 (define (apply-all-changes raw-changes doc)
-  (vector-fold (lambda (i doc change)
+  (vector-fold (lambda (doc change)
                  (apply-change (parse-change-contents change)
                                doc))
                doc
