@@ -15,6 +15,7 @@
         $tcp-read-timeout)
 
 (import (gambit)
+        (only (srfi 1) find)
         (only (srfi 13) string-tokenize string-prefix?)
         (only (srfi 14) char-set char-set-complement)
         (srfi 28)
@@ -88,22 +89,31 @@
         '()))
 
   (define (lsp-server-dependency? mod-name)
-    (member mod-name
-            '((json-rpc)
-              (json-rpc private)
-              (json-rpc lolevel)
-              (json-rpc gambit)
-              (lsp-server)
-              (lsp-server document)
-              (lsp-server gambit)
-              (lsp-server gambit util)
-              (lsp-server parse)
-              (lsp-server private)
-              (lsp-server trie)
-              (srfi 13)
-              (srfi 28)
-              (srfi 64)
-              (srfi 69))))
+    (define pred
+      (if (symbol? mod-name)
+          (lambda (dep-name)
+            (eq? mod-name (car dep-name)))
+          (lambda (dep-name)
+            (equal? mod-name dep-name))))
+    (find pred
+          '((_geiser)
+            (irregex)
+            (json-rpc)
+            (json-rpc private)
+            (json-rpc lolevel)
+            (json-rpc gambit)
+            (lsp-server)
+            (lsp-server adapter)
+            (lsp-server document)
+            (lsp-server gambit)
+            (lsp-server gambit util)
+            (lsp-server parse)
+            (lsp-server private)
+            (lsp-server trie)
+            (srfi 13)
+            (srfi 14)
+            (srfi 28)
+            (srfi 69))))
 
   (define (compile-and-import-if-needed file-path)
     (guard
@@ -115,11 +125,14 @@
                                              (else condition))))
              #f))
       (let ((mod-name (parse-library-name-from-file file-path)))
-        (when (and mod-name
-                   (not (lsp-server-dependency? mod-name)))
-          (write-log 'info (format "importing module ~a" mod-name))
-          (eval `(import ,mod-name)))
-        #f)))
+        (cond ((and mod-name
+                    (not (lsp-server-dependency? mod-name)))
+               (write-log 'info (format "importing module ~s" mod-name))
+               (eval `(import ,mod-name)))
+              (else
+               (write-log 'info (format "ignoring LSP-server dependency ~a"
+                                        mod-name))
+               #f)))))
 
   (define ($open-file! file-path)
     (compile-and-import-if-needed file-path)

@@ -50,6 +50,9 @@
 (define (guile-library-definition-form? expr)
   (tagged-expression? expr 'define-module))
 
+(define (gambit-namespace-form? expr)
+  (tagged-expression? expr '##namespace))
+
 (define (library-definition-form? expr)
   (cond-expand
    (chicken (or (r7rs-library-definition-form? expr)
@@ -180,6 +183,11 @@
          (case-lambda-docstring (caddr expr)))))
 
 ;;;; Main procedures
+
+(define (parse-gambit-namespace expr)
+  (let* ((name (caadr expr))
+         (mod-name (string-trim-right name (char-set #\#))))
+    (string->symbol mod-name)))
 
 (define (parse-guile-module expression)
   (define mod-name (cadr expression))
@@ -410,12 +418,19 @@
                    (make-hash-table)))
 
 (define (parse-library-name-from-file filename)
+  (cond-expand
+   (gambit (define (namespace-form? expr)
+             (gambit-namespace-form? expr)))
+   (else (define (namespace-form? expr)
+           #f)))
   (with-input-from-file filename
     (lambda ()
       (let loop ((expr (read)))
         (cond ((eof-object? expr) #f)
               ((library-definition-form? expr)
                (cadr expr))
+              ((namespace-form? expr)
+               (parse-gambit-namespace expr))
               (else
                (loop (read))))))))
 

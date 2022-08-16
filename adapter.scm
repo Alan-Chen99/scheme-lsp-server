@@ -33,7 +33,12 @@
                    (if (not (null? args))
                        (alist-ref/default "key" (car args) '())
                        '())))
-             (module-name (alist-ref "module" doc)))
+             (raw-module-name (alist-ref "module" doc))
+             (module-name (cond ((and raw-module-name
+                                      (list? raw-module-name)
+                                      (null? raw-module-name))
+                                 #f)
+                                (else raw-module-name))))
         (if (null? doc)
             #f
             (format "(~a~a ~a)"

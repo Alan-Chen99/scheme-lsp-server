@@ -39,22 +39,6 @@
                       (cons (car rem) cur-str)
                       result)))))
 
-(cond-expand
- (guile
-  (define (intersperse lst delim)
-    (let loop ((remaining lst)
-               (result '()))
-      (cond ((null? remaining)
-             (reverse result))
-            ((null? (cdr remaining))
-             (reverse (cons (car remaining) result)))
-            (else
-             (loop (cdr remaining)
-                   (cons delim
-                         (cons (car remaining)
-                               result))))))))
- (else))
-
 (define (split-module-name mod)
   (map string->symbol
        (string-tokenize (substring mod

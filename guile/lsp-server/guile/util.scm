@@ -11,6 +11,7 @@
           pathname-join
           get-absolute-pathname
           hash-table-join!
+          intersperse
 
           irregex
           irregex-match
@@ -99,6 +100,18 @@
                              (car rest-parts))
               (cdr rest-parts)))))
 
+(define (intersperse lst delim)
+  (let loop ((remaining lst)
+             (result '()))
+    (cond ((null? remaining)
+           (reverse result))
+          ((null? (cdr remaining))
+           (reverse (cons (car remaining) result)))
+          (else
+           (loop (cdr remaining)
+                 (cons delim
+                       (cons (car remaining)
+                             result)))))))
 
 ;;;; irregex.scm -- IrRegular Expressions
 ;;
