@@ -65,39 +65,61 @@
                                         #f))
                        (eval identifier)) ; safe 'cause only a symbol
                      #f))
-    (if proc
+    (if (and proc (procedure? proc))
         (let ((loc (##procedure-locat proc)))
           (if (not loc)
               '()
-              (let* ((file-path (##container->path (##locat-container loc)))
-                     (pos (##position->filepos (##locat-position loc)))
-                     (line-number (##filepos-line pos))
-                     (char-number (##filepos-col pos)))
-                `(((uri . ,file-path)
-                   (range . ((start . ((line . ,line-number)
-                                       (character . ,char-number)))
-                             (end . ((line . ,line-number)
-                                     (character . ,(+ char-number
-                                                      (string-length
-                                                       (symbol->string identifier)))))))))))))
+              (let* ((##locat-container loc)
+                     (file-path (and loc (##container->path loc)))
+                     (pos (and loc (##locat-position loc)))
+                     (file-pos (and pos (##position->filepos pos)))
+                     (line-number (and file-pos (##filepos-line file-pos)))
+                     (char-number (or (and file-pos (##filepos-col file-pos))
+                                      0)))
+                (if (and file-path line-number)
+                    `(((uri . ,file-path)
+                       (range . ((start . ((line . ,line-number)
+                                           (character . ,char-number)))
+                                 (end . ((line . ,line-number)
+                                         (character . ,(+ char-number
+                                                          (string-length
+                                                           (symbol->string identifier))))))))))
+                    '()))))
         '()))
 
+  (define (lsp-server-dependency? mod-name)
+    (member mod-name
+            '((json-rpc)
+              (json-rpc private)
+              (json-rpc lolevel)
+              (json-rpc gambit)
+              (lsp-server)
+              (lsp-server document)
+              (lsp-server gambit)
+              (lsp-server gambit util)
+              (lsp-server parse)
+              (lsp-server private)
+              (lsp-server trie)
+              (srfi 13)
+              (srfi 28)
+              (srfi 64)
+              (srfi 69))))
+
   (define (compile-and-import-if-needed file-path)
-  (guard
-   (condition
-    (#t (write-log 'error (format "Can't compile file ~a: ~a"
-                                  file-path
-                                  (cond ((error-object? condition)
-                                         (error-object-message condition))
-                                        (else condition))))
-        (raise condition)))
-   (let ((mod-name (parse-library-name-from-file file-path)))
-     (when mod-name
-       ;;(write-log 'info (format "loading file ~a" file-path))
-       ;;(load file-path)
-       (write-log 'info (format "importing module ~a" mod-name))
-       (eval `(import ,mod-name)))
-     #f)))
+    (guard
+        (condition
+         (#t (write-log 'error (format "Can't compile file ~a: ~a"
+                                       file-path
+                                       (cond ((error-object? condition)
+                                              (error-object-message condition))
+                                             (else condition))))
+             #f))
+      (let ((mod-name (parse-library-name-from-file file-path)))
+        (when (and mod-name
+                   (not (lsp-server-dependency? mod-name)))
+          (write-log 'info (format "importing module ~a" mod-name))
+          (eval `(import ,mod-name)))
+        #f)))
 
   (define ($open-file! file-path)
     (compile-and-import-if-needed file-path)

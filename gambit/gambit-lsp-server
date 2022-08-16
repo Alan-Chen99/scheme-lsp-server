@@ -1,3 +1,5 @@
+#!/usr/bin/env gsi-script
+
 (import (lsp-server)
         (lsp-server private))
 
@@ -129,4 +131,6 @@
         (lsp-server-start/tcp tcp-port-num)
         (lsp-server-start/stdio))))
 
-(main (cdr (command-line)))
+(cond-expand
+ ((or chicken gambit) (main (cdr (command-line))))
+ (else))
