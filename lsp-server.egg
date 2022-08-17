@@ -12,7 +12,8 @@
                srfi-130
                srfi-18
                srfi-69
-               utf8)
+               utf8
+               vector-lib)
  (test-dependencies srfi-1
                     srfi-69
                     srfi-64)
