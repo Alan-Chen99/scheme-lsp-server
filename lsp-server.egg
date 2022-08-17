@@ -78,21 +78,27 @@
              (source "src/adapter.sld")
              (source-dependencies "src/adapter.scm")
              (component-dependencies geiser
-                                     lsp-server.parse))
+                                     lsp-server.parse
+                                     lsp-server.private
+                                     lsp-server.chicken.util))
   (extension lsp-server.document
              (source "src/document.sld")
-             (source-dependencies "src/document.scm"))
+             (source-dependencies "src/document.scm")
+             (component-dependencies lsp-server.private))
   (extension lsp-server.trie
              (source "src/trie.sld")
              (source-dependencies "src/trie.scm"))
   (extension lsp-server.parse
              (source "src/parse.sld")
              (source-dependencies "src/parse.scm")
-             (component-dependencies lsp-server.trie
-                                     lsp-server.chicken.util))
+             (component-dependencies lsp-server.chicken.util
+                                     lsp-server.private
+                                     lsp-server.trie))
   (extension lsp-server
              (source "src/lsp-server.sld")
              (source-dependencies "src/file.scm"
                                   "src/server.scm")
              (component-dependencies lsp-server.chicken
-                                     lsp-server.document))))
+                                     lsp-server.document
+                                     lsp-server.parse
+                                     lsp-server.private))))
