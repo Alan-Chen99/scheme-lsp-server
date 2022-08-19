@@ -56,37 +56,59 @@
     (write-log 'debug (format "$apropos-list ~a ~a" module prefix))
     (fetch-apropos prefix))
 
-  ;; TODO move this geiser
+  (define (procedure-module-prefix identifier)
+    (let* ((idn (symbol->string identifier))
+           (ap-lst ($apropos-list #f idn))
+           (match (assoc idn ap-lst)))
+      (and match
+           (cdr match))))
+
+  (define (fetch-location identifier)
+    (write-log 'debug
+               (format "fetch-location ~s" identifier))
+
+    (let ((proc (if (symbol? identifier)
+                    (guard
+                     (condition (#t (write-log 'error
+                                               (format "procedure not found: ~a"
+                                                       identifier))
+                                    #f))
+                     (eval identifier)) ; safe 'cause only a symbol
+                    #f)))
+      (if (and proc (procedure? proc))
+          (let ((loc (##procedure-locat proc)))
+            (if (not loc)
+                '()
+                (let* ((container (##locat-container loc))
+                       (file-path (and loc (##container->path container)))
+                       (pos (and loc (##locat-position loc)))
+                       (file-pos (and pos (##position->filepos pos)))
+                       (line-number (and file-pos (##filepos-line file-pos)))
+                       (char-number (or (and file-pos (##filepos-col file-pos))
+                                        0)))
+                  (if (and file-path line-number)
+                      `(((uri . ,file-path)
+                         (range . ((start . ((line . ,line-number)
+                                             (character . ,char-number)))
+                                   (end . ((line . ,line-number)
+                                           (character . ,(+ char-number
+                                                            (string-length
+                                                             (symbol->string identifier))))))))))
+                      '()))))
+          '())))
+
+  ;; TODO move this to geiser?
   (define ($get-definition-locations mod-name identifier)
-    (define proc (if (symbol? identifier)
-                     (guard
-                         (condition (#t (write-log 'error
-                                                   (format "procedure not found: ~a"
-                                                           identifier))
-                                        #f))
-                       (eval identifier)) ; safe 'cause only a symbol
-                     #f))
-    (if (and proc (procedure? proc))
-        (let ((loc (##procedure-locat proc)))
-          (if (not loc)
-              '()
-              (let* ((##locat-container loc)
-                     (file-path (and loc (##container->path loc)))
-                     (pos (and loc (##locat-position loc)))
-                     (file-pos (and pos (##position->filepos pos)))
-                     (line-number (and file-pos (##filepos-line file-pos)))
-                     (char-number (or (and file-pos (##filepos-col file-pos))
-                                      0)))
-                (if (and file-path line-number)
-                    `(((uri . ,file-path)
-                       (range . ((start . ((line . ,line-number)
-                                           (character . ,char-number)))
-                                 (end . ((line . ,line-number)
-                                         (character . ,(+ char-number
-                                                          (string-length
-                                                           (symbol->string identifier))))))))))
-                    '()))))
-        '()))
+    (let ((res (fetch-location identifier)))
+      (if (null? res)
+          (let ((mod-prefix (procedure-module-prefix identifier)))
+            (if mod-prefix
+                (fetch-location (string->symbol
+                                 (format "~a~a"
+                                         mod-prefix
+                                         identifier)))
+                '()))
+          res)))
 
   (define (lsp-server-dependency? mod-name)
     (define pred
@@ -151,7 +173,13 @@
                        mod-name
                        identifier))
 
-    (lsp-geiser-signature identifier))
+    (or (lsp-geiser-signature identifier)
+        (let ((mod-prefix (procedure-module-prefix identifier)))
+          (and mod-prefix
+               (lsp-geiser-signature (string->symbol
+                                      (format "~a~a"
+                                              mod-prefix
+                                              identifier)))))))
 
   (define namespace-regex
     (irregex '(: "\""

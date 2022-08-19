@@ -7,11 +7,14 @@
         irregex-match-substring
         irregex-match-start-index
         irregex-search
+        prefix-identifier
         vector-fold
         with-input-from-string)
 
 (import (scheme base)
-        (gambit))
+        (gambit)
+        (only (srfi 13) string-join)
+        (srfi 28))
 
 (include "../irregex.scm")
 
@@ -55,4 +58,19 @@
     (define res (assoc key lst))
     (if res
         (cdr res)
-        default))))
+        default))
+
+  (define (prefix-identifier mod-name identifier)
+    (string->symbol
+     (format "~a#~a"
+             (canonicalize-module-name mod-name)
+             identifier)))
+
+  (define (canonicalize-module-name mod-name)
+    (cond ((symbol? mod-name)
+           mod-name)
+          ((list? mod-name)
+           (string->symbol
+            (string-join (map symbol->string mod-name)
+                         "/")))
+          (else (error "expecting a valid module name" mod-name))))))
