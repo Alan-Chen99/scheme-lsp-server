@@ -161,7 +161,7 @@
     #f)
 
   (define ($save-file! file-path)
-    (compile-and-import-if-needed file-path)
+    ;;(load file-path)
     #f)
 
   (define ($fetch-documentation mod-name identifier)
