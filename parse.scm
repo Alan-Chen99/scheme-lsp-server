@@ -50,8 +50,17 @@
 (define (guile-library-definition-form? expr)
   (tagged-expression? expr 'define-module))
 
-(define (gambit-namespace-form? expr)
-  (tagged-expression? expr '##namespace))
+(cond-expand
+ (gambit
+  (define (gambit-namespace-form? expr)
+    ;;; don't compare with '##namespace directly, since it's not a valid
+    ;;; identifier and causes errors when processed by other implementations.
+    (if (and (list? expr)
+             (not (null? expr))
+             (string=? (symbol->string (car expr))
+                       "##namespace"))
+        #f)))
+ (else))
 
 (define (library-definition-form? expr)
   (cond-expand
