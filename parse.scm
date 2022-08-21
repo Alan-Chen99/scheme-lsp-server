@@ -168,7 +168,7 @@
 
 (define (procedure-definition-name expr)
   (cond ((procedure-definition-with-parenthesis? expr)
-         (caadr expr))
+         (car (cadr expr)))
         ((procedure-definition-with-lambda? expr)
          (cadr expr))))
 
@@ -194,7 +194,7 @@
 ;;;; Main procedures
 
 (define (parse-gambit-namespace expr)
-  (let* ((name (caadr expr))
+  (let* ((name (car (cadr expr)))
          (mod-name (string-trim-right name (char-set #\#))))
     (string->symbol mod-name)))
 
