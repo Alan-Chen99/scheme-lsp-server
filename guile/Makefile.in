@@ -200,9 +200,8 @@ am__DIST_COMMON = $(srcdir)/Makefile.in $(srcdir)/guile.am \
 	$(top_srcdir)/lsp-server/guile/util.scm \
 	$(top_srcdir)/lsp-server/parse.sld \
 	$(top_srcdir)/lsp-server/private.sld \
-	$(top_srcdir)/lsp-server/trie.sld build-aux/compile \
-	build-aux/config.guess build-aux/config.sub \
-	build-aux/install-sh build-aux/missing
+	$(top_srcdir)/lsp-server/trie.sld build-aux/install-sh \
+	build-aux/missing
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
 distdir = $(PACKAGE)-$(VERSION)
 top_distdir = $(distdir)
@@ -880,14 +879,15 @@ lsp-server/adapter.scm: lsp-server/adapter.sld lsp-server/adapter-impl.scm
 	cat lsp-server/adapter-impl.scm >> $@
 
 distclean-local:
-	rm -Rf lsp-server.scm \
-               lsp-server/private.scm \
-               lsp-server/document.scm \
-               lsp-server/trie.scm \
-               lsp-server/parse.scm \
-               lsp-server/adapter.scm \
-               geiser/ \
-               $(SOURCES)
+	rm -Rf geiser/ \
+	       private.scm    \
+	       document.scm   \
+	       trie.scm       \
+	       parse.scm      \
+	       adapter.scm    \
+	       file.scm       \
+	       server.scm     \
+	       main.scm
 
 .scm.go:
 	$(PREFIX) $(GUILE_TOOLS) compile $(GUILE_WARNINGS) -x ".sld" -O0 --r7rs -o "$@" "$<"

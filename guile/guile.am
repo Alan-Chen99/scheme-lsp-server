@@ -68,14 +68,15 @@ lsp-server/adapter.scm: lsp-server/adapter.sld lsp-server/adapter-impl.scm
 
 
 distclean-local:
-	rm -Rf lsp-server.scm \
-               lsp-server/private.scm \
-               lsp-server/document.scm \
-               lsp-server/trie.scm \
-               lsp-server/parse.scm \
-               lsp-server/adapter.scm \
-               geiser/ \
-               $(SOURCES)
+	rm -Rf geiser/ \
+	       private.scm    \
+	       document.scm   \
+	       trie.scm       \
+	       parse.scm      \
+	       adapter.scm    \
+	       file.scm       \
+	       server.scm     \
+	       main.scm
 
 .scm.go:
 	$(PREFIX) $(GUILE_TOOLS) compile $(GUILE_WARNINGS) -x ".sld" -O0 --r7rs -o "$@" "$<"
