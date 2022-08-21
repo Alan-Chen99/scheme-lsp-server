@@ -282,7 +282,7 @@
 
 (define lsp-server-log-level (make-parameter 'debug))
 (define lsp-server-state 'off)
-(define lsp-server-version "0.1.12")
+(define lsp-server-version "0.2.0")
 
 (define listening-threads '())
 (define listening-threads-mutex (make-mutex))
