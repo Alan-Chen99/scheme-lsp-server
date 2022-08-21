@@ -20,9 +20,9 @@
         (only (srfi 14) char-set char-set-complement)
         (srfi 28)
         (lsp-server adapter)
+        (lsp-server gambit util)
         (lsp-server parse)
-        (lsp-server private)
-        (lsp-server gambit util))
+        (lsp-server private))
 
 (begin
 
