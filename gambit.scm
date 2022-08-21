@@ -140,7 +140,7 @@
   (define (compile-and-import-if-needed file-path)
     (guard
         (condition
-         (#t (write-log 'error (format "Can't compile file ~a: ~a"
+         (#t (write-log 'error (format "Error compiling file ~a: ~a"
                                        file-path
                                        (cond ((error-object? condition)
                                               (error-object-message condition))
@@ -149,10 +149,10 @@
       (let ((mod-name (parse-library-name-from-file file-path)))
         (cond ((and mod-name
                     (not (lsp-server-dependency? mod-name)))
-               (write-log 'info (format "importing module ~s" mod-name))
+               (write-log 'info (format "Importing module ~s" mod-name))
                (eval `(import ,mod-name)))
               (else
-               (write-log 'info (format "ignoring LSP-server dependency ~a"
+               (write-log 'info (format "Ignoring LSP-server dependency ~a"
                                         mod-name))
                #f)))))
 
@@ -161,7 +161,13 @@
     #f)
 
   (define ($save-file! file-path)
-    ;;(load file-path)
+    (guard
+        (condition
+         (#t (write-log 'error (format "Error loading file ~a: ~a"
+                                       file-path
+                                       condition))
+             #f))
+      (load file-path))
     #f)
 
   (define ($fetch-documentation mod-name identifier)
