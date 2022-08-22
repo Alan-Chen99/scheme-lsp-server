@@ -16,6 +16,7 @@
           (srfi 28))))
 
 (cond-expand (chicken (import (lsp-server chicken)
+                              (only (srfi 1) any)
                               (srfi 18)))
              (gambit (import (lsp-server gambit)
                              (only (srfi 1) any)))
