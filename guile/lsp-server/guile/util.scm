@@ -21,11 +21,14 @@
 
           vector-fold)
 
+#:re-export (uri-decode)
+
 #:use-module ((scheme base) #:select (assoc guard))
 #:use-module (srfi srfi-1)
 #:use-module (srfi srfi-28)
 #:use-module (srfi srfi-69)
 #:use-module ((lsp-server private) #:select (write-log))
+#:use-module (web uri)
 #:declarative? #f
 )
 

@@ -67,6 +67,7 @@
  (chicken (import (only (chicken base) intersperse)
                   (lsp-server chicken util)
                   r7rs))
- (gambit (import (lsp-server gambit util))))
+ (gambit (import (chibi uri)
+                 (lsp-server gambit util))))
 
 (include "private.scm"))

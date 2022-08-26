@@ -61,7 +61,7 @@
   (define uri (alist-ref* '(textDocument uri)
                           params))
   (if uri
-      (parse-uri uri)
+      (uri-decode (parse-uri uri))
       #f))
 
 (define (get-root-path params)

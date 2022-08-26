@@ -13,6 +13,7 @@
                srfi-133 ;;vector
                srfi-18
                srfi-69
+               uri-generic
                utf8)
  (test-dependencies srfi-1
                     srfi-69
