@@ -578,6 +578,7 @@
           ("textDocument/hover" . ,text-document/hover)
           ("completionItem/resolve" . ,completion-item/resolve)
           ("textDocument/signatureHelp" . ,text-document/signature-help)
+          ("$/setTraceNotification" . ,ignore-request)
           ("$/cancelRequest" . ,ignore-request)
           ("exit" . ,lsp-exit-handler)
           ("shutdown" . ,shutdown-handler)

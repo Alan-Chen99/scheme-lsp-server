@@ -17,7 +17,9 @@
           irregex-match
           irregex-match-start-index
           irregex-match-substring
-          irregex-search)
+          irregex-search
+
+          vector-fold)
 
 #:use-module ((scheme base) #:select (assoc guard))
 #:use-module (srfi srfi-1)
@@ -26,6 +28,26 @@
 #:use-module ((lsp-server private) #:select (write-log))
 #:declarative? #f
 )
+
+;;; copied over from srfi-133
+(define (vector-fold kons knil vec1 . o)
+  (let ((len (vector-length vec1)))
+    (if (null? o)
+        (let lp ((i 0)
+                 (acc knil))
+          (if (>= i len)
+              acc
+              (lp (+ i 1)
+                  (kons acc (vector-ref vec1 i)))))
+        (let lp ((i 0)
+                 (acc knil))
+          (if (>= i len)
+              acc
+              (lp (+ i 1)
+                  (apply kons acc (vector-ref vec1 i)
+                         (map (lambda (v)
+                                (vector-ref v i))
+                              o))))))))
 
 (define (alist-ref key lst)
   (define res (assoc key lst))

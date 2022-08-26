@@ -56,9 +56,9 @@
     ;;; don't compare with '##namespace directly, since it's not a valid
     ;;; identifier and causes errors when processed by other implementations.
     (if (and (list? expr)
-             (not (null? expr))
-             (string=? (symbol->string (car expr))
-                       "##namespace"))
+             (not (null? expr)))
+        (string=? (symbol->string (car expr))
+                  "##namespace")
         #f)))
  (else))
 
@@ -195,7 +195,7 @@
 
 (define (parse-gambit-namespace expr)
   (let* ((name (car (cadr expr)))
-         (mod-name (string-trim-right name (char-set #\#))))
+         (mod-name (string-trim-right (symbol->string name) (char-set #\#))))
     (string->symbol mod-name)))
 
 (define (parse-guile-module expression)
