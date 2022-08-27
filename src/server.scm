@@ -1,6 +1,6 @@
 (define lsp-server-log-level (make-parameter 'debug))
 (define lsp-server-state 'off)
-(define lsp-server-version "0.1.14")
+(define lsp-server-version "0.1.16")
 
 (define listening-threads '())
 (define listening-threads-mutex (make-mutex))
@@ -168,7 +168,7 @@
                         (parse-library-name-from-file file-path)))
   (if (or (not editor-word)
           (< (string-length (editor-word-text editor-word))
-             3))
+             1))
       'null
       (let* ((word (editor-word-text editor-word))
              (suggestions ($apropos-list mod-name word)))
