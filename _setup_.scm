@@ -11,10 +11,10 @@
   (codeberg.org/rgherdt/scheme-json-rpc gambit))
 
 (define-module-alias (chibi string)
-  (codeberg.org/rgherdt/scheme-json-rpc chibi string))
+  (codeberg.org/rgherdt/scheme-lsp-server chibi string))
 
 (define-module-alias (chibi pathname)
-  (codeberg.org/rgherdt/scheme-json-rpc chibi pathname))
+  (codeberg.org/rgherdt/scheme-lsp-server chibi pathname))
 
 (define-module-alias (chibi uri)
-  (codeberg.org/rgherdt/scheme-json-rpc chibi uri))
+  (codeberg.org/rgherdt/scheme-lsp-server chibi uri))
