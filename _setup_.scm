@@ -10,11 +10,12 @@
 (define-module-alias (json-rpc gambit)
   (codeberg.org/rgherdt/scheme-json-rpc gambit))
 
-(define-module-alias (chibi string)
-  (codeberg.org/rgherdt/scheme-lsp-server chibi string))
+(define-module-alias (chibi irregex)
+  (github.com/ashinn/irregex))
 
-(define-module-alias (chibi pathname)
-  (codeberg.org/rgherdt/scheme-lsp-server chibi pathname))
+(define-module-alias (srfi 180)
+  (codeberg.org/rgherdt/srfi srfi 180))
 
-(define-module-alias (chibi uri)
-  (codeberg.org/rgherdt/scheme-lsp-server chibi uri))
+(define-module-alias chibi
+  (github.com/rgherdt/chibi-scheme lib chibi))
+
