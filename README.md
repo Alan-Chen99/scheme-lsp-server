@@ -4,12 +4,12 @@
 1. [Introduction](#introduction)
 2. [Installing](#installing)
 3. [API](#api)
-3. [Command-line tool](#cli)
-4. [Supported features](#supported-features)
-5. [Notes to specific implementations](#specific-implementations)
-6. [Known issues](#known-issues)
-7. [Existing clients](#existing-clients)
-8. [Contributing](#contributing)
+4. [Command-line tool](#cli)
+5. [Supported features](#supported-features)
+6. [Notes to specific implementations](#specific-implementations)
+7. [Known issues](#known-issues)
+8. [Existing clients](#existing-clients)
+9. [Contributing](#contributing)
 
 ## <a name="user-content-introduction"></a> Introduction
 
@@ -17,16 +17,18 @@
 
 A LSP (Language Server Protocol) server for Scheme.
 
-### Goals
-
 This software aims to support several Scheme implementations. To achieve this,
 the code is designed to contain as much logic as possible in R7RS Scheme,
 separating implementation-specific code in different directories.
 
-Currently CHICKEN 5, Gambit 4.9.4+ and Guile 3+ are supported.
-
 *Note*: this code is still in an early development stage and the API may change.
 Change suggestions are welcome.
+
+
+### Supported implementations
+
+Currently CHICKEN 5, Gambit 4.9.4+ and Guile 3+ are supported. See [Supported features](#supported-features), [Notes to specific implementations](#specific-implementations) and [Known issues](#known-issues) for more information.
+
 
 ## <a name="user-content-installing"></a> Installing
 
