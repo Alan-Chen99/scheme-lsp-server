@@ -91,6 +91,15 @@ Now switch to the `./guile` folder and run:
 ./configure && make && sudo make install
 ```
 
+*Note: Make sure the install dir is in your %load-path and %load-compiled-path`.
+ For example, under Linux, add the following to your `./bashrc` file*
+
+```
+export GUILE_LOAD_COMPILED_PATH=...:/usr/local/lib/guile/3.0/site-ccache
+export GUILE_LOAD_PATH=...:/usr/local/share/guile/site/3.0
+
+```
+
 
 ## <a name="user-content-api"></a>API
 
@@ -135,14 +144,16 @@ Run `guile-lsp-server --help` for more information.
 <thead>
 <tr>
 <th scope="col" class="org-left">&#xa0;</th>
-<th scope="col" class="org-left">Guile</th>
 <th scope="col" class="org-left">CHICKEN</th>
+<th scope="col" class="org-left">Gambit</th>
+<th scope="col" class="org-left">Guile</th>
 </tr>
 </thead>
 
 <tbody>
 <tr>
 <td class="org-left">Find signature</td>
+<td class="org-left">X</td>
 <td class="org-left">X</td>
 <td class="org-left">X</td>
 </tr>
@@ -153,6 +164,7 @@ Run `guile-lsp-server --help` for more information.
 <td class="org-left">Find documentation</td>
 <td class="org-left">X</td>
 <td class="org-left">X</td>
+<td class="org-left">X</td>
 </tr>
 </tbody>
 
@@ -161,12 +173,14 @@ Run `guile-lsp-server --help` for more information.
 <td class="org-left">Autocomplete identifier</td>
 <td class="org-left">X</td>
 <td class="org-left">X</td>
+<td class="org-left">X</td>
 </tr>
 </tbody>
 
 <tbody>
 <tr>
 <td class="org-left">Jump to definition</td>
+<td class="org-left">X</td>
 <td class="org-left">X</td>
 <td class="org-left">X</td>
 </tr>
