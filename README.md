@@ -208,7 +208,7 @@ packaging and automatic installation from LSP clients).
 
 ## <a name="user-content-known-issues"></a>Known issues
 
-### [Guile] No LSP information when library definition is missing
+### [Gambit and Guile] No LSP information when library definition is missing
 
 Currently the LSP server only compiles (and imports) files that contain a
 library definition. In Scheme it's common though to separate the library
