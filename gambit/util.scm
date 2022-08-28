@@ -15,7 +15,7 @@
         (gambit)
         (only (srfi 13) string-join)
         (srfi 28)
-        (github.com/ashinn/irregex))
+        (github.com/ashinn/irregex irregex))
 
 (begin
   ;;; copied over from srfi-133
