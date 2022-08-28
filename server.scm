@@ -166,7 +166,7 @@
                         (parse-library-name-from-file file-path))))
     (if (or (not editor-word)
             (< (string-length (editor-word-text editor-word))
-               3))
+               1))
         'null
         (let* ((word (editor-word-text editor-word))
                (suggestions ($apropos-list mod-name word)))

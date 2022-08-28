@@ -1,6 +1,10 @@
 ((author "Ricardo Gabriel Herdt")
  (synopsis "LSP Server for CHICKEN.")
+<<<<<<< HEAD
  (version "0.2.0")
+=======
+ (version "0.1.16")
+>>>>>>> master
  (license "MIT")
  (category tools)
  (dependencies apropos
@@ -13,8 +17,13 @@
                srfi-133 ;;vector
                srfi-18
                srfi-69
+<<<<<<< HEAD
                uri-generic
                utf8)
+=======
+               utf8
+               vector-lib)
+>>>>>>> master
  (test-dependencies srfi-1
                     srfi-69
                     srfi-64)
@@ -79,10 +88,13 @@
              (source "adapter.sld")
              (source-dependencies "adapter.scm")
              (component-dependencies geiser
-                                     lsp-server.parse))
+                                     lsp-server.parse
+                                     lsp-server.private
+                                     lsp-server.chicken.util))
   (extension lsp-server.document
              (source "document.sld")
-             (source-dependencies "document.scm"))
+             (source-dependencies "document.scm")
+             (component-dependencies lsp-server.private))
   (extension lsp-server.trie
              (source "trie.sld")
              (source-dependencies "trie.scm"))
@@ -90,10 +102,13 @@
              (source "parse.sld")
              (source-dependencies "parse.scm")
              (component-dependencies lsp-server.trie
+                                     lsp-server.private
                                      lsp-server.chicken.util))
   (extension lsp-server
              (source "lsp-server.sld")
              (source-dependencies "file.scm"
                                   "server.scm")
              (component-dependencies lsp-server.chicken
-                                     lsp-server.document))))
+                                     lsp-server.document
+                                     lsp-server.parse
+                                     lsp-server.private))))
