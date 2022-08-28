@@ -9,11 +9,13 @@
         pathname-directory
         pathname-base
         pathname-join
-        uri-decode)
+        uri-decode
+        with-input-from-string)
 
 (import (scheme base)
         (chicken base)
         (chicken pathname)
+        (only (chicken port) with-input-from-string)
         (chicken process-context)
         (srfi 28)
         (uri-generic))

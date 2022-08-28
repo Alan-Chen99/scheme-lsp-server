@@ -1,10 +1,6 @@
 ((author "Ricardo Gabriel Herdt")
  (synopsis "LSP Server for CHICKEN.")
-<<<<<<< HEAD
  (version "0.2.0")
-=======
- (version "0.1.16")
->>>>>>> master
  (license "MIT")
  (category tools)
  (dependencies apropos
@@ -17,13 +13,8 @@
                srfi-133 ;;vector
                srfi-18
                srfi-69
-<<<<<<< HEAD
                uri-generic
                utf8)
-=======
-               utf8
-               vector-lib)
->>>>>>> master
  (test-dependencies srfi-1
                     srfi-69
                     srfi-64)

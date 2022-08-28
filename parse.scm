@@ -426,44 +426,73 @@
                        acc))
                    (make-hash-table)))
 
+(define (read-escaped-string . args)
+  (let ((port (if (not (null? args))
+                  (car args)
+                  (current-input-port))))
+    (let loop ((c (read-char port))
+               (res '()))
+      (cond ((eof-object? c)
+             (list->string (reverse res)))
+            ((char=? c #\\)
+             (loop (read-char port)
+                   (append (list #\\ #\\)
+                           res)))
+            (else
+             (loop (read-char port)
+                   (cons c res)))))))
+
 (define (parse-library-name-from-file filename)
   (cond-expand
    (gambit (define (namespace-form? expr)
              (gambit-namespace-form? expr)))
    (else (define (namespace-form? expr)
            #f)))
-  (with-input-from-file filename
-    (lambda ()
-      (let loop ((expr (read)))
-        (cond ((eof-object? expr) #f)
-              ((library-definition-form? expr)
-               (cadr expr))
-              ((namespace-form? expr)
-               (parse-gambit-namespace expr))
-              (else
-               (loop (read))))))))
-
-(define (parse-file filename)
-  (define meta-data-without-location
+  (guard
+      (condition
+       (#t (write-log 'error
+                      (format "Cannot parse library name from file ~a: ~a"
+                              filename
+                              condition))
+           #f))
     (with-input-from-file filename
       (lambda ()
-        (let loop ((expr (read))
-                   (meta-data '()))
-          (if (eof-object? expr)
-              (merge-meta-data meta-data)
-              (loop (read)
-                    (let ((sub-meta-data (parse-expression expr (make-parse-context
-                                                                 (pathname-directory filename)
-                                                                 #f))))
-                      (if sub-meta-data
-                          (cons sub-meta-data meta-data)
-                          meta-data))))))))
-  (make-source-meta-data
-   (source-meta-data-library-name meta-data-without-location)
-   (collect-procedure-locations
-    (source-meta-data-procedure-info-table meta-data-without-location)
-    filename)
-   (source-meta-data-imports meta-data-without-location)))
+        (let loop ((expr (read)))
+          (cond ((eof-object? expr) #f)
+                ((library-definition-form? expr)
+                 (cadr expr))
+                ((namespace-form? expr)
+                 (parse-gambit-namespace expr))
+                (else
+                 (loop (read)))))))))
+
+(define (parse-file filename)
+  (guard (condition
+          (#t (write-log 'error
+                         (format "Cannot parse file ~a: ~a"
+                                 filename
+                                 condition))
+              #f))
+    (let ((meta-data-without-location
+           (with-input-from-file filename
+             (lambda ()
+               (let loop ((expr (read))
+                          (meta-data '()))
+                 (if (eof-object? expr)
+                     (merge-meta-data meta-data)
+                     (loop (read)
+                           (let ((sub-meta-data (parse-expression expr (make-parse-context
+                                                                        (pathname-directory filename)
+                                                                        #f))))
+                             (if sub-meta-data
+                                 (cons sub-meta-data meta-data)
+                                 meta-data)))))))))
+      (make-source-meta-data
+       (source-meta-data-library-name meta-data-without-location)
+       (collect-procedure-locations
+        (source-meta-data-procedure-info-table meta-data-without-location)
+        filename)
+       (source-meta-data-imports meta-data-without-location)))))
 
 (define (update-identifier-to-source-meta-data-table! source-path meta-data)
   (hash-table-walk
@@ -499,14 +528,14 @@
                                          (else
                                           condition))))
                 #f))
-           (let ((meta-data (parse-file abs-source-path)))
-             (update-identifier-to-source-meta-data-table! abs-source-path meta-data)
-             ;; (for-each (lambda (path)
-             ;;             (let ((module-path (get-module-path path)))
-             ;;               (when module-path
-             ;;                 (generate-meta-data! module-path))))
-             ;;           (source-meta-data-imports meta-data))
-             ))))
+      (let ((meta-data (parse-file abs-source-path)))
+        (update-identifier-to-source-meta-data-table! abs-source-path meta-data)
+        ;; (for-each (lambda (path)
+        ;;             (let ((module-path (get-module-path path)))
+        ;;               (when module-path
+        ;;                 (generate-meta-data! module-path))))
+        ;;           (source-meta-data-imports meta-data))
+        ))))
 
 (define scheme-file-regex
   (irregex '(: bos
@@ -580,24 +609,24 @@
     (for-each
      (lambda (f)
        (guard
-        (condition
-         (#t (write-log 'warning
-                        (format "generate-meta-data!: can't read file ~a"
-                                f))))
-        (cond ((directory? f)
-               (write-log 'debug (format "generate-meta-data!: processing directory ~a" f))
-               (let ((files
-                      (find-files f
-                                  #:test chicken-relevant-scheme-file-regex)))
-                 (for-each
-                  (lambda (filename)
-                    (write-log 'debug
-                               (format "generate-meta-data!: processing file ~a"
-                                       filename))
-                    (parse-and-update-if-needed! filename))
-                  files)))
-              (else
-               (parse-and-update-if-needed! f)))))
+           (condition
+            (#t (write-log 'warning
+                           (format "generate-meta-data!: can't read file ~a"
+                                   f))))
+         (cond ((directory? f)
+                (write-log 'debug (format "generate-meta-data!: processing directory ~a" f))
+                (let ((files
+                       (find-files f
+                                   #:test chicken-relevant-scheme-file-regex)))
+                  (for-each
+                   (lambda (filename)
+                     (write-log 'debug
+                                (format "generate-meta-data!: processing file ~a"
+                                        filename))
+                     (parse-and-update-if-needed! filename))
+                   files)))
+               (else
+                (parse-and-update-if-needed! f)))))
      (filter (lambda (f)
                (not (string=? f "")))
              files)))))

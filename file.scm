@@ -122,7 +122,7 @@
                                          (format "pos ~a bigger than contents-length ~a"
                                                  pos
                                                  contents-length)))
-                             (else 
+                             (else
                               (let ((c (string-ref contents pos)))
                                 (cond ((char=? c #\newline)
                                        (+ cn 1))
