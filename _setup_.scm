@@ -19,3 +19,5 @@
 (define-module-alias chibi
   (github.com/rgherdt/chibi-scheme lib chibi))
 
+(define-module-alias lsp-server
+  (codeberg.org/rgherdt/scheme-lsp-server))
