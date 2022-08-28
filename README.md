@@ -22,7 +22,7 @@ This software aims to support several Scheme implementations. To achieve this,
 the code is designed to contain as much logic as possible in R7RS Scheme,
 separating implementation-specific code in different directories.
 
-Currently only CHICKEN 5 and Guile are supported.
+Currently CHICKEN 5, Gambit 4.9.4+ and Guile 3+ are supported.
 
 *Note*: this code is still in an early development stage and the API may change.
 Change suggestions are welcome.
@@ -52,7 +52,8 @@ chicken-install -s lsp-server
 
 ### Gambit
 
-You can install the library by simply running
+Note that you need Gambit 4.9.4 or later in order to use this lib. You can
+install the library by simply running
 
 ```
 $ gsi -install codeberg.org/rgherdt/scheme-lsp-server
@@ -75,7 +76,7 @@ In order to use the command line tool, copy the file
 `~~userlib/codeberg.org/rgherdt/scheme-lsp-server/@/gambit/gambit-lsp-server` 
 to a directory in your `PATH`. `~~userlib` usually expands to `~/.gambit_userlib`.
 
-### GUILE
+### Guile
 Guile's version of the LSP server is packaged using automake. Make
 sure Guile 3 **AND** its development libraries are installed. On Debian
 you can install it using:
