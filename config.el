@@ -9,7 +9,8 @@
              with-db-connection
              with-input-from-file
              with-input-from-request
-             with-input-from-string)))
+             with-input-from-string
+             with-current-output-port)))
   (dolist (tag lst)
     (put tag 'scheme-indent-function 1)))
 

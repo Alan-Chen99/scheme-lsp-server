@@ -182,19 +182,17 @@ CSCOPE = cscope
 AM_RECURSIVE_TARGETS = cscope
 am__DIST_COMMON = $(srcdir)/Makefile.in $(srcdir)/guile.am \
 	$(srcdir)/lsp-server.sld $(top_srcdir)/../README.md \
+	$(top_srcdir)/../adapter.scm $(top_srcdir)/../document.scm \
+	$(top_srcdir)/../file.scm \
 	$(top_srcdir)/../geiser/guile/src/geiser/completion.scm \
 	$(top_srcdir)/../geiser/guile/src/geiser/doc.scm \
 	$(top_srcdir)/../geiser/guile/src/geiser/evaluation.scm \
 	$(top_srcdir)/../geiser/guile/src/geiser/modules.scm \
 	$(top_srcdir)/../geiser/guile/src/geiser/utils.scm \
 	$(top_srcdir)/../geiser/guile/src/geiser/xref.scm \
-	$(top_srcdir)/../src/adapter.scm \
-	$(top_srcdir)/../src/document.scm \
-	$(top_srcdir)/../src/file.scm $(top_srcdir)/../src/main.scm \
-	$(top_srcdir)/../src/parse.scm \
-	$(top_srcdir)/../src/private.scm \
-	$(top_srcdir)/../src/server.scm $(top_srcdir)/../src/trie.scm \
-	$(top_srcdir)/build-aux/install-sh \
+	$(top_srcdir)/../main.scm $(top_srcdir)/../parse.scm \
+	$(top_srcdir)/../private.scm $(top_srcdir)/../server.scm \
+	$(top_srcdir)/../trie.scm $(top_srcdir)/build-aux/install-sh \
 	$(top_srcdir)/build-aux/missing \
 	$(top_srcdir)/lsp-server/adapter.sld \
 	$(top_srcdir)/lsp-server/document.sld \
@@ -881,7 +879,15 @@ lsp-server/adapter.scm: lsp-server/adapter.sld lsp-server/adapter-impl.scm
 	cat lsp-server/adapter-impl.scm >> $@
 
 distclean-local:
-	rm -Rf src/ geiser/ $(SOURCES)
+	rm -Rf geiser/ \
+	       private.scm    \
+	       document.scm   \
+	       trie.scm       \
+	       parse.scm      \
+	       adapter.scm    \
+	       file.scm       \
+	       server.scm     \
+	       main.scm
 
 .scm.go:
 	$(PREFIX) $(GUILE_TOOLS) compile $(GUILE_WARNINGS) -x ".sld" -O0 --r7rs -o "$@" "$<"

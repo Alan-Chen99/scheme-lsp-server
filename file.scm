@@ -34,38 +34,39 @@
 
 
 (define (update-file! path . args)
-  (define raw-change-contents (if (null? args)
-                              #f
-                              (car args)))
+  (let ((raw-change-contents
+         (if (null? args)
+             #f
+             (car args))))
 
-  (cond (raw-change-contents
-         (mutex-lock! file-table-mutex)
-         (let ((result
-                (if (hash-table-exists? file-table path)
-                    (hash-table-update! file-table
-                                        path
-                                        (lambda (old-doc)
-                                          (apply-all-changes
-                                           raw-change-contents
-                                           old-doc)))
-                    (hash-table-set! file-table
-                                     path
-                                     (begin
-                                       (write-log 'debug
-                                                  (format "reading file from disk: ~a" path))
-                                       (call-with-input-file path
-                                         (lambda (p)
-                                           (apply-all-changes
-                                            raw-change-contents
-                                            (read-document p)))))))))
-           (mutex-unlock! file-table-mutex)
-           result))
-        (else #f)))
+    (cond (raw-change-contents
+           (mutex-lock! file-table-mutex)
+           (let ((result
+                  (if (hash-table-exists? file-table path)
+                      (hash-table-update! file-table
+                                          path
+                                          (lambda (old-doc)
+                                            (apply-all-changes
+                                             raw-change-contents
+                                             old-doc)))
+                      (hash-table-set! file-table
+                                       path
+                                       (begin
+                                         (write-log 'debug
+                                                    (format "reading file from disk: ~a" path))
+                                         (call-with-input-file path
+                                           (lambda (p)
+                                             (apply-all-changes
+                                              raw-change-contents
+                                              (read-document p)))))))))
+             (mutex-unlock! file-table-mutex)
+             result))
+          (else #f))))
 
 (define (free-file! path)
   (mutex-lock! file-table-mutex)
-  (define file (hash-table-ref/default file-table path #f))
-  (let ((result (cond ((not file)
+  (let* ((file (hash-table-ref/default file-table path #f))
+         (result (cond ((not file)
                        (write-log 'warning
                                   "trying to freeing a non-existing file"
                                   path)
@@ -76,20 +77,19 @@
     result))
 
 (define (get-word-under-cursor params)
-  (write-log 'debug (format "get-word-under-cursor: params: ~a"
-                            params))
   (define file-path (get-uri-path params))
   (define doc (read-file! file-path))
   (define contents (document-contents doc))
   (define contents-length (document-length doc))
   (define line-number (alist-ref* '(position line) params))
   (define char-number (alist-ref* '(position character) params))
-  (write-log 'debug
-             "get-word-under-cursor: computing text-pos")
   (define text-pos
     (min (line/char->pos doc line-number char-number)
          (max (- (document-length doc) 1)
               0)))
+  (write-log 'debug (format "get-word-under-cursor: params: ~a"
+                            params))
+
   (write-log 'debug
              (format "contents-length: ~a; text-pos: ~a"
                      contents-length
@@ -122,7 +122,7 @@
                                          (format "pos ~a bigger than contents-length ~a"
                                                  pos
                                                  contents-length)))
-                             (else 
+                             (else
                               (let ((c (string-ref contents pos)))
                                 (cond ((char=? c #\newline)
                                        (+ cn 1))
@@ -211,7 +211,7 @@
                             (min start-pos end-pos))))))
 
 (define (apply-all-changes raw-changes doc)
-  (vector-fold (lambda (i doc change)
+  (vector-fold (lambda (doc change)
                  (apply-change (parse-change-contents change)
                                doc))
                doc

@@ -1,8 +1,19 @@
-(import (srfi 1)
-        (srfi 18)
-        (srfi 28)
-        (srfi 69)
-        (srfi 64))
+(cond-expand
+ (guile (import (srfi srfi-1)
+                (srfi srfi-18)
+                (srfi srfi-28)
+                (srfi srfi-69)
+                (srfi srfi-64)))
+ (gambit (import (srfi 1)
+                 ;; (srfi 18) already defined in gambit
+                 (srfi 28)
+                 (srfi 69)
+                 (srfi 64)))
+ (else (import (srfi 1)
+               (srfi 18)
+               (srfi 28)
+               (srfi 69)
+               (srfi 64))))
 
 (import (json-rpc)
         (json-rpc lolevel))
@@ -20,6 +31,13 @@
                   (only (srfi 130) string-replace)
                   (lsp-server chicken)
                   (lsp-server trie)))
+ (gambit (import (except (scheme base)
+                         cond-expand
+                         include
+                         error
+                         raise
+                         map)
+                 (lsp-server gambit)))
  (guile (import (except (scheme base)
                         cond-expand
                         include
@@ -28,26 +46,59 @@
                         map)
                 (lsp-server guile))))
 
-(include "../src/document.scm")
-(include "../src/file.scm")
-(include "../src/server.scm")
+;; (include "../lsp-server/file.scm")
+;; (include "../lsp-server/server.scm")
 
-(include "parse-tests.scm")
-(include "trie-tests.scm")
+;; (include "parse-tests.scm")
+;; (include "trie-tests.scm")
+
+(cond-expand
+ (chicken (import-for-syntax (only (scheme base) string->symbol)
+                             (only (srfi 13) string-join)
+                             (only (chicken string) conc ->string))
+          (define-syntax @@
+            (er-macro-transformer
+             (lambda (form rename compare?)
+               (let* ((lib-name (cadr form))
+                      (identifier (caddr form))
+                      (%eval (rename 'eval))
+                      (%string->symbol (rename 'string->symbol))
+                      (%string-append (rename 'string-append))
+                      (%string-join (rename 'string-join))
+                      (lib-name-str (if (pair? lib-name)
+                                        (string-join (map ->string lib-name) ".")
+                                        (->string lib-name)))
+                      (internal-name-str (conc lib-name-str
+                                               "#"
+                                               identifier))
+                      (internal-name (string->symbol internal-name-str)))
+                 internal-name)))))
+ (else))
+
+(define document-append (@@ (lsp-server document) document-append))
+(define document-copy (@@ (lsp-server document) document-copy))
+(define document-newline-positions (@@ (lsp-server document) document-newline-positions))
+(define line/char->pos (@@ (lsp-server document) line/char->pos))
+
+(define parse-definition-line (@@ (lsp-server parse) parse-definition-line))
+
+(define apply-change (@@ (lsp-server) apply-change))
+(define make-change-contents (@@ (lsp-server) make-change-contents))
+(define make-range (@@ (lsp-server) make-range))
 
 (test-begin "lsp-server tests")
 
 (test-group "(lsp-server document): document main functions"
-  (define a-doc (string->document "abc\ndef\ng"))
-  (test-equal 6
-              (line/char->pos a-doc 1 2))
-  (test-equal 0
-              (line/char->pos a-doc 0 0))
-  (test-equal 2
-              (line/char->pos a-doc 0 2))
-  (test-equal 8
-              (line/char->pos a-doc 2 0))
-  (test-equal 2 (line/char->pos (string->document "1\n\n3\n") 1 0)))
+  (let ((a-doc (string->document "abc\ndef\ng")))
+    (test-equal 6
+                (line/char->pos a-doc 1 2))
+    (test-equal 0
+                (line/char->pos a-doc 0 0))
+    (test-equal 2
+                (line/char->pos a-doc 0 2))
+    (test-equal 8
+                (line/char->pos a-doc 2 0))
+    (test-equal 2 (line/char->pos (string->document "1\n\n3\n") 1 0))))
 
 
 (test-group "(lsp-server document): document-copy"
@@ -227,190 +278,189 @@
  (else))
 
 (test-group "(lsp-server document): range update"
-  (define document
-    (string->document
-     (string-append "(define (f x)\n"
-                    "  (cond ((= x 0) 1)\n"
-                    "        ((= x 1) 1)\n"
-                    "        (else (* x (f (- x 1))))))\n")))
+  (let ((document
+         (string->document
+          (string-append "(define (f x)\n"
+                         "  (cond ((= x 0) 1)\n"
+                         "        ((= x 1) 1)\n"
+                         "        (else (* x (f (- x 1))))))\n"))))
 
-  (test-equal (string-append "(define (g x)\n"
-                             "  (cond ((= x 0) 1)\n"
-                             "        ((= x 1) 1)\n"
-                             "        (else (* x (f (- x 1))))))\n")
-              (document-contents
-               (apply-change
-                (make-change-contents
-                 (make-range 0 9 0 10 1)
-                 "g")
-                document)))
+    (test-equal (string-append "(define (g x)\n"
+                               "  (cond ((= x 0) 1)\n"
+                               "        ((= x 1) 1)\n"
+                               "        (else (* x (f (- x 1))))))\n")
+                (document-contents
+                 (apply-change
+                  (make-change-contents
+                   (make-range 0 9 0 10 1)
+                   "g")
+                  document)))
 
-  (test-equal (string-append "(define (f x)\n"
-                             "  (cond ((= x 0) 1)\n"
-                             "\n"
-                             "        (else (* x (f (- x 1))))))\n")
-              (document-contents
-               (apply-change
-                (make-change-contents
-                 (make-range 2 0 2 19 19)
-                 "")
-                document)))
+    (test-equal (string-append "(define (f x)\n"
+                               "  (cond ((= x 0) 1)\n"
+                               "\n"
+                               "        (else (* x (f (- x 1))))))\n")
+                (document-contents
+                 (apply-change
+                  (make-change-contents
+                   (make-range 2 0 2 19 19)
+                   "")
+                  document)))
 
-  (test-equal (string-append "(define (f x)\n"
-                             "  (cond ((= x 0) 1)\n"
-                             "        (else (* x (f (- x 1))))))\n")
-              (document-contents
-               (apply-change
-                (make-change-contents
-                 (make-range 2 0 3 0 20)
-                 "")
-                document)))
+    (test-equal (string-append "(define (f x)\n"
+                               "  (cond ((= x 0) 1)\n"
+                               "        (else (* x (f (- x 1))))))\n")
+                (document-contents
+                 (apply-change
+                  (make-change-contents
+                   (make-range 2 0 3 0 20)
+                   "")
+                  document)))
 
-  (test-equal (string-append
-               "(define (f x)\n"
-               "  (cond ((= x 0) 1)\n"
-               "        ((= x 1) 1)\n"
-               "        ((= x 2) 2)\n"
-               "        (else (* x (f (- x 1))))))\n")
-              (document-contents
-               (apply-change
-                (make-change-contents
-                 (make-range 2 19 2 19 0)
-                 "\n        ((= x 2) 2)")
-                document)))
+    (test-equal (string-append
+                 "(define (f x)\n"
+                 "  (cond ((= x 0) 1)\n"
+                 "        ((= x 1) 1)\n"
+                 "        ((= x 2) 2)\n"
+                 "        (else (* x (f (- x 1))))))\n")
+                (document-contents
+                 (apply-change
+                  (make-change-contents
+                   (make-range 2 19 2 19 0)
+                   "\n        ((= x 2) 2)")
+                  document)))
 
-  (test-equal (string-append
-               "(define (f x)\n"
-               "  (cond ((= x 0) 1)\n"
-               "        ((= x 1) 1)\n"
-               "\n"
-               "        (else (* x (f (- x 1))))))\n")
-              (document-contents
-               (apply-change
-                (make-change-contents
-                 (make-range 2 19 2 19 0)
-                 "\n")
-                document)))
+    (test-equal (string-append
+                 "(define (f x)\n"
+                 "  (cond ((= x 0) 1)\n"
+                 "        ((= x 1) 1)\n"
+                 "\n"
+                 "        (else (* x (f (- x 1))))))\n")
+                (document-contents
+                 (apply-change
+                  (make-change-contents
+                   (make-range 2 19 2 19 0)
+                   "\n")
+                  document)))
 
-  (test-equal (string-append "        ((= x 1) 1)\n"
-                             "        (else (* x (f (- x 1))))))\n")
-              (document-contents
-               (apply-change
-                (make-change-contents
-                 (make-range 0 0 2 0 34)
-                 "")
-                document)))
+    (test-equal (string-append "        ((= x 1) 1)\n"
+                               "        (else (* x (f (- x 1))))))\n")
+                (document-contents
+                 (apply-change
+                  (make-change-contents
+                   (make-range 0 0 2 0 34)
+                   "")
+                  document)))
 
-  (test-equal (string-append
-               "(define (f x)\n"
-               "  (cond ((= x 0) 1)\n"
-               "        ((= x 1) 1)\n"
-               "        (else (* x (f (- x 1))))))\n"
-               "\n"          )
-              (document-contents
-               (apply-change
-                (make-change-contents
-                 (make-range 3 34 3 34 0)
-                 "\n")
-                document)))
+    (test-equal (string-append
+                 "(define (f x)\n"
+                 "  (cond ((= x 0) 1)\n"
+                 "        ((= x 1) 1)\n"
+                 "        (else (* x (f (- x 1))))))\n"
+                 "\n"          )
+                (document-contents
+                 (apply-change
+                  (make-change-contents
+                   (make-range 3 34 3 34 0)
+                   "\n")
+                  document)))
 
-  (test-equal (string-append
-               "i(define (f x)\n"
-               "  (cond ((= x 0) 1)\n"
-               "        ((= x 1) 1)\n"
-               "        (else (* x (f (- x 1))))))\n")
-              (document-contents
-               (apply-change
-                (make-change-contents
-                 (make-range 0 0 0 0 0)
-                 "i")
-                document)))
+    (test-equal (string-append
+                 "i(define (f x)\n"
+                 "  (cond ((= x 0) 1)\n"
+                 "        ((= x 1) 1)\n"
+                 "        (else (* x (f (- x 1))))))\n")
+                (document-contents
+                 (apply-change
+                  (make-change-contents
+                   (make-range 0 0 0 0 0)
+                   "i")
+                  document)))
 
-  (test-equal (string-append "(define (f x)\n"
-                             "blacond ((= x 0) 1)\n"
-                             "        ((= x 1) 1)\n"
-                             "        (else (* x (f (- x 1))))))\n")
-              (document-contents
-               (apply-change
-                (make-change-contents
-                 (make-range 1 0 1 3 3)
-                 "bla")
-                document)))
+    (test-equal (string-append "(define (f x)\n"
+                               "blacond ((= x 0) 1)\n"
+                               "        ((= x 1) 1)\n"
+                               "        (else (* x (f (- x 1))))))\n")
+                (document-contents
+                 (apply-change
+                  (make-change-contents
+                   (make-range 1 0 1 3 3)
+                   "bla")
+                  document)))
 
-  (test-equal (string-append "i\n" "bla\n")
-              (document-contents
-               (apply-change
-                (make-change-contents
-                 (make-range 0 0 0 0 0)
-                 "i")
-                (string->document
-                 (string-append "\n" "bla\n")))))
+    (test-equal (string-append "i\n" "bla\n")
+                (document-contents
+                 (apply-change
+                  (make-change-contents
+                   (make-range 0 0 0 0 0)
+                   "i")
+                  (string->document
+                   (string-append "\n" "bla\n")))))
 
-  (test-equal (string-append
-               "(define (f x)\n"
-               "        ((= x 1) 1)\n"
-               "        (else (* x (f (- x 1))))))\n")
-              (document-contents
-               (apply-change
-                (make-change-contents
-                 (make-range 1 0 2 0 20)
-                 "")
-                document)))
+    (test-equal (string-append
+                 "(define (f x)\n"
+                 "        ((= x 1) 1)\n"
+                 "        (else (* x (f (- x 1))))))\n")
+                (document-contents
+                 (apply-change
+                  (make-change-contents
+                   (make-range 1 0 2 0 20)
+                   "")
+                  document)))
 
-  (test-equal (string-append
-               "(define (f x)\n"
-               "  (cond ((= x 0) 1)        ((= x 1) 1)\n"
-               "        (else (* x (f (- x 1))))))\n")
-              (document-contents
-               (apply-change
-                (make-change-contents
-                 (make-range 2 0 1 19 1)
-                 "")
-                document)))
+    (test-equal (string-append
+                 "(define (f x)\n"
+                 "  (cond ((= x 0) 1)        ((= x 1) 1)\n"
+                 "        (else (* x (f (- x 1))))))\n")
+                (document-contents
+                 (apply-change
+                  (make-change-contents
+                   (make-range 2 0 1 19 1)
+                   "")
+                  document)))
 
-  #;
-  (test-equal '("(define (f x)\n"
-  "  (cond ((= x 0) 1)\n"
-  "(+ 2\n"
-  "   3)        ((= x 1) 1)\n"
-  "        (else (* x (f (- x 1))))))\n")
-  (apply-change (make-change-contents
-  (make-range 2 0 2 5 10)
-  '("(+ 2\n   3)"))
-  document))
+    ;; (test-equal '("(define (f x)\n"
+    ;; "  (cond ((= x 0) 1)\n"
+    ;; "(+ 2\n"
+    ;; "   3)        ((= x 1) 1)\n"
+    ;; "        (else (* x (f (- x 1))))))\n")
+    ;; (apply-change (make-change-contents
+    ;; (make-range 2 0 2 5 10)
+    ;; '("(+ 2\n   3)"))
+    ;; document))
 
-  (test-equal (string-append
-               "(define (f x)\n"
-               "  (cond ((= x 0) 1)\n"
-               "(+ 2\n"
-               "   3)   (else (* x (f (- x 1))))))\n")
-              (document-contents
-               (apply-change
-                (make-change-contents
-                 (make-range 2 0 3 5 10)
-                 (string-append "(+ 2\n" "   3)"))
-                document)))
+    (test-equal (string-append
+                 "(define (f x)\n"
+                 "  (cond ((= x 0) 1)\n"
+                 "(+ 2\n"
+                 "   3)   (else (* x (f (- x 1))))))\n")
+                (document-contents
+                 (apply-change
+                  (make-change-contents
+                   (make-range 2 0 3 5 10)
+                   (string-append "(+ 2\n" "   3)"))
+                  document)))
 
-  (test-equal (string-append
-               "(define (f x)\n"
-               "  (cond ((= x 0) 1)\n"
-               "        ((= x 1) 1)\n"
-               "        (else (* x (f (- x 1))))))\n"
-               "(")
-              (document-contents
-               (apply-change
-                (make-change-contents
-                 (make-range 4 0 4 0 0)
+    (test-equal (string-append
+                 "(define (f x)\n"
+                 "  (cond ((= x 0) 1)\n"
+                 "        ((= x 1) 1)\n"
+                 "        (else (* x (f (- x 1))))))\n"
                  "(")
-                document)))
+                (document-contents
+                 (apply-change
+                  (make-change-contents
+                   (make-range 4 0 4 0 0)
+                   "(")
+                  document)))
 
-  (test-equal ""
-              (document-contents
-               (apply-change
-                (make-change-contents
-                 (make-range 0 0 4 0 88)
-                 "")
-                document)))
+    (test-equal ""
+                (document-contents
+                 (apply-change
+                  (make-change-contents
+                   (make-range 0 0 4 0 88)
+                   "")
+                  document))))
 
   (let ((doc (apply-change
               (make-change-contents

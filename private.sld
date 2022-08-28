@@ -33,17 +33,18 @@
         log-level
         satisfies-log-level?
 
-        $string-split
-
         delete-lines
 
         compose
         flatmap)
 
-(import scheme
-        (scheme base)
+(import (scheme base)
         (scheme char)
         (scheme write))
+
+(cond-expand
+ (chicken (import (scheme)))
+ (else))
 
 (cond-expand
  (guile (import
@@ -52,15 +53,21 @@
          (srfi srfi-69)
          (srfi srfi-13)))
  (else (import
-        (srfi 1)
+        (only (srfi 1)
+              take
+              take-right
+              fold)
         (srfi 28)
         (srfi 69)
-        (srfi 130))))
+        (only (srfi 13)
+              string-join
+              string-tokenize))))
 
 (cond-expand
  (chicken (import (only (chicken base) intersperse)
                   (lsp-server chicken util)
                   r7rs))
- (else))
+ (gambit (import (chibi uri)
+                 (lsp-server gambit util))))
 
 (include "private.scm"))

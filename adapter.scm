@@ -1,54 +1,72 @@
+(cond-expand
+ (gambit
+  (define geiser-completions geiser:module-completions)
+  (define geiser-autodoc geiser:autodoc)
+  (define geiser-symbol-documentation (lambda (x) (error "not implemented")))
+  (define geiser-symbol-location (lambda (x) (error "not implemented")))
+  (define geiser-symbol-module (lambda (x) (error "not implemented"))))
+ (else))
+
 (define (lsp-geiser-completions prefix)
   (geiser-completions prefix))
 
 (define (lsp-geiser-signature identifier)
-  (define doc (alist-ref/default identifier (geiser-autodoc (list identifier)) '()))
-  (define args (alist-ref/default "args" doc '()))
-  (define required-args
-    (map stringify
-         (if (not (null? args))
-             (alist-ref/default "required" (car args) '())
-             '())))
-  (define optional-args
-    (map stringify
-         (if (not (null? args))
-             (alist-ref/default "optional" (car args) '())
-             '())))
-  (define key-args
-    (map (lambda (kw-pair)
-           (format "~a" kw-pair))
-         (if (not (null? args))
-             (alist-ref/default "key" (car args) '())
-             '())))
-  (define module-name (alist-ref "module" doc))
-  (if (null? doc)
+  (define autodoc-result (geiser-autodoc (list identifier)))
+  (if (or (null? autodoc-result)
+          (null? (car autodoc-result)))
       #f
-      (format "(~a~a ~a)"
-              (if module-name
-                  (format "~a:" module-name)
-                  "")
-              identifier
-              (string-append
-               (string-join
-                (map (lambda (req-arg)
-                       (format "~a" req-arg))
-                     required-args)
-                " ")
-               (if (not (null? optional-args))
-                   " "
-                   "")
-               (apply string-append
-                      (map (lambda (opt-arg)
-                             (format "(~a)" opt-arg))
-                           optional-args))
-               (if (not (null? key-args))
-                   " "
-                   "")
-               (string-join
-                (map (lambda (key-arg)
-                       (format "~a" key-arg))
-                     key-args)
-                " ")))))
+      (let* ((doc (alist-ref/default identifier autodoc-result '()))
+             (args (alist-ref/default "args" doc '()))
+             (required-args
+              (map stringify
+                   (if (not (null? args))
+                       (alist-ref/default "required" (car args) '())
+                       '())))
+             (optional-args
+              (map stringify
+                   (if (not (null? args))
+                       (alist-ref/default "optional" (car args) '())
+                       '())))
+             (key-args
+              (map (lambda (kw-pair)
+                     (format "~a" kw-pair))
+                   (if (not (null? args))
+                       (alist-ref/default "key" (car args) '())
+                       '())))
+             (raw-module-name (alist-ref "module" doc))
+             (module-name (cond ((and raw-module-name
+                                      (list? raw-module-name)
+                                      (null? raw-module-name))
+                                 #f)
+                                (else raw-module-name))))
+        (if (null? doc)
+            #f
+            (format "(~a~a ~a)"
+                    (if module-name
+                        (format "~a:" module-name)
+                        "")
+                    identifier
+                    (string-append
+                     (string-join
+                      (map (lambda (req-arg)
+                             (format "~a" req-arg))
+                           required-args)
+                      " ")
+                     (if (not (null? optional-args))
+                         " "
+                         "")
+                     (apply string-append
+                            (map (lambda (opt-arg)
+                                   (format "(~a)" opt-arg))
+                                 optional-args))
+                     (if (not (null? key-args))
+                         " "
+                         "")
+                     (string-join
+                      (map (lambda (key-arg)
+                             (format "~a" key-arg))
+                           key-args)
+                      " ")))))))
 
 (define (lsp-geiser-documentation identifier)
   (define doc (geiser-symbol-documentation identifier))
@@ -104,12 +122,14 @@
 (define (lsp-geiser-compile-file file-path)
   (write-log 'debug (format "lsp-geiser-compile-file: ~a" file-path))
   (cond-expand
+   (gambit (compile-file file-path))
    (guile (ge:compile-file file-path))
    (chicken (geiser-compile-file file-path))))
 
 (define (lsp-geiser-load-file file-path)
   (cond-expand
-   (guile (define load-file-fn ge:load-file))
+   ((or gambit guile)
+    (define load-file-fn ge:load-file))
    (chicken (define load-file-fn geiser-load-file)))
   (guard
    (condition (#t (write-log 'error

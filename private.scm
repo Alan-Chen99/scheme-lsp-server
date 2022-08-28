@@ -1,35 +1,3 @@
-;;; Guile's string-split uses char for delim-str. Redefining it
-;;; leads to strange behavior (i.e. string-prefix? is not found
-;;; anymore). So we export a generic one.
-(cond-expand
- (guile
-  (define ($string-split str delim-str . args)
-    (define len (string-length str))
-    (define dem-len (string-length delim-str))
-    (let loop ((i 0)
-               (cur-word "")
-               (res '()))
-      (cond ((>= i len)
-             (reverse (cons cur-word res)))
-            (else
-             (let ((c (string-ref str i)))
-               (if (and (>= (- len i)
-                            dem-len)
-                        (string-prefix? delim-str
-                                        str
-                                        0
-                                        dem-len
-                                        i
-                                        len))
-                   (loop (+ i dem-len)
-                         ""
-                         (cons cur-word res))
-                   (loop (+ i 1)
-                         (string-append cur-word (string c))
-                         res))))))))
- (else
-  (define $string-split string-split)))
-
 (define-record-type <apropos-info>
   (make-apropos-info module name type object)
   apropos-info?
@@ -71,29 +39,11 @@
                       (cons (car rem) cur-str)
                       result)))))
 
-(cond-expand
- (guile
-  (define (intersperse lst delim)
-    (let loop ((remaining lst)
-               (result '()))
-      (cond ((null? remaining)
-             (reverse result))
-            ((null? (cdr remaining))
-             (reverse (cons (car remaining) result)))
-            (else
-             (loop (cdr remaining)
-                   (cons delim
-                         (cons (car remaining)
-                               result))))))))
- (else))
-
 (define (split-module-name mod)
   (map string->symbol
-       ($string-split
-        (substring mod
-                   1
-                   (- (string-length mod) 1))
-        " ")))
+       (string-tokenize (substring mod
+                                   1
+                                   (- (string-length mod) 1)))))
 
 (define (alist-ref* keys alist)
   (let loop ((keys keys)
@@ -111,7 +61,7 @@
   (define uri (alist-ref* '(textDocument uri)
                           params))
   (if uri
-      (parse-uri uri)
+      (uri-decode (parse-uri uri))
       #f))
 
 (define (get-root-path params)

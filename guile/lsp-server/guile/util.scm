@@ -11,20 +11,46 @@
           pathname-join
           get-absolute-pathname
           hash-table-join!
+          intersperse
 
           irregex
           irregex-match
           irregex-match-start-index
           irregex-match-substring
-          irregex-search)
+          irregex-search
+
+          vector-fold)
+
+#:re-export (uri-decode)
 
 #:use-module ((scheme base) #:select (assoc guard))
 #:use-module (srfi srfi-1)
 #:use-module (srfi srfi-28)
 #:use-module (srfi srfi-69)
 #:use-module ((lsp-server private) #:select (write-log))
+#:use-module (web uri)
 #:declarative? #f
 )
+
+;;; copied over from srfi-133
+(define (vector-fold kons knil vec1 . o)
+  (let ((len (vector-length vec1)))
+    (if (null? o)
+        (let lp ((i 0)
+                 (acc knil))
+          (if (>= i len)
+              acc
+              (lp (+ i 1)
+                  (kons acc (vector-ref vec1 i)))))
+        (let lp ((i 0)
+                 (acc knil))
+          (if (>= i len)
+              acc
+              (lp (+ i 1)
+                  (apply kons acc (vector-ref vec1 i)
+                         (map (lambda (v)
+                                (vector-ref v i))
+                              o))))))))
 
 (define (alist-ref key lst)
   (define res (assoc key lst))
@@ -99,6 +125,18 @@
                              (car rest-parts))
               (cdr rest-parts)))))
 
+(define (intersperse lst delim)
+  (let loop ((remaining lst)
+             (result '()))
+    (cond ((null? remaining)
+           (reverse result))
+          ((null? (cdr remaining))
+           (reverse (cons (car remaining) result)))
+          (else
+           (loop (cdr remaining)
+                 (cons delim
+                       (cons (car remaining)
+                             result)))))))
 
 ;;;; irregex.scm -- IrRegular Expressions
 ;;

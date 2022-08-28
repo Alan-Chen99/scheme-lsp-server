@@ -8,13 +8,18 @@
         lsp-geiser-load-file)
 
 (import (scheme base)
-        (scheme)
-        geiser
         (lsp-server private)
         (lsp-server parse)
-        (lsp-server chicken util)
         (srfi 28)
         (only (srfi 13) string-join))
+
+(cond-expand
+ (chicken (import (lsp-server chicken util)
+                  (geiser)
+                  (scheme)))
+ (gambit (import (_geiser)
+                 (lsp-server gambit util)))
+ (else))
 
 (begin
   (include "adapter.scm")))

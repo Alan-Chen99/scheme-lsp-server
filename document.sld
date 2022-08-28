@@ -10,21 +10,22 @@
         line/char->pos
         string->document)
 
-(import (r7rs)
-        (scheme base)
+(import (scheme case-lambda)
         (scheme file)
         (scheme write)
+        (srfi 28)
+        (srfi 69)
+        (only (srfi 13) string-replace)
         (lsp-server private))
 
 (cond-expand
- (guile (import (srfi srfi-13)
-                (srfi srfi-28)
-                (srfi srfi-69)))
- (else (import (only (chicken port) with-input-from-string)
-               (only (chicken base) case-lambda)
-               (srfi 28)
-               (srfi 69)
-               (srfi 130)
-               (utf8))))
+ (chicken (import (r7rs)
+                  (scheme base)
+                  (only (chicken port) with-input-from-string)
+                  (utf8)))
+ (gambit (import (gambit)
+                 (lsp-server gambit util)
+                 (except (scheme base) vector-copy))))
+
 (include "document.scm"))
 

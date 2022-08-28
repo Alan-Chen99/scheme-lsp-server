@@ -1,6 +1,6 @@
 ((author "Ricardo Gabriel Herdt")
  (synopsis "LSP Server for CHICKEN.")
- (version "0.1.16")
+ (version "0.2.0")
  (license "MIT")
  (category tools)
  (dependencies apropos
@@ -10,10 +10,11 @@
                r7rs
                srfi-1
                srfi-130
+               srfi-133 ;;vector
                srfi-18
                srfi-69
-               utf8
-               vector-lib)
+               uri-generic
+               utf8)
  (test-dependencies srfi-1
                     srfi-69
                     srfi-64)
@@ -30,21 +31,21 @@
   "geiser/chicken/license"
   "geiser/chicken/version"
   "geiser/chicken/src/geiser/chicken5.scm"
-  "src/adapter.scm"
-  "src/adapter.sld"
-  "src/document.scm"
-  "src/document.sld"
-  "src/file.scm"
-  "src/file.sld"
-  "src/lsp-server.sld"
-  "src/main.scm"
-  "src/parse.scm"
-  "src/parse.sld"
-  "src/private.scm"
-  "src/private.sld"
-  "src/server.scm"
-  "src/trie.scm"
-  "src/trie.sld"
+  "adapter.scm"
+  "adapter.sld"
+  "document.scm"
+  "document.sld"
+  "file.scm"
+  "file.sld"
+  "lsp-server.sld"
+  "main.scm"
+  "parse.scm"
+  "parse.sld"
+  "private.scm"
+  "private.sld"
+  "server.scm"
+  "trie.scm"
+  "trie.sld"
   "tests/run.scm"
   "tests/parse-tests.scm"
   "tests/trie-tests.scm"
@@ -56,13 +57,13 @@
   (csc-options "-O3" "-X" "r7rs" "-R" "r7rs"))
  (components
   (program chicken-lsp-server
-           (source "src/main.scm")
+           (source "main.scm")
            (component-dependencies lsp-server))
   (generated-source-file lsp-dummy-chicken-doc
                          (custom-build "chicken/setup-chicken-doc-for-test.sh"))
   (extension lsp-server.private
-             (source "src/private.sld")
-             (source-dependencies "src/private.scm")
+             (source "private.sld")
+             (source-dependencies "private.scm")
              (component-dependencies lsp-server.chicken.util))
   (extension lsp-server.chicken.util
              (source "chicken/util.sld"))
@@ -75,29 +76,29 @@
                                      lsp-server.private
                                      lsp-server.chicken.util))
   (extension lsp-server.adapter
-             (source "src/adapter.sld")
-             (source-dependencies "src/adapter.scm")
+             (source "adapter.sld")
+             (source-dependencies "adapter.scm")
              (component-dependencies geiser
                                      lsp-server.parse
                                      lsp-server.private
                                      lsp-server.chicken.util))
   (extension lsp-server.document
-             (source "src/document.sld")
-             (source-dependencies "src/document.scm")
+             (source "document.sld")
+             (source-dependencies "document.scm")
              (component-dependencies lsp-server.private))
   (extension lsp-server.trie
-             (source "src/trie.sld")
-             (source-dependencies "src/trie.scm"))
+             (source "trie.sld")
+             (source-dependencies "trie.scm"))
   (extension lsp-server.parse
-             (source "src/parse.sld")
-             (source-dependencies "src/parse.scm")
-             (component-dependencies lsp-server.chicken.util
+             (source "parse.sld")
+             (source-dependencies "parse.scm")
+             (component-dependencies lsp-server.trie
                                      lsp-server.private
-                                     lsp-server.trie))
+                                     lsp-server.chicken.util))
   (extension lsp-server
-             (source "src/lsp-server.sld")
-             (source-dependencies "src/file.scm"
-                                  "src/server.scm")
+             (source "lsp-server.sld")
+             (source-dependencies "file.scm"
+                                  "server.scm")
              (component-dependencies lsp-server.chicken
                                      lsp-server.document
                                      lsp-server.parse

@@ -9,8 +9,11 @@
         trie->alist
         alist->trie)
 
-(import (scheme base)
-        (srfi 1)
+(import (only (srfi 1) fold)
         (srfi 69))
+
+(cond-expand
+ (chicken (import (scheme base)))
+ (gambit (import (except (scheme base) for-each))))
 
 (include "trie.scm"))

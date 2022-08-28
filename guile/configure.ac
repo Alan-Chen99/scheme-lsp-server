@@ -1,4 +1,4 @@
-AC_INIT([guile-lsp-server], [0.1.16])
+AC_INIT([guile-lsp-server], [0.2.0])
 AC_CONFIG_SRCDIR([lsp-server.sld])
 AC_CONFIG_AUX_DIR([build-aux])
 AC_CONFIG_MACRO_DIR([m4])
@@ -12,14 +12,14 @@ fi
 
 AC_CONFIG_FILES([Makefile])
 
-AC_CONFIG_LINKS([lsp-server/private-impl.scm:../src/private.scm
-                 lsp-server/document-impl.scm:../src/document.scm
-                 lsp-server/file.scm:../src/file.scm
-                 lsp-server/main.scm:../src/main.scm
-                 lsp-server/server.scm:../src/server.scm
-                 lsp-server/trie-impl.scm:../src/trie.scm
-                 lsp-server/adapter-impl.scm:../src/adapter.scm
-                 lsp-server/parse-impl.scm:../src/parse.scm
+AC_CONFIG_LINKS([lsp-server/private-impl.scm:../private.scm
+                 lsp-server/document-impl.scm:../document.scm
+                 lsp-server/file.scm:../file.scm
+                 lsp-server/main.scm:../main.scm
+                 lsp-server/server.scm:../server.scm
+                 lsp-server/trie-impl.scm:../trie.scm
+                 lsp-server/adapter-impl.scm:../adapter.scm
+                 lsp-server/parse-impl.scm:../parse.scm
 
                  lsp-server/guile.scm:lsp-server/guile.scm
                  lsp-server/guile/util.scm:lsp-server/guile/util.scm

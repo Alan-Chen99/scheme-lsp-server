@@ -88,11 +88,11 @@
   (values port port))
 
 ;;; Connects to a listening server on TCP-ADDRESS and TCP-PORT.
-(define ($tcp-connect tcp-address tcp-port)
+(define ($tcp-connect tcp-address tcp-port-number)
   (define sock (socket PF_INET SOCK_STREAM 0))
   (define addr (inet-pton AF_INET tcp-address))
   (setsockopt sock SOL_SOCKET SO_REUSEADDR 1)
-  (connect sock (make-socket-address AF_INET addr tcp-port))
+  (connect sock (make-socket-address AF_INET addr tcp-port-number))
   (values sock sock))
 
 (define (add-modules-to-symbols lst)

@@ -8,13 +8,17 @@
         get-absolute-pathname
         pathname-directory
         pathname-base
-        pathname-join)
+        pathname-join
+        uri-decode
+        with-input-from-string)
 
 (import (scheme base)
         (chicken base)
         (chicken pathname)
+        (only (chicken port) with-input-from-string)
         (chicken process-context)
-        (srfi 28))
+        (srfi 28)
+        (uri-generic))
 
 (begin
   (define (get-module-path module-name)
@@ -32,5 +36,7 @@
 
   (define (alist-ref/default key alist default)
     (or (alist-ref key alist)
-        default)))
+        default))
+
+  (define uri-decode uri-decode-string))
 )

@@ -4,11 +4,12 @@
 1. [Introduction](#introduction)
 2. [Installing](#installing)
 3. [API](#api)
-4. [Supported features](#supported-features)
-5. [Notes to specific implementations](#specific-implementations)
-6. [Known issues](#known-issues)
-7. [Existing clients](#existing-clients)
-8. [Contributing](#contributing)
+4. [Command-line tool](#cli)
+5. [Supported features](#supported-features)
+6. [Notes to specific implementations](#specific-implementations)
+7. [Known issues](#known-issues)
+8. [Existing clients](#existing-clients)
+9. [Contributing](#contributing)
 
 ## <a name="user-content-introduction"></a> Introduction
 
@@ -16,22 +17,24 @@
 
 A LSP (Language Server Protocol) server for Scheme.
 
-### Goals
-
 This software aims to support several Scheme implementations. To achieve this,
 the code is designed to contain as much logic as possible in R7RS Scheme,
 separating implementation-specific code in different directories.
 
-Currently only CHICKEN 5 and Guile are supported.
-
 *Note*: this code is still in an early development stage and the API may change.
 Change suggestions are welcome.
 
+
+### Supported implementations
+
+Currently CHICKEN 5, Gambit 4.9.4+ and Guile 3+ are supported. See [Supported features](#supported-features), [Notes to specific implementations](#specific-implementations) and [Known issues](#known-issues) for more information.
+
+
 ## <a name="user-content-installing"></a> Installing
 
-First a remark. Some LSP clients (currently both of them) will
-install an LSP server automatically. If anything goes wrong (or you want
-to integrate the LSP server with a new client), please follow the
+First a remark. Some LSP clients (like [lsp-scheme](https://codeberg.org/rgherdt/emacs-lsp-scheme)
+and [vscode-scheme-lsp](https://codeberg.org/rgherdt/vscode-scheme-lsp)) will
+install an LSP server automatically. If you prefer to install it manually, please follow the
 instructions below.
 
 ### CHICKEN
@@ -50,7 +53,33 @@ Then install the LSP server with
 chicken-install -s lsp-server
 ```
 
-### GUILE
+### Gambit
+
+Note that you need Gambit 4.9.4 or later in order to use this lib. You can
+install the library by simply running
+
+```
+$ gsi -install codeberg.org/rgherdt/scheme-lsp-server
+```
+
+You can now import the library using its fully qualified name
+
+```
+> (import (codeberg.org/rgherdt/scheme-lsp-server))
+```
+
+Instead of installing it, you can also call it by invoking `gsi` with `-:whitelist`
+
+```
+$ gsi -:whitelist=codeberg.org/rgherdt/scheme-lsp-server
+> (import (codeberg.org/rgherdt/scheme-lsp-server))
+```
+
+In order to use the command line tool, copy the file
+`~~userlib/codeberg.org/rgherdt/scheme-lsp-server/@/gambit/gambit-lsp-server` 
+to a directory in your `PATH`. `~~userlib` usually expands to `~/.gambit_userlib`.
+
+### Guile
 Guile's version of the LSP server is packaged using automake. Make
 sure Guile 3 **AND** its development libraries are installed. On Debian
 you can install it using:
@@ -62,6 +91,15 @@ Now switch to the `./guile` folder and run:
 
 ```
 ./configure && make && sudo make install
+```
+
+*Note: Make sure the install dir is in your %load-path and %load-compiled-path`.
+ For example, under Linux, add the following to your `./bashrc` file*
+
+```
+export GUILE_LOAD_COMPILED_PATH=...:/usr/local/lib/guile/3.0/site-ccache
+export GUILE_LOAD_PATH=...:/usr/local/share/guile/site/3.0
+
 ```
 
 
@@ -86,6 +124,12 @@ Start an LSP server listening on stdio.
 
 Start an LSP server listening on `tcp-port-number`.
 
+## <a name="user-content-cli"></a>Command-line tool
+
+This programs also comes with command line tools to start the server. They are called
+`chicken-lsp-server`, `guile-lsp-server` etc. All of them provide the same interface.
+Run `guile-lsp-server --help` for more information.
+
 ## <a name="user-content-supported-features"></a>Supported features
 
 
@@ -102,14 +146,16 @@ Start an LSP server listening on `tcp-port-number`.
 <thead>
 <tr>
 <th scope="col" class="org-left">&#xa0;</th>
-<th scope="col" class="org-left">Guile</th>
 <th scope="col" class="org-left">CHICKEN</th>
+<th scope="col" class="org-left">Gambit</th>
+<th scope="col" class="org-left">Guile</th>
 </tr>
 </thead>
 
 <tbody>
 <tr>
 <td class="org-left">Find signature</td>
+<td class="org-left">X</td>
 <td class="org-left">X</td>
 <td class="org-left">X</td>
 </tr>
@@ -120,6 +166,7 @@ Start an LSP server listening on `tcp-port-number`.
 <td class="org-left">Find documentation</td>
 <td class="org-left">X</td>
 <td class="org-left">X</td>
+<td class="org-left">X</td>
 </tr>
 </tbody>
 
@@ -128,12 +175,14 @@ Start an LSP server listening on `tcp-port-number`.
 <td class="org-left">Autocomplete identifier</td>
 <td class="org-left">X</td>
 <td class="org-left">X</td>
+<td class="org-left">X</td>
 </tr>
 </tbody>
 
 <tbody>
 <tr>
 <td class="org-left">Jump to definition</td>
+<td class="org-left">X</td>
 <td class="org-left">X</td>
 <td class="org-left">X</td>
 </tr>
@@ -161,7 +210,7 @@ packaging and automatic installation from LSP clients).
 
 ## <a name="user-content-known-issues"></a>Known issues
 
-### [Guile] No LSP information when library definition is missing
+### [Gambit and Guile] No LSP information when library definition is missing
 
 Currently the LSP server only compiles (and imports) files that contain a
 library definition. In Scheme it's common though to separate the library

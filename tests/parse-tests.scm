@@ -36,10 +36,10 @@
  (else))
 (import (lsp-server parse))
 (cond-expand
- (guile (include "../src/irregex.scm"))
+ (guile (include "../lsp-server/irregex.scm"))
  (else))
 
-(include "../src/parse.scm")
+(include "../lsp-server/parse.scm")
 
 (test-begin "cond-expand parse tests")
 
