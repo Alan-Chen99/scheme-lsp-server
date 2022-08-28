@@ -29,9 +29,9 @@ Change suggestions are welcome.
 
 ## <a name="user-content-installing"></a> Installing
 
-First a remark. Some LSP clients (currently both of them) will
-install an LSP server automatically. If anything goes wrong (or you want
-to integrate the LSP server with a new client), please follow the
+First a remark. Some LSP clients (like [lsp-scheme](https://codeberg.org/rgherdt/emacs-lsp-scheme)
+and [vscode-scheme-lsp](https://codeberg.org/rgherdt/vscode-scheme-lsp)) will
+install an LSP server automatically. If you prefer to install it manually, please follow the
 instructions below.
 
 ### CHICKEN
@@ -64,7 +64,7 @@ You can now import the library using its fully qualified name
 > (import (codeberg.org/rgherdt/scheme-lsp-server))
 ```
 
-Instead of installing it, you can also call it by invoking `gsi` whitelisting my repo:
+Instead of installing it, you can also call it by invoking `gsi` with `-:whitelist`
 
 ```
 $ gsi -:whitelist=codeberg.org/rgherdt/scheme-lsp-server
@@ -72,8 +72,8 @@ $ gsi -:whitelist=codeberg.org/rgherdt/scheme-lsp-server
 ```
 
 In order to use the command line tool, copy the file
-`~/.gambit_userlib/codeberg.org/rgherdt/scheme-lsp-server/@/gambit/gambit-lsp-server` 
-to a directory in your `PATH`.
+`~~userlib/codeberg.org/rgherdt/scheme-lsp-server/@/gambit/gambit-lsp-server` 
+to a directory in your `PATH`. `~~userlib` usually expands to `~/.gambit_userlib`.
 
 ### GUILE
 Guile's version of the LSP server is packaged using automake. Make

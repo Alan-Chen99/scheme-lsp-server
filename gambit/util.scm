@@ -14,9 +14,8 @@
 (import (scheme base)
         (gambit)
         (only (srfi 13) string-join)
-        (srfi 28))
-
-(include "../irregex.scm")
+        (srfi 28)
+        (github.com/ashinn/irregex))
 
 (begin
   ;;; copied over from srfi-133
