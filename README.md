@@ -4,6 +4,7 @@
 1. [Introduction](#introduction)
 2. [Installing](#installing)
 3. [API](#api)
+3. [Command-line tool](#cli)
 4. [Supported features](#supported-features)
 5. [Notes to specific implementations](#specific-implementations)
 6. [Known issues](#known-issues)
@@ -111,6 +112,12 @@ Start an LSP server listening on stdio.
 ```
 
 Start an LSP server listening on `tcp-port-number`.
+
+## <a name="user-content-cli"></a>Command-line tool
+
+This programs also comes with command line tools to start the server. They are called
+`chicken-lsp-server`, `guile-lsp-server` etc. All of them provide the same interface.
+Run `guile-lsp-server --help` for more information.
 
 ## <a name="user-content-supported-features"></a>Supported features
 
