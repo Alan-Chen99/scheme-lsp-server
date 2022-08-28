@@ -1,4 +1,5 @@
 #!/usr/bin/env gsi-script
+;; -*- Scheme -*-
 
 (import (codeberg.org/rgherdt/scheme-lsp-server)
         (codeberg.org/rgherdt/scheme-lsp-server private))
