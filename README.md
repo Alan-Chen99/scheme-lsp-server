@@ -50,6 +50,31 @@ Then install the LSP server with
 chicken-install -s lsp-server
 ```
 
+### Gambit
+
+You can install the library by simply running
+
+```
+$ gsi -install codeberg.org/rgherdt/scheme-lsp-server
+```
+
+You can now import the library using its fully qualified name
+
+```
+> (import (codeberg.org/rgherdt/scheme-lsp-server))
+```
+
+Instead of installing it, you can also call it by invoking `gsi` whitelisting my repo:
+
+```
+$ gsi -:whitelist=codeberg.org/rgherdt/scheme-lsp-server
+> (import (codeberg.org/rgherdt/scheme-lsp-server))
+```
+
+In order to use the command line tool, copy the file
+`~/.gambit_userlib/codeberg.org/rgherdt/scheme-lsp-server/@/gambit/gambit-lsp-server` 
+to a directory in your `PATH`.
+
 ### GUILE
 Guile's version of the LSP server is packaged using automake. Make
 sure Guile 3 **AND** its development libraries are installed. On Debian

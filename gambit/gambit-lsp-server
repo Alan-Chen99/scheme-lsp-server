@@ -1,7 +1,7 @@
 #!/usr/bin/env gsi-script
 
-(import (lsp-server)
-        (lsp-server private))
+(import (codeberg.org/rgherdt/scheme-lsp-server)
+        (codeberg.org/rgherdt/scheme-lsp-server private))
 
 (cond-expand
  (guile (import (except (scheme base)
@@ -19,7 +19,7 @@
 
 (cond-expand (chicken (import (lsp-server chicken)
                               (srfi 18)))
-             (gambit (import (lsp-server gambit)
+             (gambit (import (codeberg.org/rgherdt/scheme-lsp-server gambit)
                              (only (srfi 1) any)))
              (guile (import (only (srfi srfi-1) any)))
              (else (import (only (srfi 1) any))))
