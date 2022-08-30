@@ -17,6 +17,7 @@
         (chicken pathname)
         (only (chicken port) with-input-from-string)
         (chicken process-context)
+        (chicken tcp)
         (srfi 28)
         (uri-generic))
 

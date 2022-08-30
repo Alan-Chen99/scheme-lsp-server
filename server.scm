@@ -1,4 +1,6 @@
 (define lsp-server-log-level (make-parameter 'debug))
+
+
 (define lsp-server-state 'off)
 (define lsp-server-version "0.2.0")
 
@@ -8,6 +10,7 @@
 (define (shutting-down?)
   (eqv? lsp-server-state 'shutdown))
 
+
 (define-syntax define-handler
   (syntax-rules ()
     ((define-handler (handler params #:exit? exit?) body ...)
@@ -15,8 +18,8 @@
        (when (and (shutting-down?) (not exit?))
          (raise (make-json-rpc-invalid-request-error
                  "Only exit request allowed after shutdown.")))
-       (write-log 'debug
-                  (format "Handler ~a called with params ~s"
+       (send-notification
+        (format "Handler ~a called with params ~s"
                           'handler
                           (truncate-string (format "~a" params))))
        body ...))
@@ -35,8 +38,7 @@
 
 (define-handler (initialize-handler params)
   (let ((root-path (get-root-path params)))
-    (when ($initialize-lsp-server! root-path)
-      (write-log 'info "LSP server initialized"))
+    ($initialize-lsp-server! root-path)
     (set! lsp-server-state 'on)
     `((capabilities . ,(append mandatory-capabilities
                                $server-capabilities))
@@ -44,22 +46,18 @@
                      (version . ,lsp-server-version))))))
 
 (define-handler (initialized-handler params)
-  (write-log 'info
-             "Server initialized")
+  (send-notification "LSP server running")
   'null)
 
 (define-handler (shutdown-handler params)
-  (write-log 'info
-             "shutting down")
   'null)
 
 (define-handler (lsp-exit-handler params #:exit? #t)
-  (write-log 'info "exiting")
+  (send-notification "Exiting LSP server.")
   (json-rpc-exit)
   #f)
 
 (define-handler (ignore-request params)
-  (write-log 'debug (format "ignoring request. Params: ~a" params))
   #f)
 
 (define-handler (text-document/definition params)
@@ -123,19 +121,17 @@
           (file-path
            (update-file! file-path
                          (alist-ref 'contentChanges params))
-           (write-log 'debug
-                      (format "file contents updated: ~a"
-                              file-path)))
+           (send-notification (format "file contents updated: ~a"
+                                      file-path)))
           (else
-           (write-log 'debug
-                      (format "file-path not found: ~a"
-                              file-path)))))
+           (send-notification (format "file-path not found: ~a"
+                                      file-path)))))
   #f)
 
 (define-handler (text-document/did-close params)
   (let ((file-path (get-uri-path params)))
     (when (free-file! file-path)
-      (write-log 'info "file closed" file-path))
+      (send-notification (format "File closed: ~a" file-path)))
     #f))
 
 (define-handler (text-document/did-open params)
@@ -143,17 +139,15 @@
     (if file-path
         (begin ($open-file! file-path) ;;(generate-meta-data! file-path)
                (read-file! file-path)
-               (write-log 'debug
-                          (format "file contents read: ~a"
-                                  file-path)))
-        (write-log 'debug
-                   (format "file-path not found: ~a"
-                           file-path)))
+               (send-notification (format "file contents read: ~a"
+                                          file-path)))
+        (send-notification (format "file-path not found: ~a"
+                                   file-path)))
     #f))
 
 (define-handler (text-document/did-save params)
   (let ((file-path (get-uri-path params)))
-    (write-log 'info "file saved.")
+    (send-notification (format "File saved: ~a." file-path))
     ($save-file! file-path)
     #f))
 
@@ -170,8 +164,9 @@
         'null
         (let* ((word (editor-word-text editor-word))
                (suggestions ($apropos-list mod-name word)))
-          (write-log 'debug "getting completion suggestions for word "
-                     word)
+          (send-notification
+           (format "getting completion suggestions for word ~a."
+                   word))
           (write-log 'debug (format "suggestions list: ~a" suggestions))
 
           `((isIncomplete . #t)
@@ -213,10 +208,9 @@
     (write-log 'debug (format "params: ~a" params))
     (guard (condition
             (#t (begin
-                  (write-log 'warning
-                             "error resolving "
-                             mod
-                             id)
+                  (send-notification (format "Error resolving ~a ~a"
+                                             mod
+                                             id))
                   (if (satisfies-log-level? 'debug)
                       (raise (make-json-rpc-internal-error
                               (format "Error resolving ~a ~a"
@@ -244,8 +238,8 @@
                                               (string->symbol cur-word))))
             (if (not signature)
                 (begin
-                  (write-log 'warning
-                             (format "no signature found for: ~a" cur-word))
+                  (send-notification
+                   (format "no signature found for: ~a" cur-word))
                   "")
                 signature)))
         "")))
@@ -270,15 +264,17 @@
 
 (define-handler (custom/load-file params)
   (let ((file-path (get-uri-path params)))
-    (write-log 'debug "loading file: " file-path)
+    (send-notification (format "Loading file: ~a." file-path))
     (guard (condition
-            (#t (write-log 'warning "error loading file")))
+            (#t (send-notification (format "Error loading file: ~a."
+                                           file-path))))
            (load file-path))
     #f))
 
-(define (parameterize-and-run thunk)
+(define (parameterize-and-run out-port thunk)
   (parameterize
-      ((json-rpc-log-file (lsp-server-log-file))
+      ((server-out-port out-port)
+       (json-rpc-log-file (lsp-server-log-file))
        (json-rpc-log-level (lsp-server-log-level))
        (log-level (lsp-server-log-level))
        (custom-error-codes '((definition-not-found-error . -32000)
@@ -308,13 +304,38 @@
   (case-lambda
    (()
     (lsp-server-start/stdio (current-input-port) (current-output-port)))
-   ((input-port output-port)
-    (parameterize-and-run
-     (lambda () (json-rpc-loop input-port output-port))))))
+   ((in-port out-port)
+    (parameterize-and-run out-port
+                          (lambda ()
+                            (json-rpc-loop in-port out-port))))))
 
 (define (lsp-server-start/tcp port-num)
-  (parameterize-and-run
-   (lambda () (json-rpc-start-server/tcp port-num))))
+  (parameterize ((tcp-read-timeout #f))
+    (let ((listener (tcp-listen port-num)))
+      (send-notification
+       (format "listening on port ~a with log level ~a~%"
+               port-num
+               (json-rpc-log-level)))
+      (guard
+       (condition (#t (begin
+                        (send-notification (format "JSON-RPC error: ~a"
+                                                   condition))
+                        (cond-expand (chicken (print-error-message condition))
+                                     (else (display condition)))
+                        #f)))
+       (let loop ()
+         (let-values (((in-port out-port)
+                       (tcp-accept listener)))
+           (parameterize-and-run
+            out-port
+            (lambda () (if (eqv? (json-rpc-loop in-port out-port) 'json-rpc-exit)
+                           (begin
+                             (close-input-port in-port)
+                             (close-output-port out-port)
+                             (tcp-close listener))
+                           (begin
+                             (send-notification "Accepted incoming request")
+                             (loop)))))))))))
 
 (define (parameterize-log-levels thunk)
   (parameterize ((log-level (lsp-server-log-level))
@@ -333,12 +354,12 @@
                       (guard
                        (condition
                         (#t (begin
-                              (write-log 'error
-                                         (string-append
-                                          (format "Unable to open command listener of LSP server on port ~a.~%"
-                                                  command-port-num)
-                                          "Is the server already running?"
-                                          "If not, try changing the LSP's command port of your LSP client."))
+                              (send-notification
+                               (string-append
+                                (format "Unable to open command listener of LSP server on port ~a.~%"
+                                        command-port-num)
+                                "Is the server already running?"
+                                "If not, try changing the LSP's command port of your LSP client."))
                               (exit 1))))
                        ($tcp-accept listener))))
           (thread-start!

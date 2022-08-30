@@ -163,7 +163,7 @@
                                          (format "pos ~a bigger than contents-length ~a"
                                                  pos
                                                  contents-length)))
-                             (else 
+                             (else
                               (let ((c (string-ref contents pos)))
                                 (cond ((char=? c #\newline)
                                        (+ cn 1))
@@ -281,6 +281,8 @@
          (invert-range range))))
 
 (define lsp-server-log-level (make-parameter 'debug))
+(define server-out-port (make-parameter #f))
+
 (define lsp-server-state 'off)
 (define lsp-server-version "0.2.0")
 
@@ -318,6 +320,9 @@
 (define-handler (initialize-handler params)
   (let ((root-path (get-root-path params)))
     (when ($initialize-lsp-server! root-path)
+      (json-rpc-send-notification (server-out-port)
+                                  "$/logTrace"
+                                  `((message . "LSP server initialized")))
       (write-log 'info "LSP server initialized"))
     (set! lsp-server-state 'on)
     `((capabilities . ,(append mandatory-capabilities
@@ -327,7 +332,10 @@
 
 (define-handler (initialized-handler params)
   (write-log 'info
-             "Server initialized")
+             "LSP Server initialized")
+  (json-rpc-send-notification (server-out-port)
+                                  "$/logTrace"
+                                  `((message . "LSP server running")))
   'null)
 
 (define-handler (shutdown-handler params)
@@ -558,9 +566,10 @@
            (load file-path))
     #f))
 
-(define (parameterize-and-run thunk)
+(define (parameterize-and-run out-port thunk)
   (parameterize
-      ((json-rpc-log-file (lsp-server-log-file))
+      ((server-out-port out-port)
+       (json-rpc-log-file (lsp-server-log-file))
        (json-rpc-log-level (lsp-server-log-level))
        (log-level (lsp-server-log-level))
        (custom-error-codes '((definition-not-found-error . -32000)
@@ -590,13 +599,37 @@
   (case-lambda
    (()
     (lsp-server-start/stdio (current-input-port) (current-output-port)))
-   ((input-port output-port)
-    (parameterize-and-run
-     (lambda () (json-rpc-loop input-port output-port))))))
+   ((in-port out-port)
+    (parameterize-and-run out-port
+                          (lambda ()
+                            (json-rpc-loop in-port out-port))))))
 
 (define (lsp-server-start/tcp port-num)
-  (parameterize-and-run
-   (lambda () (json-rpc-start-server/tcp port-num))))
+  (parameterize ((tcp-read-timeout #f))
+    (let ((listener (tcp-listen port-num)))
+      (write-log 'info
+                 (format "listening on port ~a with log level ~a~%"
+                         port-num
+                         (json-rpc-log-level)))
+      (guard
+       (condition (#t (begin
+                        (write-log 'error (format "JSON-RPC error: ~a" condition))
+                        (cond-expand (chicken (print-error-message condition))
+                                     (else (display condition)))
+                        #f)))
+       (let loop ()
+         (let-values (((in-port out-port)
+                       (tcp-accept listener)))
+           (parameterize-and-run
+            out-port
+            (lambda () (if (eqv? (json-rpc-loop in-port out-port) 'json-rpc-exit)
+                           (begin
+                             (close-input-port in-port)
+                             (close-output-port out-port)
+                             (tcp-close listener))
+                           (begin
+                             (write-log 'debug (format "Accepted incoming request"))
+                             (loop)))))))))))
 
 (define (parameterize-log-levels thunk)
   (parameterize ((log-level (lsp-server-log-level))

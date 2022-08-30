@@ -15,6 +15,28 @@
   (start-char editor-word-start-char)
   (end-char editor-word-end-char))
 
+(define log-level (make-parameter 'info))
+
+(define lsp-server-log-file (make-parameter #f))
+
+(define server-out-port (make-parameter #f))
+(define trace-level (make-parameter 'messages))
+
+(define (send-notification msg . args)
+  (let ((verbose (and (not (null? args))
+                      (car args))))
+    (case (trace-level)
+      ((messages) (json-rpc-send-notification
+                   (server-out-port)
+                   "$/logTrace"
+                   `((message . ,msg))))
+      ((verbose) (json-rpc-send-notification
+                  (server-out-port)
+                  "$/logTrace"
+                  `((message . ,msg)
+                    (verbose . ,verbose))))
+      (else #t))))
+
 (define (delete-lines lines start end)
   (define len (length lines))
   (append (take lines start)
@@ -100,9 +122,7 @@
             (hash-table-keys source))
   target)
 
-(define log-level (make-parameter 'info))
 
-(define lsp-server-log-file (make-parameter #f))
 
 (define (get-log-level symb)
   (cond ((eqv? symb 'error) 0)

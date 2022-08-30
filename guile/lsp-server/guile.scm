@@ -13,8 +13,7 @@
           $tcp-connect
           $tcp-listen
           $tcp-read-timeout
-          spawn-repl-server
-          )
+          spawn-repl-server)
 
 #:use-module ((scheme base)
               #:select (define-record-type read-line guard))
@@ -58,8 +57,8 @@
 ;;; Initialize LSP server to manage project at ROOT (a string). Used
 ;;; for implementation-specific side effects only. Empty for now.
 (define ($initialize-lsp-server! root-path)
-  (write-log 'info (format "initializing LSP server with root ~a"
-                           root-path))
+  (send-notification (format "initializing LSP server with root ~a"
+                             root-path))
 
   (when (not (eq? root-path 'null))
     (add-to-load-path root-path))
@@ -186,13 +185,13 @@
        %load-path))
 
 (define (import-library-by-name mod-name)
-  (write-log 'debug
-             (format "importing module ~a" mod-name))
+  (send-notification
+   (format "importing module ~a" mod-name))
   (guard
-   (condition (#t (write-log 'error
-                             (format "Can't import module ~a: ~a"
-                                     mod-name
-                                     condition))))
+   (condition (#t (send-notification
+                   (format "Can't import module ~a: ~a"
+                           mod-name
+                           condition))))
    (eval `(import ,mod-name) (interaction-environment))
    (let ((mod (resolve-module mod-name #t #:ensure #f)))
      (import-module-dependencies mod))))
@@ -200,8 +199,8 @@
 (define (import-module-dependencies mod)
   (for-each (lambda (m)
               (let ((mod-name (module-name m)))
-                (write-log 'debug
-                           (format "importing library ~a" mod-name))
+                (send-notification
+                 (format "importing library ~a" mod-name))
                 (eval `(import ,mod-name)
                       (interaction-environment))))
             (module-uses mod)))
@@ -209,27 +208,27 @@
 (define (compile-and-import-if-needed file-path)
   (guard
    (condition
-    (#t (write-log 'error (format "Can't compile file ~a: ~a"
-                                  file-path
-                                  condition))))
+    (#t (send-notification (format "Can't compile file ~a: ~a"
+                                   file-path
+                                   condition))))
    (let* ((mod-name (parse-library-name-from-file file-path))
           (mod (if mod-name
                    (resolve-module mod-name #t #:ensure #f)
                    #f)))
      (cond ((and mod-name (not mod))
-            (write-log 'debug
-                       (format "compile-and-import-if-needed: compiling ~a and importing ~a"
-                               file-path
-                               mod-name))
+            (send-notification
+             (format "compile-and-import-if-needed: compiling ~a and importing ~a"
+                     file-path
+                     mod-name))
             (lsp-geiser-compile-file file-path)
             (import-library-by-name mod-name))
            ((and mod-name mod)
-            (write-log 'debug
-                       (format "compile-and-import-if-needed: importing ~a" mod-name))
+            (send-notification
+             (format "compile-and-import-if-needed: importing ~a" mod-name))
             (import-library-by-name mod-name))
            (else
-            (write-log 'debug
-                       (format "compile-and-import-if-needed: ignoring file ~a" file-path))
+            (send-notification
+             (format "compile-and-import-if-needed: ignoring file ~a" file-path))
             #f)))))
 
 (define ($open-file! file-path)
@@ -241,10 +240,10 @@
   (if mod-name
       (guard
        (condition (#t
-                   (write-log 'error
-                              (format "$save-file: error reloading module ~a: ~a"
-                                      mod-name
-                                      condition))
+                   (send-notification
+                    (format "$save-file: error reloading module ~a: ~a"
+                            mod-name
+                            condition))
                    (raise-exception
                     (make-json-rpc-custom-error
                      'load-error
@@ -290,3 +289,28 @@
                  (thunk))
                #f))))
       #f))
+
+;; ignored for now
+(define tcp-read-timeout (make-parameter #f))
+
+(define (tcp-listen tcp-port)
+  (define sock (socket PF_INET SOCK_STREAM 0))
+  (setsockopt sock SOL_SOCKET SO_REUSEADDR 1)
+  (bind sock (make-socket-address AF_INET INADDR_LOOPBACK tcp-port))
+  (listen sock 20)
+  sock)
+
+(define (tcp-accept listener)
+  (define res (accept listener))
+  (define port (car res))
+  (values port port))
+
+(define (tcp-connect tcp-address tcp-port)
+  (define sock (socket PF_INET SOCK_STREAM 0))
+  (define addr (inet-pton AF_INET tcp-address))
+  (setsockopt sock SOL_SOCKET SO_REUSEADDR 1)
+  (connect sock (make-socket-address AF_INET addr tcp-port))
+  (values sock sock))
+
+(define (tcp-close conn)
+  (close conn))

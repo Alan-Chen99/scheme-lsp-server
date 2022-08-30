@@ -9,7 +9,13 @@
         irregex-search
         prefix-identifier
         vector-fold
-        with-input-from-string)
+        with-input-from-string
+
+        tcp-read-timeout
+        tcp-accept
+        tcp-close
+        tcp-connect
+        tcp-listen)
 
 (import (scheme base)
         (gambit)
@@ -72,4 +78,20 @@
            (string->symbol
             (string-join (map symbol->string mod-name)
                          "/")))
-          (else (error "expecting a valid module name" mod-name))))))
+          (else (error "expecting a valid module name" mod-name))))
+
+  (define tcp-read-timeout (make-parameter #f))
+
+  (define (tcp-listen port-number)
+    (open-tcp-server port-number))
+
+  (define (tcp-accept listener)
+    (let ((p (read listener)))
+      (values p p)))
+
+  (define (tcp-close listener)
+    (close-port listener))
+
+  (define (tcp-connect tcp-address tcp-port-number)
+    (let ((p (open-tcp-client tcp-port-number)))
+      (values p p)))))

@@ -450,10 +450,10 @@
            #f)))
   (guard
       (condition
-       (#t (write-log 'error
-                      (format "Cannot parse library name from file ~a: ~a"
-                              filename
-                              condition))
+       (#t (send-notification
+            (format "Cannot parse library name from file ~a: ~a"
+                    filename
+                    condition))
            #f))
     (with-input-from-file filename
       (lambda ()
@@ -468,10 +468,10 @@
 
 (define (parse-file filename)
   (guard (condition
-          (#t (write-log 'error
-                         (format "Cannot parse file ~a: ~a"
-                                 filename
-                                 condition))
+          (#t (send-notification
+               (format "Cannot parse file ~a: ~a"
+                       filename
+                       condition))
               #f))
     (let ((meta-data-without-location
            (with-input-from-file filename
@@ -513,20 +513,20 @@
 
 (define (parse-and-update-table! source-path)
   (define abs-source-path (get-absolute-pathname source-path))
-  (write-log 'debug
-             (format "parse-and-update-table!: ~s~%" source-path))
+  (send-notification
+   (format "parse-and-update-table!: ~s~%" source-path))
 
-  (write-log 'debug
-             (format "parse-and-update-table!: absolute path ~s~%" abs-source-path))
+  (send-notification
+   (format "parse-and-update-table!: absolute path ~s~%" abs-source-path))
   (when abs-source-path
     (guard (condition
-            (#t (write-log 'error
-                           (format "parse-and-update-table!: error parsing file ~a: ~a"
-                                   abs-source-path
-                                   (cond ((error-object? condition)
-                                          (error-object-message condition))
-                                         (else
-                                          condition))))
+            (#t (send-notification
+                 (format "parse-and-update-table!: error parsing file ~a: ~a"
+                         abs-source-path
+                         (cond ((error-object? condition)
+                                (error-object-message condition))
+                               (else
+                                condition))))
                 #f))
       (let ((meta-data (parse-file abs-source-path)))
         (update-identifier-to-source-meta-data-table! abs-source-path meta-data)
@@ -610,9 +610,9 @@
      (lambda (f)
        (guard
            (condition
-            (#t (write-log 'warning
-                           (format "generate-meta-data!: can't read file ~a"
-                                   f))))
+            (#t (send-notification
+                 (format "generate-meta-data!: can't read file ~a"
+                         f))))
          (cond ((directory? f)
                 (write-log 'debug (format "generate-meta-data!: processing directory ~a" f))
                 (let ((files
@@ -657,11 +657,11 @@
                        (pinfo (cdr loc))
                        (line-number (procedure-info-line pinfo))
                        (char-number (procedure-info-character pinfo)))
-                  (write-log 'debug (format "identifier ~a found: path ~a, line ~a, char ~a "
-                                            identifier
-                                            path
-                                            line-number
-                                            char-number))
+                  (send-notification (format "identifier ~a found: path ~a, line ~a, char ~a "
+                                             identifier
+                                             path
+                                             line-number
+                                             char-number))
                   `((uri . ,(string-append "file://" path))
                     (range . ((start . ((line . ,line-number)
                                         (character . ,char-number)))

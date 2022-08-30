@@ -146,13 +146,12 @@
                            egg
                            (list egg))
                        (list identifier))))
-          (write-log 'debug
+          (send-notification
                      (format "looking up doc-path: ~a" doc-path))
           (with-output-to-string
             (lambda ()
               (guard (condition
-                      (#t (write-log
-                           'error
+                      (#t (send-notification
                            (format "#fetch-documentation: documentation not found: (~a ~a)"
                                    egg
                                    identifier))
@@ -179,10 +178,10 @@
                 (null? egg))
             #f
             (guard (condition
-                    (#t (write-log 'error
-                                   (format "#fetch-signature: signature not found: (~a ~a)"
-                                           egg
-                                           identifier))
+                    (#t (send-notification
+                         (format "#fetch-signature: signature not found: (~a ~a)"
+                                 egg
+                                 identifier))
                         #f))
                    (node-signature
                     (lookup-node (list egg identifier)))))
@@ -192,11 +191,11 @@
   (define (load-or-import file-path)
     (guard
      (condition
-      (#t (write-log 'error (format "Can't load file ~a: ~a"
-                                    file-path
-                                    (with-output-to-string
-                                      (lambda ()
-                                        (print-error-message condition)))))))
+      (#t (send-notification (format "Can't load file ~a: ~a"
+                                     file-path
+                                     (with-output-to-string
+                                       (lambda ()
+                                         (print-error-message condition)))))))
      (let ((mod-name (parse-library-name-from-file file-path)))
 
        (if (not mod-name)

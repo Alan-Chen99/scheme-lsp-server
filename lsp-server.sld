@@ -12,6 +12,7 @@
                   (chicken format)
                   (lsp-server chicken)
                   (only (chicken base) case-lambda)
+                  (only (chicken condition) print-error-message)
                   r7rs
 
                   (except (chicken io) read-string)

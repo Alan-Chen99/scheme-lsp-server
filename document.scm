@@ -142,10 +142,10 @@
   (cond ((or (= line 0) (= num-newlines 0))
          char)
         ((> line num-newlines)
-         (write-log 'error
-                    (format "line/char->pos: line (~a) exceeds number of newlines (~a)"
-                            line
-                            num-newlines))
+         (send-notification
+          (format "line/char->pos: line (~a) exceeds number of newlines (~a)"
+                  line
+                  num-newlines))
          (- (document-length doc) 1))
         (else
          (+ char

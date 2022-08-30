@@ -36,11 +36,15 @@
         delete-lines
 
         compose
-        flatmap)
+        flatmap
+
+        server-out-port
+        send-notification)
 
 (import (scheme base)
         (scheme char)
-        (scheme write))
+        (scheme write)
+        (json-rpc))
 
 (cond-expand
  (chicken (import (scheme)))

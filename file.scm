@@ -52,6 +52,7 @@
                       (hash-table-set! file-table
                                        path
                                        (begin
+                                         ;;; TODO according to protocol the server shouldn't read from disk
                                          (write-log 'debug
                                                     (format "reading file from disk: ~a" path))
                                          (call-with-input-file path
@@ -118,10 +119,10 @@
                                   0
                                   (+ cn 1)))
                              ((>= pos contents-length)
-                              (write-log 'error
-                                         (format "pos ~a bigger than contents-length ~a"
-                                                 pos
-                                                 contents-length)))
+                              (send-notification
+                               (format "pos ~a bigger than contents-length ~a"
+                                       pos
+                                       contents-length)))
                              (else
                               (let ((c (string-ref contents pos)))
                                 (cond ((char=? c #\newline)
