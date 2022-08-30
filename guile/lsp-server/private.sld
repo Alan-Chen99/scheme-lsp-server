@@ -36,8 +36,9 @@
           $string-split
 
           delete-lines
-
-          compose)
+          compose
+          server-out-port
+          send-notification)
 
 #:use-module ((scheme base)
               #:select (define-record-type
