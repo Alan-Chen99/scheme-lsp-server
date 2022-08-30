@@ -310,8 +310,8 @@
                             (json-rpc-loop in-port out-port))))))
 
 (define (lsp-server-start/tcp port-num)
-  (parameterize ((tcp-read-timeout #f))
-    (let ((listener (tcp-listen port-num)))
+  (parameterize (($tcp-read-timeout #f))
+    (let ((listener ($tcp-listen port-num)))
       (send-notification
        (format "listening on port ~a with log level ~a~%"
                port-num
@@ -325,14 +325,14 @@
                         #f)))
        (let loop ()
          (let-values (((in-port out-port)
-                       (tcp-accept listener)))
+                       ($tcp-accept listener)))
            (parameterize-and-run
             out-port
             (lambda () (if (eqv? (json-rpc-loop in-port out-port) 'json-rpc-exit)
                            (begin
                              (close-input-port in-port)
                              (close-output-port out-port)
-                             (tcp-close listener))
+                             ($tcp-close listener))
                            (begin
                              (send-notification "Accepted incoming request")
                              (loop)))))))))))
