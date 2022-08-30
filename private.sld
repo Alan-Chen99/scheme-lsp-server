@@ -36,7 +36,6 @@
         delete-lines
 
         compose
-        flatmap
 
         server-out-port
         send-notification)

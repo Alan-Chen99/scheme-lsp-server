@@ -8,7 +8,7 @@
         list-completions
         parse-library-name-from-file)
 
-(import (only (srfi 1) any every filter find fold)
+(import (only (srfi 1) any every filter find fold append-map)
         (only (srfi 14) char-set)
         (only (srfi 13) string-trim-right)
         (srfi 28)

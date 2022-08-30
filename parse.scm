@@ -264,8 +264,8 @@
                   (make-hash-table)
                   (map source-meta-data-procedure-info-table
                        subforms-meta-data))
-            (flatmap source-meta-data-imports
-                     subforms-meta-data))))
+            (append-map source-meta-data-imports
+                        subforms-meta-data))))
         ((begin-form? expr)
          (let ((subforms-meta-data
                 (fold (lambda (e acc)
@@ -283,8 +283,8 @@
                   (make-hash-table)
                   (map source-meta-data-procedure-info-table
                        subforms-meta-data))
-            (flatmap source-meta-data-imports
-                     subforms-meta-data))))
+            (append-map source-meta-data-imports
+                        subforms-meta-data))))
         ((cond-expand-form? expr)
          (let* ((matching-clause (cond-expand-find-satisfied-clause expr))
                 (subform-meta-data
