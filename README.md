@@ -56,10 +56,15 @@ chicken-install -s lsp-server
 ### Gambit
 
 Note that you need Gambit 4.9.4 or later in order to use this lib. You can
-install the library by simply running
+install the library and its dependencies by running
 
 ```
-$ gsi -install codeberg.org/rgherdt/scheme-lsp-server
+$ gsi -install \
+      codeberg.org/rgherdt/srfi \
+      github.com/ashinn/irregex \
+      github.com/rgherdt/chibi-scheme \
+      codeberg.org/rgherdt/scheme-json-rpc/json-rpc \
+      codeberg.org/rgherdt/scheme-lsp-server/lsp-server
 ```
 
 You can now import the library using its fully qualified name
