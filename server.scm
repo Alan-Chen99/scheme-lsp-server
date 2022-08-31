@@ -312,14 +312,11 @@
 (define (lsp-server-start/tcp port-num)
   (parameterize (($tcp-read-timeout #f))
     (let ((listener ($tcp-listen port-num)))
-      (send-notification
-       (format "listening on port ~a with log level ~a~%"
-               port-num
-               (json-rpc-log-level)))
       (guard
        (condition (#t (begin
-                        (send-notification (format "JSON-RPC error: ~a"
-                                                   condition))
+                        (write-log 'error
+                                   (format "JSON-RPC error: ~a"
+                                           condition))
                         (cond-expand (chicken (print-error-message condition))
                                      (else (display condition)))
                         #f)))
@@ -328,14 +325,19 @@
                        ($tcp-accept listener)))
            (parameterize-and-run
             out-port
-            (lambda () (if (eqv? (json-rpc-loop in-port out-port) 'json-rpc-exit)
-                           (begin
-                             (close-input-port in-port)
-                             (close-output-port out-port)
-                             ($tcp-close listener))
-                           (begin
-                             (send-notification "Accepted incoming request")
-                             (loop)))))))))))
+            (lambda ()
+              (send-notification
+               (format "listening on port ~a with log level ~a~%"
+                       port-num
+                       (json-rpc-log-level)))
+              (if (eqv? (json-rpc-loop in-port out-port) 'json-rpc-exit)
+                  (begin
+                    (close-input-port in-port)
+                    (close-output-port out-port)
+                    ($tcp-close listener))
+                  (begin
+                    (send-notification "Accepted incoming request")
+                    (loop)))))))))))
 
 (define (parameterize-log-levels thunk)
   (parameterize ((log-level (lsp-server-log-level))

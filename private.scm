@@ -19,7 +19,7 @@
 
 (define lsp-server-log-file (make-parameter #f))
 
-(define server-out-port (make-parameter #f))
+(define server-out-port (make-parameter (current-output-port)))
 (define trace-level (make-parameter 'messages))
 
 (define (send-notification msg . args)
@@ -34,7 +34,7 @@
                   (server-out-port)
                   "$/logTrace"
                   `((message . ,msg)
-                    (verbose . ,verbose))))
+                    (verbose . ,(or verbose "")))))
       (else #t))))
 
 (define (delete-lines lines start end)
