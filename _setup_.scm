@@ -13,12 +13,6 @@
 (define-module-alias (chibi irregex)
   (github.com/ashinn/irregex))
 
-(define-module-alias (srfi 145)
-  (codeberg.org/rgherdt/srfi srfi 145))
-
-(define-module-alias (srfi 180)
-  (codeberg.org/rgherdt/srfi srfi 180))
-
 (define-module-alias chibi
   (github.com/rgherdt/chibi-scheme lib chibi))
 
