@@ -22,21 +22,6 @@
 (define server-out-port (make-parameter (current-output-port)))
 (define trace-level (make-parameter 'messages))
 
-(define (send-notification msg . args)
-  (let ((verbose (and (not (null? args))
-                      (car args))))
-    (case (trace-level)
-      ((messages) (json-rpc-send-notification
-                   (server-out-port)
-                   "$/logTrace"
-                   `((message . ,msg))))
-      ((verbose) (json-rpc-send-notification
-                  (server-out-port)
-                  "$/logTrace"
-                  `((message . ,msg)
-                    (verbose . ,(or verbose "")))))
-      (else #t))))
-
 (define (delete-lines lines start end)
   (define len (length lines))
   (append (take lines start)
@@ -134,34 +119,14 @@
 (define (satisfies-log-level? target-level)
   (>= (get-log-level (log-level)) (get-log-level target-level)))
 
-(define (write-log target-level msg . args)
-  (define (print-log port)
+(define (write-log target-level msg)
+  (let ((msg-type (+ (get-log-level target-level) 1)))
     (when (satisfies-log-level? target-level)
-      (display (format "[LSP-SERVER] ~a: ~a"
-                       (string-upcase (symbol->string target-level))
-                       msg)
-               port)
-      (when (not (null? args))
-        (display ": " port)
-        (map (lambda (s)
-               (display (format "~a    " s) port))
-             args))
-      (newline port)
-      (flush-output-port port)))
-  (cond ((lsp-server-log-file)
-         => (lambda (fname)
-              (cond-expand
-               (chicken (call-with-output-file fname
-                          (lambda (port)
-                            (print-log port))
-                          #:append))
-               (guile (call-with-port (open-file fname "a")
-                                      (lambda (port)
-                                        (print-log port))))
-               (else (call-with-output-file fname
-                          (lambda (port)
-                            (print-log port)))))))
-        (else (print-log (current-error-port)))))
+      (json-rpc-send-notification
+       (server-out-port)
+       "window/logMessage"
+       `((message . ,msg)
+         (type . ,msg-type))))))
 
 (define (stringify elem)
   (format "~a" elem))

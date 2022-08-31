@@ -57,8 +57,8 @@
 ;;; Initialize LSP server to manage project at ROOT (a string). Used
 ;;; for implementation-specific side effects only. Empty for now.
 (define ($initialize-lsp-server! root-path)
-  (send-notification (format "initializing LSP server with root ~a"
-                             root-path))
+  (write-log 'info (format "initializing LSP server with root ~a"
+                           root-path))
 
   (when (not (eq? root-path 'null))
     (add-to-load-path root-path))
@@ -185,10 +185,10 @@
        %load-path))
 
 (define (import-library-by-name mod-name)
-  (send-notification
+  (write-log 'info
    (format "importing module ~a" mod-name))
   (guard
-   (condition (#t (send-notification
+   (condition (#t (write-log 'warning
                    (format "Can't import module ~a: ~a"
                            mod-name
                            condition))))
@@ -199,7 +199,7 @@
 (define (import-module-dependencies mod)
   (for-each (lambda (m)
               (let ((mod-name (module-name m)))
-                (send-notification
+                (write-log 'info
                  (format "importing library ~a" mod-name))
                 (eval `(import ,mod-name)
                       (interaction-environment))))
@@ -208,26 +208,26 @@
 (define (compile-and-import-if-needed file-path)
   (guard
    (condition
-    (#t (send-notification (format "Can't compile file ~a: ~a"
-                                   file-path
-                                   condition))))
+    (#t (write-log 'error (format "Can't compile file ~a: ~a"
+                                  file-path
+                                  condition))))
    (let* ((mod-name (parse-library-name-from-file file-path))
           (mod (if mod-name
                    (resolve-module mod-name #t #:ensure #f)
                    #f)))
      (cond ((and mod-name (not mod))
-            (send-notification
+            (write-log 'debug
              (format "compile-and-import-if-needed: compiling ~a and importing ~a"
                      file-path
                      mod-name))
             (lsp-geiser-compile-file file-path)
             (import-library-by-name mod-name))
            ((and mod-name mod)
-            (send-notification
+            (write-log 'debug
              (format "compile-and-import-if-needed: importing ~a" mod-name))
             (import-library-by-name mod-name))
            (else
-            (send-notification
+            (write-log 'debug
              (format "compile-and-import-if-needed: ignoring file ~a" file-path))
             #f)))))
 
@@ -240,7 +240,7 @@
   (if mod-name
       (guard
        (condition (#t
-                   (send-notification
+                   (write-log 'error
                     (format "$save-file: error reloading module ~a: ~a"
                             mod-name
                             condition))

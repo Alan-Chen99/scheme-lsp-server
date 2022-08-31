@@ -37,8 +37,7 @@
 
           delete-lines
           compose
-          server-out-port
-          send-notification)
+          server-out-port)
 
 #:use-module ((scheme base)
               #:select (define-record-type

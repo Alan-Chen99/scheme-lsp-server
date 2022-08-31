@@ -119,7 +119,7 @@
                                   0
                                   (+ cn 1)))
                              ((>= pos contents-length)
-                              (send-notification
+                              (write-log 'warning
                                (format "pos ~a bigger than contents-length ~a"
                                        pos
                                        contents-length)))

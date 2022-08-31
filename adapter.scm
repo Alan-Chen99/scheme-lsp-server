@@ -108,7 +108,7 @@
                      loc file line file-path))
 
   (cond ((and line (< line 0))
-         (send-notification "lsp-geiser-symbol-location: line number is negative")
+         (write-log 'warning "lsp-geiser-symbol-location: line number is negative")
          '())
         ((and file-path line)
          `((uri . ,file-path)
@@ -131,7 +131,7 @@
     (define load-file-fn ge:load-file))
    (chicken (define load-file-fn geiser-load-file)))
   (guard
-   (condition (#t (send-notification
+   (condition (#t (write-log 'error
                    (format "load-file ~a error: ~a"
                            file-path
                            condition))))

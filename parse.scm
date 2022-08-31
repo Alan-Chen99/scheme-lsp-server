@@ -450,7 +450,7 @@
            #f)))
   (guard
       (condition
-       (#t (send-notification
+       (#t (write-log 'warning
             (format "Cannot parse library name from file ~a: ~a"
                     filename
                     condition))
@@ -468,7 +468,7 @@
 
 (define (parse-file filename)
   (guard (condition
-          (#t (send-notification
+          (#t (write-log 'error
                (format "Cannot parse file ~a: ~a"
                        filename
                        condition))
@@ -513,14 +513,14 @@
 
 (define (parse-and-update-table! source-path)
   (define abs-source-path (get-absolute-pathname source-path))
-  (send-notification
+  (write-log 'debug
    (format "parse-and-update-table!: ~s~%" source-path))
 
-  (send-notification
+  (write-log 'debug
    (format "parse-and-update-table!: absolute path ~s~%" abs-source-path))
   (when abs-source-path
     (guard (condition
-            (#t (send-notification
+            (#t (write-log 'error
                  (format "parse-and-update-table!: error parsing file ~a: ~a"
                          abs-source-path
                          (cond ((error-object? condition)
@@ -610,7 +610,7 @@
      (lambda (f)
        (guard
            (condition
-            (#t (send-notification
+            (#t (write-log 'warning
                  (format "generate-meta-data!: can't read file ~a"
                          f))))
          (cond ((directory? f)
@@ -657,11 +657,12 @@
                        (pinfo (cdr loc))
                        (line-number (procedure-info-line pinfo))
                        (char-number (procedure-info-character pinfo)))
-                  (send-notification (format "identifier ~a found: path ~a, line ~a, char ~a "
-                                             identifier
-                                             path
-                                             line-number
-                                             char-number))
+                  (write-log 'debug
+                             (format "identifier ~a found: path ~a, line ~a, char ~a "
+                                     identifier
+                                     path
+                                     line-number
+                                     char-number))
                   `((uri . ,(string-append "file://" path))
                     (range . ((start . ((line . ,line-number)
                                         (character . ,char-number)))

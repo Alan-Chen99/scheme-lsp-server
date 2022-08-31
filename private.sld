@@ -37,8 +37,7 @@
 
         compose
 
-        server-out-port
-        send-notification)
+        server-out-port)
 
 (import (scheme base)
         (scheme char)

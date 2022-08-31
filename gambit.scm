@@ -10,6 +10,7 @@
         $server-capabilities
         $server-name
         $tcp-accept
+        $tcp-close
         $tcp-connect
         $tcp-listen
         $tcp-read-timeout)
@@ -33,8 +34,9 @@
   (define $tcp-read-timeout (make-parameter #f))
 
   (define ($initialize-lsp-server! root-path)
-    (send-notification (format "initializing LSP server with root ~a"
-                               root-path))
+    (write-log 'info
+               (format "initializing LSP server with root ~a"
+                       root-path))
     (module-search-order-add! root-path)
     #f)
 
@@ -47,6 +49,9 @@
   (define ($tcp-accept listener)
     (let ((p (read listener)))
       (values p p)))
+
+  (define ($tcp-close listener)
+    (close-port listener))
 
   (define ($tcp-connect tcp-address tcp-port-number)
     (let ((p (open-tcp-client tcp-port-number)))
@@ -69,7 +74,7 @@
 
     (let ((proc (if (symbol? identifier)
                     (guard
-                     (condition (#t (send-notification
+                     (condition (#t (write-log 'info
                                      (format "procedure not found: ~a"
                                              identifier))
                                     #f))
@@ -140,20 +145,22 @@
   (define (compile-and-import-if-needed file-path)
     (guard
         (condition
-         (#t (send-notification (format "Error compiling file ~a: ~a"
-                                        file-path
-                                        (cond ((error-object? condition)
-                                               (error-object-message condition))
-                                              (else condition))))
+         (#t (write-log 'error
+                        (format "Error compiling file ~a: ~a"
+                                file-path
+                                (cond ((error-object? condition)
+                                       (error-object-message condition))
+                                      (else condition))))
              #f))
       (let ((mod-name (parse-library-name-from-file file-path)))
         (cond ((and mod-name
                     (not (lsp-server-dependency? mod-name)))
-               (send-notification (format "Importing module ~s" mod-name))
+               (write-log 'info (format "Importing module ~s" mod-name))
                (eval `(import ,mod-name)))
               (else
-               (send-notification (format "Ignoring LSP-server dependency ~a"
-                                          mod-name))
+               (write-log 'debug
+                          (format "Ignoring LSP-server dependency ~a"
+                                  mod-name))
                #f)))))
 
   (define ($open-file! file-path)
@@ -163,9 +170,10 @@
   (define ($save-file! file-path)
     (guard
         (condition
-         (#t (send-notification (format "Error loading file ~a: ~a"
-                                        file-path
-                                        condition))
+         (#t (write-log 'error
+                        (format "Error loading file ~a: ~a"
+                                file-path
+                                condition))
              #f))
       (load file-path))
     #f)

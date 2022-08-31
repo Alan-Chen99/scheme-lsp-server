@@ -11,6 +11,7 @@
         $server-name
         spawn-repl-server
         $tcp-accept
+        $tcp-close
         $tcp-connect
         $tcp-listen
         $tcp-read-timeout
@@ -98,6 +99,8 @@
 
   (define $tcp-accept tcp-accept)
 
+  (define $tcp-close tcp-close)
+
   (define $tcp-connect tcp-connect)
 
   (define $tcp-listen tcp-listen)
@@ -146,12 +149,12 @@
                            egg
                            (list egg))
                        (list identifier))))
-          (send-notification
+          (write-log 'debug
                      (format "looking up doc-path: ~a" doc-path))
           (with-output-to-string
             (lambda ()
               (guard (condition
-                      (#t (send-notification
+                      (#t (write-log 'debug
                            (format "#fetch-documentation: documentation not found: (~a ~a)"
                                    egg
                                    identifier))
@@ -178,7 +181,7 @@
                 (null? egg))
             #f
             (guard (condition
-                    (#t (send-notification
+                    (#t (write-log 'debug
                          (format "#fetch-signature: signature not found: (~a ~a)"
                                  egg
                                  identifier))
@@ -191,11 +194,12 @@
   (define (load-or-import file-path)
     (guard
      (condition
-      (#t (send-notification (format "Can't load file ~a: ~a"
-                                     file-path
-                                     (with-output-to-string
-                                       (lambda ()
-                                         (print-error-message condition)))))))
+      (#t (write-log 'error
+                     (format "Can't load file ~a: ~a"
+                             file-path
+                             (with-output-to-string
+                               (lambda ()
+                                 (print-error-message condition)))))))
      (let ((mod-name (parse-library-name-from-file file-path)))
 
        (if (not mod-name)
