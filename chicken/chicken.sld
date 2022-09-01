@@ -37,16 +37,15 @@
         (chicken tcp)
         nrepl
         chicken-doc
-        medea
         r7rs
         scheme
-        srfi-1
-        srfi-18
-        srfi-69
-        srfi-130
+        (srfi 1)
+        (srfi 18)
+        (srfi 69)
+        (srfi 130)
+        (srfi 180)
 
         (geiser)
-        (srfi 18)
         (lsp-server private)
         (lsp-server chicken util)
         (lsp-server parse)

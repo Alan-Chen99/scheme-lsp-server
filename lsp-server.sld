@@ -20,8 +20,8 @@
                   (only (srfi 133) vector-fold)
                   (chicken tcp)
                   apropos
-                  medea
                   (srfi 18)
+                  (srfi 180)
                   utf8))
  (gambit (import (except (gambit) string-upcase)
                  (lsp-server gambit util)

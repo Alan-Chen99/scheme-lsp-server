@@ -2,7 +2,7 @@
 
 
 (define lsp-server-state 'off)
-(define lsp-server-version "0.2.0")
+(define lsp-server-version "0.2.1")
 
 (define listening-threads '())
 (define listening-threads-mutex (make-mutex))
