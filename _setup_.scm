@@ -1,4 +1,11 @@
-(define-module-alias json-rpc
+(define-module-alias (srfi 145)
+  (codeberg.org/rgherdt/srfi srfi 145))
+
+(define-module-alias (srfi 180)
+  (codeberg.org/rgherdt/srfi srfi 180))
+
+
+(define-module-alias (json-rpc)
   (codeberg.org/rgherdt/scheme-json-rpc json-rpc))
 
 (define-module-alias (json-rpc private)
