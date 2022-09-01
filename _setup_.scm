@@ -20,8 +20,14 @@
 (define-module-alias (chibi irregex)
   (github.com/ashinn/irregex))
 
-(define-module-alias chibi
-  (github.com/rgherdt/chibi-scheme lib chibi))
+(define-module-alias (chibi uri)
+  (github.com/rgherdt/chibi-scheme lib chibi uri))
+
+(define-module-alias (chibi string)
+  (github.com/rgherdt/chibi-scheme lib chibi string))
+
+(define-module-alias (chibi pathname)
+  (github.com/rgherdt/chibi-scheme lib chibi pathname))
 
 (define-module-alias lsp-server
   (codeberg.org/rgherdt/scheme-lsp-server))
