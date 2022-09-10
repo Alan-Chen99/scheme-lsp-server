@@ -1,6 +1,7 @@
 #!/bin/sh
 
-BASEDIR=$(dirname $0)
+BASE_DIR=$(dirname $0)
+SOURCE_DIR=${BASE_DIR}/..
 
 echo -n "Checking for existing installation...   "
 gsi -e '(import (codeberg.org/rgherdt/scheme-lsp-server gambit util)) (exit)' >/dev/null
@@ -24,12 +25,12 @@ gsc codeberg.org/rgherdt/scheme-lsp-server/gambit/util \
 
 echo "Compiling gambit-lsp-server executable."
 
-gsc -exe -nopreload . \
-    ../gambit/util.scm \
-    ../private.sld \
-    ../parse.sld \
-    ../adapter.sld \
-    ../gambit.scm \
-    ../trie.sld \
-    ../lsp-server.sld \
-    gambit-lsp-server.scm
+gsc -exe -nopreload ${BASE_DIR} \
+    ${SOURCE_DIR}/gambit/util.scm \
+    ${SOURCE_DIR}/private.sld \
+    ${SOURCE_DIR}/parse.sld \
+    ${SOURCE_DIR}/adapter.sld \
+    ${SOURCE_DIR}/gambit.scm \
+    ${SOURCE_DIR}/trie.sld \
+    ${SOURCE_DIR}/lsp-server.sld \
+    ${SOURCE_DIR}/gambit/gambit-lsp-server.scm
