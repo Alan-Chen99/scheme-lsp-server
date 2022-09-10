@@ -325,62 +325,27 @@
                                      (else (display condition)))
                         #f)))
        (let loop ()
-         (let-values (((in-port out-port)
-                       ($tcp-accept listener)))
-           (parameterize-and-run
-            out-port
-            (lambda ()
-              (write-log 'info
-               (format "listening on port ~a with log level ~a~%"
-                       port-num
-                       (json-rpc-log-level)))
-              (if (eqv? (json-rpc-loop in-port out-port) 'json-rpc-exit)
-                  (begin
-                    (close-input-port in-port)
-                    (close-output-port out-port)
-                    ($tcp-close listener))
-                  (begin
-                    (write-log 'info "Accepted incoming request")
-                    (loop)))))))))))
+         (call-with-values (lambda () ($tcp-accept listener))
+           (lambda (in-port out-port)
+             (parameterize-and-run
+              out-port
+              (lambda ()
+                (write-log 'info
+                           (format "listening on port ~a with log level ~a~%"
+                                   port-num
+                                   (json-rpc-log-level)))
+                (cond ((eqv? (json-rpc-loop in-port out-port) 'json-rpc-exit)
+                       (close-input-port in-port)
+                       (close-output-port out-port)
+                       ($tcp-close listener))
+                      (else
+                       (write-log 'info "Accepted incoming request")
+                       (loop))))))))))))
 
 (define (parameterize-log-levels thunk)
   (parameterize ((log-level (lsp-server-log-level))
                  (json-rpc-log-level (lsp-server-log-level)))
     (thunk)))
-
-(define (lsp-spawner-loop command-port-num)
-  (write-log 'debug
-             (format "lsp-spawner-loop: ~a [log level: ~a]"
-                     command-port-num
-                     (lsp-server-log-level)))
-  (parameterize (($tcp-read-timeout #f))
-    (let ((listener ($tcp-listen command-port-num)))
-      (let loop ()
-        (let-values (((in-port out-port)
-                      (guard
-                       (condition
-                        (#t (begin
-                              (write-log 'warning
-                               (string-append
-                                (format "Unable to open command listener of LSP server on port ~a.~%"
-                                        command-port-num)
-                                "Is the server already running?"
-                                "If not, try changing the LSP's command port of your LSP client."))
-                              (exit 1))))
-                       ($tcp-accept listener))))
-          (thread-start!
-           (make-thread
-            (lambda () (lsp-server-start/stdio in-port out-port))))
-          (loop))))))
-
-(define (lsp-spawner-start port-num)
-  (parameterize-log-levels
-   (lambda ()
-     (write-log 'info
-                         (format "LSP command server started on port ~a"
-                                 port-num))
-     (thread-start!
-      (make-thread (lambda () (lsp-spawner-loop port-num)))))))
 
 (define (remove-slashes path)
   (define new-path (make-string (string-length path)))
