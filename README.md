@@ -55,8 +55,12 @@ chicken-install -s lsp-server
 
 ### Gambit
 
-Note that you need Gambit 4.9.4 or later in order to use this lib. You can
-install the library and its dependencies by running
+Note that you need Gambit 4.9.4 or later in order to use this lib. Make sure
+to also install the extra modules, since this program depends on srfi-151.
+If you are compiling gambit from source, run `make modules` before installing
+with `sudo make install`.
+
+You can install the library and its dependencies by running
 
 ```
 $ gsi -install \
@@ -66,6 +70,7 @@ $ gsi -install \
       codeberg.org/rgherdt/scheme-json-rpc/json-rpc \
       codeberg.org/rgherdt/scheme-lsp-server/lsp-server
 ```
+
 
 You can now import the library using its fully qualified name
 
@@ -80,9 +85,22 @@ $ gsi -:whitelist=codeberg.org/rgherdt/scheme-lsp-server
 > (import (codeberg.org/rgherdt/scheme-lsp-server lsp-server))
 ```
 
-In order to use the command line tool, copy the file
-`~~userlib/codeberg.org/rgherdt/scheme-lsp-server/@/gambit/gambit-lsp-server` 
-to a directory in your `PATH`. `~~userlib` usually expands to `~/.gambit_userlib`.
+The command-line tool is available as a script `gambit/gambit-lsp-server.scm`,
+which you can put in your `PATH`. Alternatively, you can compile it for better
+performance (see next).
+
+#### Improving performance through compilation
+
+You may notice that `gambit-lsp-server` takes some seconds to start. This can
+be annoying, since some LSP clients fire up the client for each .scm file
+or project. You can improve performance by compiling the library. For this
+you need to compile Gambit using it's current `master` branch, since the 4.9.4
+release contains bugs regarding some R7RS forms. You can compile the library
+and the executable by running the script `gambit/compile.sh`
+```
+$ cd ~/.gambit_userlib/codeberg.org/rgherdt/scheme-lsp-server/@/gambit
+$ ./compile.sh
+```
 
 ### Guile
 Guile's version of the LSP server is packaged using automake. Make
