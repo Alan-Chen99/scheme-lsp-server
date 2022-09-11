@@ -195,7 +195,7 @@
 
 (define (parse-gambit-namespace expr)
   (let* ((name (car (cadr expr)))
-         (mod-name (string-trim-right (symbol->string name) (char-set #\#))))
+         (mod-name (string-trim-right name (char-set #\#))))
     (string->symbol mod-name)))
 
 (define (parse-guile-module expression)
