@@ -4,7 +4,6 @@
 (define-module-alias (srfi 180)
   (codeberg.org/rgherdt/srfi srfi 180))
 
-
 (define-module-alias (json-rpc)
   (codeberg.org/rgherdt/scheme-json-rpc json-rpc))
 
