@@ -18,7 +18,8 @@
         tcp-listen
         get-absolute-pathname
         find-files
-        pathname-directory)
+        pathname-directory
+        pathname-join)
 
 (import (scheme base)
         (gambit)
@@ -103,7 +104,7 @@
   (define (get-absolute-pathname p)
     (path-expand (path-normalize p)))
 
-  (define (path-join dirname filename)
+  (define (pathname-join dirname filename)
     (string-append dirname "/" filename))
 
   (define pathname-directory path-directory)
@@ -118,7 +119,7 @@
     (if (and (regular-file? path)
              (test path))
         (list path)
-        (let ((files (map (lambda (f) (path-join path f))
+        (let ((files (map (lambda (f) (pathname-join path f))
                           (directory-files path))))
           (append (filter (lambda (f)
                             (and (regular-file? f)

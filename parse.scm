@@ -200,7 +200,10 @@
 (define (parse-gambit-namespace expr)
   (let* ((name (car (cadr expr)))
          (mod-name (string-trim-right name (char-set #\#))))
-    (string->symbol mod-name)))
+    (if (and (not (string=? mod-name ""))
+             (not (string=? mod-name "##")))
+        (string->symbol mod-name)
+        #f)))
 
 (define (parse-guile-module expression)
   (define mod-name (cadr expression))
