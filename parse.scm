@@ -107,7 +107,11 @@
 ;; TODO support set!
 (define (procedure-definition-form? expr)
   (and (or (tagged-expression? expr 'define)
-           (tagged-expression? expr 'define*))
+           (tagged-expression? expr 'define*)
+           (and (list? expr)
+                (not (null? expr))
+                (let ((tag (car expr)))
+                  (string-prefix? "define" (symbol->string tag)))))
        (not (null? (cdr expr)))
        (or (procedure-definition-with-case-lambda? expr)
            (procedure-definition-with-lambda? expr)
@@ -369,7 +373,11 @@
 (define definition-regex
   (irregex '(: (* whitespace)
                (* #\()
-               (: (or "define" "define*" "define-syntax" "set!")
+               (: (or "define"
+                      "define*"
+                      "define-syntax"
+                      "set!"
+                      (: "define" (+ (~ whitespace))))
                   (+ whitespace)
                   (? #\()
                   (submatch (+ (~ (or whitespace
@@ -556,8 +564,38 @@
                eol)))
 
 (cond-expand
- (gambit (define (generate-meta-data! . files)
-           #f))
+ (gambit
+  (define (parse-and-update-if-needed! filename)
+    (let* ((abs-filename (get-absolute-pathname filename))
+           (mtime (time->seconds
+                   (file-last-modification-time abs-filename)))
+           (old-time-stamp (hash-table-ref/default
+                            (source-path-timestamps)
+                            abs-filename
+                            #f)))
+      (when (or (not old-time-stamp)
+                (> mtime old-time-stamp))
+        (hash-table-set! (source-path-timestamps)
+                         abs-filename
+                         mtime)
+        (parse-and-update-table! abs-filename))))
+  (define (generate-meta-data! . files)
+           (for-each (lambda (f)
+                       (let ((fs
+                              (find-files f
+                                          (lambda (p)
+                                            (string=? (path-extension p)
+                                                      ".scm")))))
+                         (for-each
+                          (lambda (filename)
+                            (write-log 'debug
+                                       (format "generate-meta-data!: processing file ~a"
+                                               filename))
+                            (parse-and-update-if-needed! filename))
+                          fs)))
+                     (filter (lambda (f)
+                               (not (string=? f "")))
+                             files))))
  (guile (define (generate-meta-data! . files)
           (write-log 'debug
                      (format "generate-meta-data! for files ~a" files))
@@ -631,6 +669,13 @@
                (not (string=? f "")))
              files)))))
 
+(define (location-valid? loc)
+  (and loc
+       (not (null? loc))
+       (let ((pinfo (cdr loc)))
+         (and (procedure-info-line pinfo)
+              (procedure-info-character pinfo)))))
+
 ;;; Return a list of locations found for IDENTIFIER (a symbol).
 ;;; Each location is represented by an alist
 ;;; '((url . "file:///<path>")
@@ -668,7 +713,7 @@
                                         (character . ,char-number)))
                               (end . ((line . ,line-number)
                                       (character . ,char-number))))))))
-              locations))
+              (filter location-valid? locations)))
         (else '())))
 
 (define (pinfo-signature pinfo)

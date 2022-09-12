@@ -38,7 +38,8 @@
 
 (define-handler (initialize-handler params)
   (let ((root-path (get-root-path params)))
-    ($initialize-lsp-server! root-path)
+    (thread-start!
+     (make-thread (lambda () ($initialize-lsp-server! root-path))))
     (set! lsp-server-state 'on)
     `((capabilities . ,(append mandatory-capabilities
                                $server-capabilities))

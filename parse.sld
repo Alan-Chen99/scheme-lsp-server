@@ -10,7 +10,7 @@
 
 (import (only (srfi 1) any every filter find fold append-map)
         (only (srfi 14) char-set)
-        (only (srfi 13) string-trim-right)
+        (only (srfi 13) string-trim-right string-prefix?)
         (srfi 28)
         (srfi 69)
         (only (scheme file) with-input-from-file)
@@ -27,6 +27,11 @@
                   (only (chicken keyword) keyword?)
                   (lsp-server chicken util)))
  (gambit (import (scheme base)
+                 (only (gambit)
+                       caddr
+                       file-last-modification-time
+                       path-extension
+                       time->seconds)
                  (lsp-server gambit util))))
 
 (include "parse.scm")

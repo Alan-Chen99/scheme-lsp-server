@@ -26,7 +26,6 @@
         (lsp-server private))
 
 (begin
-
   (define $server-name
     "Gambit LSP server")
 
@@ -38,6 +37,7 @@
                (format "initializing LSP server with root ~a"
                        root-path))
     (module-search-order-add! root-path)
+    (generate-meta-data! root-path)
     #f)
 
   (define $server-capabilities
@@ -104,16 +104,20 @@
 
   ;; TODO move this to geiser?
   (define ($get-definition-locations mod-name identifier)
-    (let ((res (fetch-location identifier)))
-      (if (null? res)
-          (let ((mod-prefix (procedure-module-prefix identifier)))
-            (if mod-prefix
-                (fetch-location (string->symbol
-                                 (format "~a~a"
-                                         mod-prefix
-                                         identifier)))
-                '()))
-          res)))
+    (let* ((res (fetch-location identifier))
+           (internal-res
+            (if (null? res)
+                (let ((mod-prefix (procedure-module-prefix identifier)))
+                  (if mod-prefix
+                      (fetch-location (string->symbol
+                                       (format "~a~a"
+                                               mod-prefix
+                                               identifier)))
+                      '()))
+                res)))
+      (if (not (null? internal-res))
+          internal-res
+          (fetch-definition-locations identifier))))
 
   (define (lsp-server-dependency? mod-name)
     (define pred
@@ -137,6 +141,7 @@
             (lsp-server parse)
             (lsp-server private)
             (lsp-server trie)
+            (srfi 1)
             (srfi 13)
             (srfi 14)
             (srfi 28)
@@ -164,10 +169,12 @@
                #f)))))
 
   (define ($open-file! file-path)
+    (generate-meta-data! file-path)
     (compile-and-import-if-needed file-path)
     #f)
 
   (define ($save-file! file-path)
+    (generate-meta-data! file-path)
     (guard
         (condition
          (#t (write-log 'error
@@ -175,7 +182,12 @@
                                 file-path
                                 condition))
              #f))
-      (load file-path))
+        (let ((mod-name (parse-library-name-from-file file-path)))
+          (if (not (lsp-server-dependency? mod-name))
+              (load file-path)
+              (write-log 'info
+                         (format "Skip reload of lsp dependency: ~a"
+                                 mod-name)))))
     #f)
 
   (define ($fetch-documentation mod-name identifier)
@@ -189,11 +201,12 @@
 
     (or (lsp-geiser-signature identifier)
         (let ((mod-prefix (procedure-module-prefix identifier)))
-          (and mod-prefix
-               (lsp-geiser-signature (string->symbol
-                                      (format "~a~a"
-                                              mod-prefix
-                                              identifier)))))))
+          (or (and mod-prefix
+                   (lsp-geiser-signature (string->symbol
+                                          (format "~a~a"
+                                                  mod-prefix
+                                                  identifier))))
+              (fetch-signature mod-name identifier)))))
 
   (define namespace-regex
     (irregex '(: "\""

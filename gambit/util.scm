@@ -15,10 +15,14 @@
         tcp-accept
         tcp-close
         tcp-connect
-        tcp-listen)
+        tcp-listen
+        get-absolute-pathname
+        find-files
+        pathname-directory)
 
 (import (scheme base)
         (gambit)
+        (only (srfi 1) append-map)
         (only (srfi 13) string-join)
         (srfi 28)
         (github.com/ashinn/irregex irregex))
@@ -94,4 +98,31 @@
 
   (define (tcp-connect tcp-address tcp-port-number)
     (let ((p (open-tcp-client tcp-port-number)))
-      (values p p)))))
+      (values p p)))
+
+  (define (get-absolute-pathname p)
+    (path-expand (path-normalize p)))
+
+  (define (path-join dirname filename)
+    (string-append dirname "/" filename))
+
+  (define pathname-directory path-directory)
+
+  (define (directory? f)
+    (eq? (file-type f) 'directory))
+
+  (define (regular-file? f)
+    (eq? (file-type f) 'regular))
+
+  (define (find-files path test)
+    (if (and (regular-file? path)
+             (test path))
+        (list path)
+        (let ((files (map (lambda (f) (path-join path f))
+                          (directory-files path))))
+          (append (filter (lambda (f)
+                            (and (regular-file? f)
+                                 (test f)))
+                          files)
+                  (append-map (lambda (d) (find-files d test))
+                              (filter directory? files))))))))
