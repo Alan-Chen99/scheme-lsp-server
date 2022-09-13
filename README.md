@@ -55,11 +55,7 @@ chicken-install -s lsp-server
 
 ### Gambit
 
-Note that you need Gambit 4.9.4 or later in order to use this lib. Make sure
-to also install the extra modules, since this program depends on srfi-151.
-If you are compiling gambit from source, run `make modules` before installing
-with `sudo make install`.
-
+Note that you need Gambit 4.9.4 or later in order to use this lib.
 You can install the library and its dependencies by running
 
 ```
