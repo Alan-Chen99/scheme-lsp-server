@@ -1,6 +1,6 @@
 ((author "Ricardo Gabriel Herdt")
  (synopsis "LSP Server for CHICKEN.")
- (version "0.2.1")
+ (version "0.2.2")
  (license "MIT")
  (category tools)
  (dependencies apropos
