@@ -229,7 +229,7 @@ packaging and automatic installation from LSP clients).
 
 ## <a name="user-content-known-issues"></a>Known issues
 
-### [Gambit and Guile] No LSP information when library definition is missing
+### [Gambit and Guile] Incomplete (or none at all) LSP information when library definition is missing
 
 Currently the LSP server only compiles (and imports) files that contain a
 library definition. In Scheme it's common though to separate the library
@@ -240,11 +240,12 @@ information. By opening the corresponding library definition (doesn't matter if
 before of after opening the first file) it should work properly.
 
 I experimented with a couple of workarounds for this, but was not 100% satisfied
-by the result. One idea was to simply compile/import every single file found
+by the result. One idea is to simply compile/import every single file found
 in a project that contains a library definition. But this would bloat the
 run-time, and in my experiments lead to weird behavior on some large projects.
-Ideally we would like to keep track which source files belong to which library
-definition, but I'm not sure what's the best way to achieve this.
+
+Another workaround is to scan files and parse them statically, but this has
+some problems (see below).
 
 ### [CHICKEN] Slow startup on large projects
 
@@ -252,6 +253,7 @@ For CHICKEN we scan the project and parse files in order to fetch LSP-related
 information. On large projects, you may experience a delay until
 information starts to be received. LSP provides ways of giving feedback
 to the user when an operation takes a long time, we can add support to it
+in the future. I may investigate caching strategies for better performance
 in the future.
 
 ## <a name="user-content-existing-clients"></a>Existing clients
