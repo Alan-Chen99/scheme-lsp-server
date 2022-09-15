@@ -73,15 +73,9 @@
     (write-log 'debug
                (format "fetch-location ~s" identifier))
 
-    (let ((proc (if (symbol? identifier)
-                    (guard
-                     (condition (#t (write-log 'info
-                                     (format "procedure not found: ~a"
-                                             identifier))
-                                    #f))
-                     (eval identifier)) ; safe 'cause only a symbol
-                    #f)))
-      (if (and proc (procedure? proc))
+    (let ((proc (##global-var-ref
+                 (##make-global-var identifier))))
+      (if (and (not (##unbound? proc)) (procedure? proc))
           (let ((loc (##procedure-locat proc)))
             (if (not loc)
                 '()
@@ -151,13 +145,13 @@
   (define (compile-and-import-if-needed file-path)
     (guard
         (condition
-         (#t (write-log 'error
-                        (format "Error compiling file ~a: ~a"
-                                file-path
-                                (cond ((error-object? condition)
-                                       (error-object-message condition))
-                                      (else condition))))
-             #f))
+         (else (write-log 'error
+                          (format "Error compiling file ~a: ~a"
+                                  file-path
+                                  (cond ((error-object? condition)
+                                         (error-object-message condition))
+                                        (else condition))))
+               #f))
       (let ((mod-name (parse-library-name-from-file file-path)))
         (cond ((and mod-name
                     (not (lsp-server-dependency? mod-name)))
@@ -178,11 +172,11 @@
     (generate-meta-data! file-path)
     (guard
         (condition
-         (#t (write-log 'error
-                        (format "Error loading file ~a: ~a"
-                                file-path
-                                condition))
-             #f))
+         (else (write-log 'error
+                          (format "Error loading file ~a: ~a"
+                                  file-path
+                                  condition))
+               #f))
         (let ((mod-name (parse-library-name-from-file file-path)))
           (if (not (lsp-server-dependency? mod-name))
               (load file-path)

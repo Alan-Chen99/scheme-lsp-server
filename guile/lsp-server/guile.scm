@@ -10,6 +10,7 @@
           $server-capabilities
           $server-name
           $tcp-accept
+          $tcp-close
           $tcp-connect
           $tcp-listen
           $tcp-read-timeout
@@ -291,26 +292,26 @@
       #f))
 
 ;; ignored for now
-(define tcp-read-timeout (make-parameter #f))
+(define $tcp-read-timeout (make-parameter #f))
 
-(define (tcp-listen tcp-port)
+(define ($tcp-listen tcp-port)
   (define sock (socket PF_INET SOCK_STREAM 0))
   (setsockopt sock SOL_SOCKET SO_REUSEADDR 1)
   (bind sock (make-socket-address AF_INET INADDR_LOOPBACK tcp-port))
   (listen sock 20)
   sock)
 
-(define (tcp-accept listener)
+(define ($tcp-accept listener)
   (define res (accept listener))
   (define port (car res))
   (values port port))
 
-(define (tcp-connect tcp-address tcp-port)
+(define ($tcp-connect tcp-address tcp-port)
   (define sock (socket PF_INET SOCK_STREAM 0))
   (define addr (inet-pton AF_INET tcp-address))
   (setsockopt sock SOL_SOCKET SO_REUSEADDR 1)
   (connect sock (make-socket-address AF_INET addr tcp-port))
   (values sock sock))
 
-(define (tcp-close conn)
+(define ($tcp-close conn)
   (close conn))

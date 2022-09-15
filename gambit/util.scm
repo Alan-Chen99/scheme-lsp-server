@@ -21,8 +21,7 @@
         pathname-directory
         pathname-join)
 
-(import (scheme base)
-        (gambit)
+(import (gambit)
         (only (srfi 1) append-map)
         (only (srfi 13) string-join)
         (srfi 28)

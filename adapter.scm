@@ -131,8 +131,8 @@
     (define load-file-fn ge:load-file))
    (chicken (define load-file-fn geiser-load-file)))
   (guard
-   (condition (#t (write-log 'error
-                   (format "load-file ~a error: ~a"
-                           file-path
-                           condition))))
+   (condition (else (write-log 'error
+                               (format "load-file ~a error: ~a"
+                                       file-path
+                                       condition))))
    (load-file-fn file-path)))

@@ -208,21 +208,20 @@
                    mod-name))))
     (write-log 'debug (format "params: ~a" params))
     (guard (condition
-            (#t (begin
-                  (write-log 'error (format "Error resolving ~a ~a"
-                                            mod
-                                            id))
-                  (if (satisfies-log-level? 'debug)
-                      (raise (make-json-rpc-internal-error
-                              (format "Error resolving ~a ~a"
-                                      mod
-                                      id)))
-                      'null))))
-           (begin
-             (let ((doc (or ($fetch-documentation mod id)
-                            "")))
-               (cons `(documentation . ,doc)
-                     params))))))
+            (else (begin
+                    (write-log 'error (format "Error resolving ~a ~a"
+                                              mod
+                                              id))
+                    (if (satisfies-log-level? 'debug)
+                        (raise (make-json-rpc-internal-error
+                                (format "Error resolving ~a ~a"
+                                        mod
+                                        id)))
+                        'null))))
+           (let ((doc (or ($fetch-documentation mod id)
+                          "")))
+             (cons `(documentation . ,doc)
+                   params)))))
 
 (define (fetch-signature-under-cursor params)
   (let* ((editor-word
@@ -267,8 +266,8 @@
   (let ((file-path (get-uri-path params)))
     (write-log 'info (format "Loading file: ~a." file-path))
     (guard (condition
-            (#t (write-log 'error (format "Error loading file: ~a."
-                                          file-path))))
+            (else (write-log 'error (format "Error loading file: ~a."
+                                            file-path))))
            (load file-path))
     #f))
 
@@ -318,13 +317,13 @@
   (parameterize (($tcp-read-timeout #f))
     (let ((listener ($tcp-listen port-num)))
       (guard
-       (condition (#t (begin
-                        (write-log 'error
-                                   (format "JSON-RPC error: ~a"
-                                           condition))
-                        (cond-expand (chicken (print-error-message condition))
-                                     (else (display condition)))
-                        #f)))
+       (condition (else (begin
+                          (write-log 'error
+                                     (format "JSON-RPC error: ~a"
+                                             condition))
+                          (cond-expand (chicken (print-error-message condition))
+                                       (else (display condition)))
+                          #f)))
        (let loop ()
          (call-with-values (lambda () ($tcp-accept listener))
            (lambda (in-port out-port)

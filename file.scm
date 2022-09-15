@@ -68,12 +68,12 @@
   (mutex-lock! file-table-mutex)
   (let* ((file (hash-table-ref/default file-table path #f))
          (result (cond ((not file)
-                       (write-log 'warning
-                                  "trying to freeing a non-existing file"
-                                  path)
-                       #f)
-                      (else (hash-table-delete! file-table path)
-                            #t))))
+                        (write-log 'warning
+                                   (format "trying to freeing a non-existing file: ~a"
+                                           path))
+                        #f)
+                       (else (hash-table-delete! file-table path)
+                             #t))))
     (mutex-unlock! file-table-mutex)
     result))
 
