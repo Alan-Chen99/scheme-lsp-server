@@ -22,7 +22,10 @@
                   (srfi 18)
                   (srfi 180)
                   utf8))
- (gambit (import (except (gambit) string-upcase)
+ (gambit (import (only (gambit)
+                       make-mutex
+                       mutex-lock!
+                       mutex-unlock!)
                  (lsp-server gambit util)
                  (lsp-server gambit))))
 
