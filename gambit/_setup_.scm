@@ -8,13 +8,13 @@
   (codeberg.org/rgherdt/scheme-json-rpc json-rpc))
 
 (define-module-alias (json-rpc private)
-  (codeberg.org/rgherdt/scheme-json-rpc private))
+  (codeberg.org/rgherdt/scheme-json-rpc json-rpc private))
 
 (define-module-alias (json-rpc lolevel)
-  (codeberg.org/rgherdt/scheme-json-rpc lolevel))
+  (codeberg.org/rgherdt/scheme-json-rpc json-rpc lolevel))
 
-(define-module-alias (json-rpc gambit)
-  (codeberg.org/rgherdt/scheme-json-rpc gambit))
+(define-module-alias (json-rpc private compat)
+  (codeberg.org/rgherdt/scheme-json-rpc json-rpc private compat))
 
 (define-module-alias (chibi irregex)
   (github.com/ashinn/irregex))
