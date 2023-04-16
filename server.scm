@@ -274,7 +274,7 @@
 (define (parameterize-and-run out-port thunk)
   (parameterize
       ((server-out-port out-port)
-       (json-rpc-log-file #f)
+       ;;(json-rpc-log-file "/tmp/example.log")
        ;; logging to stderr may cause problems with some clients
        ;; (particularly vscode), so we silence log messages from json-rpc lib.
        (json-rpc-log-level 'silent)
@@ -298,6 +298,7 @@
           ("textDocument/signatureHelp" . ,text-document/signature-help)
           ("$/setTraceNotification" . ,ignore-request)
           ("$/cancelRequest" . ,ignore-request)
+          ("window/logMessage" . ,ignore-request)
           ("exit" . ,lsp-exit-handler)
           ("shutdown" . ,shutdown-handler)
           ;; custom commands
