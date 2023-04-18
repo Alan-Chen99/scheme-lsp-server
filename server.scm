@@ -37,8 +37,8 @@
     (signatureHelpProvider . ())))
 
 (cond-expand
- (gambit (define thread-start! ##thread-start!)
-         (define make-thread ##make-thread))
+ (gambit (define thread-start! (primitive thread-start!))
+         (define make-thread (primitive make-thread)))
  (else))
 
 (define-handler (initialize-handler params)

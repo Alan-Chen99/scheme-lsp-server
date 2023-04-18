@@ -24,7 +24,8 @@
                   (only (chicken port) with-input-from-string)
                   (utf8)))
  (gambit (import (lsp-server gambit util)
-                 (except (scheme base) vector-copy))))
+                 (except (scheme base) vector-copy))
+         (include "~~lib/_gambit#.scm")))
 
 (include "document.scm"))
 

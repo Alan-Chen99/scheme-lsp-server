@@ -1,8 +1,8 @@
 (cond-expand
- (gambit (define vector-append ##vector-append)
-         (define vector-copy ##vector-copy)
-         (define vector-length ##vector-length)
-         (define vector-ref ##vector-ref))
+ (gambit (define vector-append (primitive vector-append))
+         (define vector-copy (primitive vector-copy))
+         (define vector-length (primitive vector-length))
+         (define vector-ref (primitive vector-ref)))
  (else))
 
 ;;; For efficiency reasons, we represent documents by a string containing the

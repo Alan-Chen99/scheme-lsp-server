@@ -27,7 +27,8 @@
                        mutex-lock!
                        mutex-unlock!)
                  (lsp-server gambit util)
-                 (lsp-server gambit))))
+                 (lsp-server gambit))
+         (include "~~lib/_gambit#.scm")))
 
 
 (import (scheme base)
