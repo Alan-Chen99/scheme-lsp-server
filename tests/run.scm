@@ -15,12 +15,17 @@
                (srfi 69)
                (srfi 64))))
 
-(import (json-rpc)
-        (json-rpc lolevel))
+(cond-expand
+ (gambit (import (codeberg.org/rgherdt/scheme-json-rpc json-rpc)
+                 (codeberg.org/rgherdt/scheme-json-rpc json-rpc lolevel)
+                 (codeberg.org/rgherdt/scheme-lsp-server lsp-server)))
+ (else (import (json-rpc)
+               (json-rpc lolevel)
+               (lsp-server)
+               (lsp-server private)
+               (lsp-server document))))
 
-(import (lsp-server)
-        (lsp-server private)
-        (lsp-server document))
+
 
 (cond-expand
  (chicken (import (scheme base)

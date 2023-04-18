@@ -9,17 +9,23 @@
 
 (import (scheme base)
         (lsp-server private)
+        (lsp-server private compat)
         (lsp-server parse)
         (srfi 28)
         (only (srfi 13) string-join))
 
 (cond-expand
- (chicken (import (lsp-server chicken util)
-                  (geiser)
+ (chicken (import (geiser)
                   (scheme)))
  (gambit (import (_geiser)
                  (lsp-server gambit util)))
+ (guile (import (prefix (geiser completion) geiser-)
+                (geiser evaluation)
+                (prefix (geiser modules) geiser-)
+                (prefix (geiser doc) geiser-)
+                (prefix (geiser xref) geiser-)
+                (lsp-server private guile)))
  (else))
 
 (begin
-  (include "adapter.scm")))
+  (include "adapter-impl.scm")))

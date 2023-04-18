@@ -25,8 +25,9 @@
 #:use-module ((scheme file) #:select (with-input-from-file))
 #:use-module (scheme read)
 #:use-module (lsp-server private)
+#:use-module (lsp-server private compat)
+#:use-module (lsp-server private guile)
 #:use-module (lsp-server trie)
-#:use-module (lsp-server guile util)
 #:use-module (system vm program)
 #:use-module (ice-9 ftw)
 

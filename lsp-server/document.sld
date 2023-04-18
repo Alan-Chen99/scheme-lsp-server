@@ -25,7 +25,12 @@
                   (utf8)))
  (gambit (import (lsp-server gambit util)
                  (except (scheme base) vector-copy))
-         (include "~~lib/_gambit#.scm")))
+         (include "~~lib/_gambit#.scm"))
+ (guile (import (only (scheme base)
+                      define-record-type
+                      vector-append
+                      vector-copy
+                      vector-map))))
 
-(include "document.scm"))
+(include "document-impl.scm"))
 

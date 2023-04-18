@@ -12,5 +12,6 @@
 #:use-module (scheme base)
 #:use-module ((srfi srfi-1) #:select (every fold))
 #:use-module (srfi srfi-69)
-#:use-module (lsp-server guile util))
+#:use-module (lsp-server private compat)
+#:use-module (lsp-server private guile))
 

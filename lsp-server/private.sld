@@ -50,10 +50,14 @@
 
 (cond-expand
  (guile (import
-         (srfi srfi-1)
-         (srfi srfi-28)
-         (srfi srfi-69)
-         (srfi srfi-13)))
+         (srfi 1)
+         (srfi 28)
+         (srfi 69)
+         (srfi 13)
+         (only (scheme base)
+               define-record-type
+               flush-output-port)
+         (scheme write)))
  (else (import
         (only (srfi 1)
               take
@@ -70,6 +74,7 @@
                   (lsp-server chicken util)
                   r7rs))
  (gambit (import (chibi uri)
-                 (lsp-server gambit util))))
+                 (lsp-server gambit util)))
+ (guile (import (lsp-server private guile))))
 
-(include "private.scm"))
+(include "private-impl.scm"))

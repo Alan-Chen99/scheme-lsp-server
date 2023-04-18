@@ -1,11 +1,10 @@
 moddir=$(datadir)/guile/site/$(GUILE_EFFECTIVE_VERSION)
 godir=$(libdir)/guile/$(GUILE_EFFECTIVE_VERSION)/site-ccache
 
-SOURCES = $(LIBRARY_DEFINITIONS:%.sld=%.scm)
-GOBJECTS = $(DEPENDENCIES:%.scm=%.go) $(SOURCES:%.scm=%.go) $(GUILE_SPECIFIC_SOURCES:%.scm=%.go)
+GOBJECTS = $(LIBRARY_DEFINITIONS:%.sld=%.go)
 EXECUTABLE = lsp-server/guile-lsp-server
 
-nobase_dist_mod_DATA = $(SOURCES) $(GUILE_SPECIFIC_SOURCES) $(DEPENDENCIES)
+nobase_dist_mod_DATA = $(SOURCES) $(DEPENDENCIES)
 nobase_go_DATA = $(GOBJECTS)
 bin_SCRIPTS = $(EXECUTABLE)
 $(EXECUTABLE): lsp-server/main.scm
@@ -34,12 +33,17 @@ SUFFIXES = .scm .sld .go
 PREFIX=$(AM_V_GEN)GUILE_LOAD_COMPILED_PATH="@abs_top_builddir@/:$(GUILE_LOAD_COMPILED_PATH)"; \
       GUILE_LOAD_PATH="@abs_top_builddir@/:@abs_top_srcdir@/:$(GUILE_LOAD_PATH)"
 
-lsp-server.scm: lsp-server.sld lsp-server/file.scm lsp-server/server.scm
+lsp-server.scm: lsp-server.sld lsp-server/file-impl.scm lsp-server/server-impl.scm
 	cat $< > $@
 	echo "" >> $@
-	cat lsp-server/file.scm >> $@
+	cat lsp-server/file-impl.scm >> $@
 	echo "" >> $@
-	cat lsp-server/server.scm >> $@
+	cat lsp-server/server-impl.scm >> $@
+
+lsp-server/private/compat.scm: lsp-server/private/compat.sld lsp-server/private/compat-guile-impl.scm
+	cat $< > $@
+	echo "" >> $@
+	cat lsp-server/private/compat-guile-impl.scm >> $@
 
 lsp-server/private.scm: lsp-server/private.sld lsp-server/private-impl.scm
 	cat $< > $@
@@ -66,16 +70,23 @@ lsp-server/adapter.scm: lsp-server/adapter.sld lsp-server/adapter-impl.scm
 	echo "" >> $@
 	cat lsp-server/adapter-impl.scm >> $@
 
+lsp-server/private/guile.scm: lsp-server/private/guile.sld lsp-server/private/guile-impl.scm
+	cat $< > $@
+	echo "" >> $@
+	cat lsp-server/private/guile-impl.scm >> $@
+
 
 distclean-local:
 	rm -Rf geiser/ \
-	       private.scm    \
-	       document.scm   \
-	       trie.scm       \
-	       parse.scm      \
-	       adapter.scm    \
-	       file.scm       \
-	       server.scm     \
+	       lsp-server/private/compat.scm \
+	       lsp-server/private/guile.scm \
+	       lsp-server/private.scm    \
+	       lsp-server/document.scm   \
+	       lsp-server/trie.scm       \
+	       lsp-server/parse.scm      \
+	       lsp-server/adapter.scm    \
+	       lsp-server/file.scm       \
+	       lsp-server/server.scm     \
 	       main.scm
 
 .scm.go:

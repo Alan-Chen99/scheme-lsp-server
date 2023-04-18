@@ -9,11 +9,15 @@
         trie->alist
         alist->trie)
 
-(import (only (srfi 1) fold)
+(import (only (srfi 1) every fold)
         (srfi 69))
 
 (cond-expand
  (chicken (import (scheme base)))
- (gambit (import (except (scheme base) for-each))))
+ (gambit (import (except (scheme base) for-each)))
+ (guile (import (scheme base)
+                (lsp-server private guile))))
 
-(include "trie.scm"))
+(import (lsp-server private compat))
+
+(include "trie-impl.scm"))

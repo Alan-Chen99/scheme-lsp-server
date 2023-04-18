@@ -100,15 +100,17 @@ am__CONFIG_DISTCLEAN_FILES = config.status config.cache config.log \
  configure.lineno config.status.lineno
 mkinstalldirs = $(install_sh) -d
 CONFIG_CLEAN_FILES = lsp-server/private-impl.scm \
-	lsp-server/document-impl.scm lsp-server/file.scm \
-	lsp-server/main.scm lsp-server/server.scm \
+	lsp-server/document-impl.scm lsp-server/file-impl.scm \
+	lsp-server/main.scm lsp-server/server-impl.scm \
 	lsp-server/trie-impl.scm lsp-server/adapter-impl.scm \
-	lsp-server/parse-impl.scm geiser/modules.scm geiser/utils.scm \
-	geiser/doc.scm geiser/completion.scm geiser/evaluation.scm \
-	geiser/xref.scm README.md
-CONFIG_CLEAN_VPATH_FILES = lsp-server/guile.scm \
-	lsp-server/guile/util.scm lsp-server/adapter.sld \
+	lsp-server/parse-impl.scm \
+	lsp-server/private/compat-guile-impl.scm \
+	lsp-server/private/guile-impl.scm geiser/modules.scm \
+	geiser/utils.scm geiser/doc.scm geiser/completion.scm \
+	geiser/evaluation.scm geiser/xref.scm README.md
+CONFIG_CLEAN_VPATH_FILES = lsp-server/adapter.sld \
 	lsp-server/document.sld lsp-server/private.sld \
+	lsp-server/private/compat.sld lsp-server/private/guile.sld \
 	lsp-server/trie.sld lsp-server/parse.sld lsp-server.sld
 am__vpath_adj_setup = srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`;
 am__vpath_adj = case $$p in \
@@ -182,24 +184,29 @@ CSCOPE = cscope
 AM_RECURSIVE_TARGETS = cscope
 am__DIST_COMMON = $(srcdir)/Makefile.in $(srcdir)/guile.am \
 	$(srcdir)/lsp-server.sld $(top_srcdir)/../README.md \
-	$(top_srcdir)/../adapter.scm $(top_srcdir)/../document.scm \
-	$(top_srcdir)/../file.scm \
 	$(top_srcdir)/../geiser/guile/src/geiser/completion.scm \
 	$(top_srcdir)/../geiser/guile/src/geiser/doc.scm \
 	$(top_srcdir)/../geiser/guile/src/geiser/evaluation.scm \
 	$(top_srcdir)/../geiser/guile/src/geiser/modules.scm \
 	$(top_srcdir)/../geiser/guile/src/geiser/utils.scm \
 	$(top_srcdir)/../geiser/guile/src/geiser/xref.scm \
-	$(top_srcdir)/../main.scm $(top_srcdir)/../parse.scm \
-	$(top_srcdir)/../private.scm $(top_srcdir)/../server.scm \
-	$(top_srcdir)/../trie.scm $(top_srcdir)/build-aux/install-sh \
+	$(top_srcdir)/../lsp-server/adapter-impl.scm \
+	$(top_srcdir)/../lsp-server/document-impl.scm \
+	$(top_srcdir)/../lsp-server/file-impl.scm \
+	$(top_srcdir)/../lsp-server/parse-impl.scm \
+	$(top_srcdir)/../lsp-server/private-impl.scm \
+	$(top_srcdir)/../lsp-server/private/compat-guile-impl.scm \
+	$(top_srcdir)/../lsp-server/private/guile-impl.scm \
+	$(top_srcdir)/../lsp-server/server-impl.scm \
+	$(top_srcdir)/../lsp-server/trie-impl.scm \
+	$(top_srcdir)/../main.scm $(top_srcdir)/build-aux/install-sh \
 	$(top_srcdir)/build-aux/missing \
 	$(top_srcdir)/lsp-server/adapter.sld \
 	$(top_srcdir)/lsp-server/document.sld \
-	$(top_srcdir)/lsp-server/guile.scm \
-	$(top_srcdir)/lsp-server/guile/util.scm \
 	$(top_srcdir)/lsp-server/parse.sld \
 	$(top_srcdir)/lsp-server/private.sld \
+	$(top_srcdir)/lsp-server/private/compat.sld \
+	$(top_srcdir)/lsp-server/private/guile.sld \
 	$(top_srcdir)/lsp-server/trie.sld build-aux/install-sh \
 	build-aux/missing
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
@@ -305,10 +312,9 @@ top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 moddir = $(datadir)/guile/site/$(GUILE_EFFECTIVE_VERSION)
 godir = $(libdir)/guile/$(GUILE_EFFECTIVE_VERSION)/site-ccache
-SOURCES = $(LIBRARY_DEFINITIONS:%.sld=%.scm)
-GOBJECTS = $(DEPENDENCIES:%.scm=%.go) $(SOURCES:%.scm=%.go) $(GUILE_SPECIFIC_SOURCES:%.scm=%.go)
+GOBJECTS = $(LIBRARY_DEFINITIONS:%.sld=%.go)
 EXECUTABLE = lsp-server/guile-lsp-server
-nobase_dist_mod_DATA = $(SOURCES) $(GUILE_SPECIFIC_SOURCES) $(DEPENDENCIES)
+nobase_dist_mod_DATA = $(SOURCES) $(DEPENDENCIES)
 nobase_go_DATA = $(GOBJECTS)
 bin_SCRIPTS = $(EXECUTABLE)
 
@@ -333,16 +339,24 @@ DEPENDENCIES = \
   geiser/xref.scm
 
 LIBRARY_DEFINITIONS = \
+  lsp-server/private/guile.sld \
   lsp-server/private.sld    \
+  lsp-server/private/compat.sld \
   lsp-server/document.sld   \
   lsp-server/trie.sld       \
   lsp-server/parse.sld      \
   lsp-server/adapter.sld    \
   lsp-server.sld
 
-GUILE_SPECIFIC_SOURCES = \
-  lsp-server/guile/util.scm \
-  lsp-server/guile.scm
+SOURCES = \
+  lsp-server/private-impl.scm    \
+  lsp-server/private/compat-guile-impl.scm \
+  lsp-server/private/guile-impl.scm \
+  lsp-server/document-impl.scm   \
+  lsp-server/trie-impl.scm       \
+  lsp-server/parse-impl.scm      \
+  lsp-server/adapter-impl.scm    \
+  lsp-server.scm
 
 EXTRA_DIST = \
   README.md             \
@@ -846,12 +860,17 @@ uninstall-hook:
 	rm -f $(DESTDIR)$(godir)/$(GOBJECTS)
 	rm -f $(DESTDIR)$(bindir)/$(EXECUTABLE)
 
-lsp-server.scm: lsp-server.sld lsp-server/file.scm lsp-server/server.scm
+lsp-server.scm: lsp-server.sld lsp-server/file-impl.scm lsp-server/server-impl.scm
 	cat $< > $@
 	echo "" >> $@
-	cat lsp-server/file.scm >> $@
+	cat lsp-server/file-impl.scm >> $@
 	echo "" >> $@
-	cat lsp-server/server.scm >> $@
+	cat lsp-server/server-impl.scm >> $@
+
+lsp-server/private/compat.scm: lsp-server/private/compat.sld lsp-server/private/compat-guile-impl.scm
+	cat $< > $@
+	echo "" >> $@
+	cat lsp-server/private/compat-guile-impl.scm >> $@
 
 lsp-server/private.scm: lsp-server/private.sld lsp-server/private-impl.scm
 	cat $< > $@
@@ -878,15 +897,22 @@ lsp-server/adapter.scm: lsp-server/adapter.sld lsp-server/adapter-impl.scm
 	echo "" >> $@
 	cat lsp-server/adapter-impl.scm >> $@
 
+lsp-server/private/guile.scm: lsp-server/private/guile.sld lsp-server/private/guile-impl.scm
+	cat $< > $@
+	echo "" >> $@
+	cat lsp-server/private/guile-impl.scm >> $@
+
 distclean-local:
 	rm -Rf geiser/ \
-	       private.scm    \
-	       document.scm   \
-	       trie.scm       \
-	       parse.scm      \
-	       adapter.scm    \
-	       file.scm       \
-	       server.scm     \
+	       lsp-server/private/compat.scm \
+	       lsp-server/private/guile.scm \
+	       lsp-server/private.scm    \
+	       lsp-server/document.scm   \
+	       lsp-server/trie.scm       \
+	       lsp-server/parse.scm      \
+	       lsp-server/adapter.scm    \
+	       lsp-server/file.scm       \
+	       lsp-server/server.scm     \
 	       main.scm
 
 .scm.go:

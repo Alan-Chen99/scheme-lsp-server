@@ -32,9 +32,21 @@
                        file-last-modification-time
                        path-extension
                        time->seconds)
-                 (lsp-server gambit util))))
+                 (lsp-server gambit util)))
+ (guile (import (only (scheme base)
+                      define-record-type
+                      error-object?
+                      error-object-message
+                      features
+                      guard
+                      read-line)
+                (only (scheme file) with-input-from-file)
+                (scheme read)
+                (system vm program)
+                (ice-9 ftw)
+                (lsp-server private guile))))
 
-(include "parse.scm")
+(include "parse-impl.scm")
 
 (begin
   (define hash-table-join! hash-table-merge!)

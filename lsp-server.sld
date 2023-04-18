@@ -28,8 +28,20 @@
                        mutex-unlock!)
                  (lsp-server gambit util)
                  (lsp-server gambit))
-         (include "~~lib/_gambit#.scm")))
-
+         (include "~~lib/_gambit#.scm"))
+ (guile (import (only (scheme base)
+                      define-record-type
+                      guard
+                      let-values)
+                (scheme write)
+                (srfi 1)
+                (srfi 8)
+                (srfi 18)
+                (srfi 43)
+                (ice-9 documentation)
+                (ice-9 session)
+                (system vm program)
+                (lsp-server adapter))))
 
 (import (scheme base)
         (scheme case-lambda)
@@ -52,7 +64,8 @@
 
         (lsp-server document)
         (lsp-server parse)
-        (lsp-server private))
+        (lsp-server private)
+        (lsp-server private compat))
 
-(include "file.scm")
-(include "server.scm"))
+(include "lsp-server/file-impl.scm")
+(include "lsp-server/server-impl.scm"))
