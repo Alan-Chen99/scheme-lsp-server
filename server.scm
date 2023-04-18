@@ -36,6 +36,11 @@
     (completionProvider . ((resolveProvider . #t)))
     (signatureHelpProvider . ())))
 
+(cond-expand
+ (gambit (define thread-start! ##thread-start!)
+         (define make-thread ##make-thread))
+ (else))
+
 (define-handler (initialize-handler params)
   (let ((root-path (get-root-path params)))
     (thread-start!
@@ -324,7 +329,7 @@
                                              condition))
                           (cond-expand (chicken (print-error-message condition))
                                        (else (display condition)))
-                          #f)))
+                          (raise condition))))
        (let loop ()
          (call-with-values (lambda () ($tcp-accept listener))
            (lambda (in-port out-port)

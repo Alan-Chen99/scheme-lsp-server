@@ -1,3 +1,10 @@
+(cond-expand
+ (gambit (define vector-append ##vector-append)
+         (define vector-copy ##vector-copy)
+         (define vector-length ##vector-length)
+         (define vector-ref ##vector-ref))
+ (else))
+
 ;;; For efficiency reasons, we represent documents by a string containing the
 ;;; text and a vector with indices of all #\newline's found in it.
 (define-record-type <document>
