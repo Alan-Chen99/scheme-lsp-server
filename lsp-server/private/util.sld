@@ -1,4 +1,4 @@
-(define-library (lsp-server private)
+(define-library (lsp-server private util)
 
 (export make-apropos-info
         apropos-info-module
@@ -71,10 +71,10 @@
 
 (cond-expand
  (chicken (import (only (chicken base) intersperse)
-                  (lsp-server chicken util)
+                  (lsp-server private chicken)
                   r7rs))
  (gambit (import (chibi uri)
-                 (lsp-server gambit util)))
+                 (lsp-server private gambit)))
  (guile (import (lsp-server private guile))))
 
-(include "private-impl.scm"))
+(include "util-impl.scm"))

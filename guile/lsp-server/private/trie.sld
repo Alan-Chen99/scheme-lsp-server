@@ -1,4 +1,4 @@
-(define-module (lsp-server trie)
+(define-module (lsp-server private trie)
 
 #:export (make-trie
           trie?

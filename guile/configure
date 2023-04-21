@@ -2734,7 +2734,7 @@ fi
 ac_config_files="$ac_config_files Makefile"
 
 
-ac_config_links="$ac_config_links lsp-server/private-impl.scm:../lsp-server/private-impl.scm lsp-server/document-impl.scm:../lsp-server/document-impl.scm lsp-server/file-impl.scm:../lsp-server/file-impl.scm lsp-server/main.scm:../main.scm lsp-server/server-impl.scm:../lsp-server/server-impl.scm lsp-server/trie-impl.scm:../lsp-server/trie-impl.scm lsp-server/adapter-impl.scm:../lsp-server/adapter-impl.scm lsp-server/parse-impl.scm:../lsp-server/parse-impl.scm lsp-server/private/compat-guile-impl.scm:../lsp-server/private/compat-guile-impl.scm lsp-server/private/guile-impl.scm:../lsp-server/private/guile-impl.scm lsp-server/adapter.sld:lsp-server/adapter.sld lsp-server/document.sld:lsp-server/document.sld lsp-server/private.sld:lsp-server/private.sld lsp-server/private/compat.sld:lsp-server/private/compat.sld lsp-server/private/guile.sld:lsp-server/private/guile.sld lsp-server/trie.sld:lsp-server/trie.sld lsp-server/parse.sld:lsp-server/parse.sld lsp-server.sld:lsp-server.sld geiser/modules.scm:../geiser/guile/src/geiser/modules.scm geiser/utils.scm:../geiser/guile/src/geiser/utils.scm geiser/doc.scm:../geiser/guile/src/geiser/doc.scm geiser/completion.scm:../geiser/guile/src/geiser/completion.scm geiser/evaluation.scm:../geiser/guile/src/geiser/evaluation.scm geiser/xref.scm:../geiser/guile/src/geiser/xref.scm README.md:../README.md"
+ac_config_links="$ac_config_links lsp-server/private/util-impl.scm:../lsp-server/private/util-impl.scm lsp-server/private/document-impl.scm:../lsp-server/private/document-impl.scm lsp-server/file-impl.scm:../lsp-server/file-impl.scm lsp-server/main.scm:../main.scm lsp-server/server-impl.scm:../lsp-server/server-impl.scm lsp-server/private/trie-impl.scm:../lsp-server/private/trie-impl.scm lsp-server/private/adapter-impl.scm:../lsp-server/private/adapter-impl.scm lsp-server/private/parse-impl.scm:../lsp-server/private/parse-impl.scm lsp-server/private/compat-guile-impl.scm:../lsp-server/private/compat-guile-impl.scm lsp-server/private/guile-impl.scm:../lsp-server/private/guile-impl.scm lsp-server/private/adapter.sld:lsp-server/private/adapter.sld lsp-server/private/document.sld:lsp-server/private/document.sld lsp-server/private/util.sld:lsp-server/private/util.sld lsp-server/private/compat.sld:lsp-server/private/compat.sld lsp-server/private/guile.sld:lsp-server/private/guile.sld lsp-server/private/trie.sld:lsp-server/private/trie.sld lsp-server/private/parse.sld:lsp-server/private/parse.sld lsp-server.sld:lsp-server.sld geiser/modules.scm:../geiser/guile/src/geiser/modules.scm geiser/utils.scm:../geiser/guile/src/geiser/utils.scm geiser/doc.scm:../geiser/guile/src/geiser/doc.scm geiser/completion.scm:../geiser/guile/src/geiser/completion.scm geiser/evaluation.scm:../geiser/guile/src/geiser/evaluation.scm geiser/xref.scm:../geiser/guile/src/geiser/xref.scm README.md:../README.md"
 
 
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking if (json-rpc) is available" >&5
@@ -3475,23 +3475,23 @@ for ac_config_target in $ac_config_targets
 do
   case $ac_config_target in
     "Makefile") CONFIG_FILES="$CONFIG_FILES Makefile" ;;
-    "lsp-server/private-impl.scm") CONFIG_LINKS="$CONFIG_LINKS lsp-server/private-impl.scm:../lsp-server/private-impl.scm" ;;
-    "lsp-server/document-impl.scm") CONFIG_LINKS="$CONFIG_LINKS lsp-server/document-impl.scm:../lsp-server/document-impl.scm" ;;
+    "lsp-server/private/util-impl.scm") CONFIG_LINKS="$CONFIG_LINKS lsp-server/private/util-impl.scm:../lsp-server/private/util-impl.scm" ;;
+    "lsp-server/private/document-impl.scm") CONFIG_LINKS="$CONFIG_LINKS lsp-server/private/document-impl.scm:../lsp-server/private/document-impl.scm" ;;
     "lsp-server/file-impl.scm") CONFIG_LINKS="$CONFIG_LINKS lsp-server/file-impl.scm:../lsp-server/file-impl.scm" ;;
     "lsp-server/main.scm") CONFIG_LINKS="$CONFIG_LINKS lsp-server/main.scm:../main.scm" ;;
     "lsp-server/server-impl.scm") CONFIG_LINKS="$CONFIG_LINKS lsp-server/server-impl.scm:../lsp-server/server-impl.scm" ;;
-    "lsp-server/trie-impl.scm") CONFIG_LINKS="$CONFIG_LINKS lsp-server/trie-impl.scm:../lsp-server/trie-impl.scm" ;;
-    "lsp-server/adapter-impl.scm") CONFIG_LINKS="$CONFIG_LINKS lsp-server/adapter-impl.scm:../lsp-server/adapter-impl.scm" ;;
-    "lsp-server/parse-impl.scm") CONFIG_LINKS="$CONFIG_LINKS lsp-server/parse-impl.scm:../lsp-server/parse-impl.scm" ;;
+    "lsp-server/private/trie-impl.scm") CONFIG_LINKS="$CONFIG_LINKS lsp-server/private/trie-impl.scm:../lsp-server/private/trie-impl.scm" ;;
+    "lsp-server/private/adapter-impl.scm") CONFIG_LINKS="$CONFIG_LINKS lsp-server/private/adapter-impl.scm:../lsp-server/private/adapter-impl.scm" ;;
+    "lsp-server/private/parse-impl.scm") CONFIG_LINKS="$CONFIG_LINKS lsp-server/private/parse-impl.scm:../lsp-server/private/parse-impl.scm" ;;
     "lsp-server/private/compat-guile-impl.scm") CONFIG_LINKS="$CONFIG_LINKS lsp-server/private/compat-guile-impl.scm:../lsp-server/private/compat-guile-impl.scm" ;;
     "lsp-server/private/guile-impl.scm") CONFIG_LINKS="$CONFIG_LINKS lsp-server/private/guile-impl.scm:../lsp-server/private/guile-impl.scm" ;;
-    "lsp-server/adapter.sld") CONFIG_LINKS="$CONFIG_LINKS lsp-server/adapter.sld:lsp-server/adapter.sld" ;;
-    "lsp-server/document.sld") CONFIG_LINKS="$CONFIG_LINKS lsp-server/document.sld:lsp-server/document.sld" ;;
-    "lsp-server/private.sld") CONFIG_LINKS="$CONFIG_LINKS lsp-server/private.sld:lsp-server/private.sld" ;;
+    "lsp-server/private/adapter.sld") CONFIG_LINKS="$CONFIG_LINKS lsp-server/private/adapter.sld:lsp-server/private/adapter.sld" ;;
+    "lsp-server/private/document.sld") CONFIG_LINKS="$CONFIG_LINKS lsp-server/private/document.sld:lsp-server/private/document.sld" ;;
+    "lsp-server/private/util.sld") CONFIG_LINKS="$CONFIG_LINKS lsp-server/private/util.sld:lsp-server/private/util.sld" ;;
     "lsp-server/private/compat.sld") CONFIG_LINKS="$CONFIG_LINKS lsp-server/private/compat.sld:lsp-server/private/compat.sld" ;;
     "lsp-server/private/guile.sld") CONFIG_LINKS="$CONFIG_LINKS lsp-server/private/guile.sld:lsp-server/private/guile.sld" ;;
-    "lsp-server/trie.sld") CONFIG_LINKS="$CONFIG_LINKS lsp-server/trie.sld:lsp-server/trie.sld" ;;
-    "lsp-server/parse.sld") CONFIG_LINKS="$CONFIG_LINKS lsp-server/parse.sld:lsp-server/parse.sld" ;;
+    "lsp-server/private/trie.sld") CONFIG_LINKS="$CONFIG_LINKS lsp-server/private/trie.sld:lsp-server/private/trie.sld" ;;
+    "lsp-server/private/parse.sld") CONFIG_LINKS="$CONFIG_LINKS lsp-server/private/parse.sld:lsp-server/private/parse.sld" ;;
     "lsp-server.sld") CONFIG_LINKS="$CONFIG_LINKS lsp-server.sld:lsp-server.sld" ;;
     "geiser/modules.scm") CONFIG_LINKS="$CONFIG_LINKS geiser/modules.scm:../geiser/guile/src/geiser/modules.scm" ;;
     "geiser/utils.scm") CONFIG_LINKS="$CONFIG_LINKS geiser/utils.scm:../geiser/guile/src/geiser/utils.scm" ;;

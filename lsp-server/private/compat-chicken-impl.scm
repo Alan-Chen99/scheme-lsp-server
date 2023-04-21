@@ -252,21 +252,3 @@
 (define (spawn-repl-server port-num)
   (nrepl port-num))
 
-(define (get-module-path module-name)
-    #f)
-(define pathname-join make-pathname)
-(define (pathname-base p)
-  (format "~a.~a"
-          (pathname-file p)
-          (pathname-extension p)))
-
-(define (get-absolute-pathname path)
-  (if (absolute-pathname? path)
-      path
-      (pathname-join (current-directory) path)))
-
-(define (alist-ref/default key alist default)
-  (or (alist-ref key alist)
-      default))
-
-(define uri-decode uri-decode-string)

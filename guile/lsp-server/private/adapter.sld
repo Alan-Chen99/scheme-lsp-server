@@ -1,4 +1,4 @@
-(define-module (lsp-server adapter)
+(define-module (lsp-server private adapter)
 
 #:export (lsp-geiser-completions
           lsp-geiser-documentation
@@ -13,9 +13,8 @@
 #:use-module ((geiser modules) #:prefix geiser-)
 #:use-module ((geiser doc) #:prefix geiser-)
 #:use-module ((geiser xref) #:prefix geiser-)
-#:use-module (lsp-server parse)
-#:use-module (lsp-server private)
-#:use-module (lsp-server private compat)
+#:use-module (lsp-server private util)
+#:use-module (lsp-server private parse)
 #:use-module (lsp-server private guile)
 #:use-module (srfi srfi-28)
 #:declarative? #f)

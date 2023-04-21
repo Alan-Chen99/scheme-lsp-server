@@ -1,4 +1,4 @@
-(define-module (lsp-server private)
+(define-module (lsp-server private util)
 
 #:export (make-apropos-info
           apropos-info-module

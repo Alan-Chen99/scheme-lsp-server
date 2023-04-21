@@ -22,8 +22,9 @@
  (else (import (json-rpc)
                (json-rpc lolevel)
                (lsp-server)
-               (lsp-server private)
-               (lsp-server document))))
+               (lsp-server private util)
+               (lsp-server private compat)
+               (lsp-server private document))))
 
 
 
@@ -34,22 +35,21 @@
                   (only (chicken keyword) keyword?)
                   (only (chicken port) with-input-from-string)
                   (only (srfi 130) string-replace)
-                  (lsp-server chicken)
-                  (lsp-server trie)))
+                  (lsp-server private trie)))
  (gambit (import (except (scheme base)
                          cond-expand
                          include
                          error
                          raise
                          map)
-                 (lsp-server gambit)))
+                 (lsp-server private gambit)))
  (guile (import (except (scheme base)
                         cond-expand
                         include
                         error
                         raise
                         map)
-                (lsp-server guile))))
+                (lsp-server private guile))))
 
 ;; (include "../lsp-server/file.scm")
 ;; (include "../lsp-server/server.scm")
@@ -80,12 +80,12 @@
                  internal-name)))))
  (else))
 
-(define document-append (@@ (lsp-server document) document-append))
-(define document-copy (@@ (lsp-server document) document-copy))
-(define document-newline-positions (@@ (lsp-server document) document-newline-positions))
-(define line/char->pos (@@ (lsp-server document) line/char->pos))
+(define document-append (@@ (lsp-server private document) document-append))
+(define document-copy (@@ (lsp-server private document) document-copy))
+(define document-newline-positions (@@ (lsp-server private document) document-newline-positions))
+(define line/char->pos (@@ (lsp-server private document) line/char->pos))
 
-(define parse-definition-line (@@ (lsp-server parse) parse-definition-line))
+(define parse-definition-line (@@ (lsp-server private parse) parse-definition-line))
 
 (define apply-change (@@ (lsp-server) apply-change))
 (define make-change-contents (@@ (lsp-server) make-change-contents))

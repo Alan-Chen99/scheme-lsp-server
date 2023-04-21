@@ -1,4 +1,4 @@
-(define-library (lsp-server document)
+(define-library (lsp-server private document)
 
 (export make-document
         read-document
@@ -16,14 +16,14 @@
         (srfi 28)
         (srfi 69)
         (only (srfi 13) string-replace)
-        (lsp-server private))
+        (lsp-server private util))
 
 (cond-expand
  (chicken (import (r7rs)
                   (scheme base)
                   (only (chicken port) with-input-from-string)
                   (utf8)))
- (gambit (import (lsp-server gambit util)
+ (gambit (import (lsp-server private gambit)
                  (except (scheme base) vector-copy))
          (include "~~lib/_gambit#.scm"))
  (guile (import (only (scheme base)

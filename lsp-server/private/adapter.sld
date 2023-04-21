@@ -1,4 +1,4 @@
-(define-library (lsp-server adapter)
+(define-library (lsp-server private adapter)
 
 (export lsp-geiser-completions
         lsp-geiser-documentation
@@ -8,17 +8,16 @@
         lsp-geiser-load-file)
 
 (import (scheme base)
-        (lsp-server private)
-        (lsp-server private compat)
-        (lsp-server parse)
+        (lsp-server private util)
         (srfi 28)
         (only (srfi 13) string-join))
 
 (cond-expand
  (chicken (import (geiser)
-                  (scheme)))
+                  (scheme)
+                  (lsp-server private chicken)))
  (gambit (import (_geiser)
-                 (lsp-server gambit util)))
+                 (lsp-server private gambit)))
  (guile (import (prefix (geiser completion) geiser-)
                 (geiser evaluation)
                 (prefix (geiser modules) geiser-)

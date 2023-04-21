@@ -1,4 +1,4 @@
-(define-library (lsp-server trie)
+(define-library (lsp-server private trie)
 
 (export make-trie
         trie?
@@ -17,7 +17,5 @@
  (gambit (import (except (scheme base) for-each)))
  (guile (import (scheme base)
                 (lsp-server private guile))))
-
-(import (lsp-server private compat))
 
 (include "trie-impl.scm"))

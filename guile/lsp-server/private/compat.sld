@@ -32,9 +32,9 @@
 #:use-module (system vm program)
 #:use-module (system repl server)
 #:use-module (json-rpc lolevel)
-#:use-module (lsp-server parse)
-#:use-module (lsp-server private)
-#:use-module (lsp-server adapter)
+#:use-module (lsp-server private util)
+#:use-module (lsp-server private adapter)
+#:use-module (lsp-server private parse)
 #:use-module (lsp-server private guile)
 
 #:declarative? #f)

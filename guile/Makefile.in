@@ -99,19 +99,21 @@ DIST_COMMON = $(srcdir)/Makefile.am $(top_srcdir)/configure \
 am__CONFIG_DISTCLEAN_FILES = config.status config.cache config.log \
  configure.lineno config.status.lineno
 mkinstalldirs = $(install_sh) -d
-CONFIG_CLEAN_FILES = lsp-server/private-impl.scm \
-	lsp-server/document-impl.scm lsp-server/file-impl.scm \
+CONFIG_CLEAN_FILES = lsp-server/private/util-impl.scm \
+	lsp-server/private/document-impl.scm lsp-server/file-impl.scm \
 	lsp-server/main.scm lsp-server/server-impl.scm \
-	lsp-server/trie-impl.scm lsp-server/adapter-impl.scm \
-	lsp-server/parse-impl.scm \
+	lsp-server/private/trie-impl.scm \
+	lsp-server/private/adapter-impl.scm \
+	lsp-server/private/parse-impl.scm \
 	lsp-server/private/compat-guile-impl.scm \
 	lsp-server/private/guile-impl.scm geiser/modules.scm \
 	geiser/utils.scm geiser/doc.scm geiser/completion.scm \
 	geiser/evaluation.scm geiser/xref.scm README.md
-CONFIG_CLEAN_VPATH_FILES = lsp-server/adapter.sld \
-	lsp-server/document.sld lsp-server/private.sld \
+CONFIG_CLEAN_VPATH_FILES = lsp-server/private/adapter.sld \
+	lsp-server/private/document.sld lsp-server/private/util.sld \
 	lsp-server/private/compat.sld lsp-server/private/guile.sld \
-	lsp-server/trie.sld lsp-server/parse.sld lsp-server.sld
+	lsp-server/private/trie.sld lsp-server/private/parse.sld \
+	lsp-server.sld
 am__vpath_adj_setup = srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`;
 am__vpath_adj = case $$p in \
     $(srcdir)/*) f=`echo "$$p" | sed "s|^$$srcdirstrip/||"`;; \
@@ -190,24 +192,24 @@ am__DIST_COMMON = $(srcdir)/Makefile.in $(srcdir)/guile.am \
 	$(top_srcdir)/../geiser/guile/src/geiser/modules.scm \
 	$(top_srcdir)/../geiser/guile/src/geiser/utils.scm \
 	$(top_srcdir)/../geiser/guile/src/geiser/xref.scm \
-	$(top_srcdir)/../lsp-server/adapter-impl.scm \
-	$(top_srcdir)/../lsp-server/document-impl.scm \
 	$(top_srcdir)/../lsp-server/file-impl.scm \
-	$(top_srcdir)/../lsp-server/parse-impl.scm \
-	$(top_srcdir)/../lsp-server/private-impl.scm \
+	$(top_srcdir)/../lsp-server/private/adapter-impl.scm \
 	$(top_srcdir)/../lsp-server/private/compat-guile-impl.scm \
+	$(top_srcdir)/../lsp-server/private/document-impl.scm \
 	$(top_srcdir)/../lsp-server/private/guile-impl.scm \
+	$(top_srcdir)/../lsp-server/private/parse-impl.scm \
+	$(top_srcdir)/../lsp-server/private/trie-impl.scm \
+	$(top_srcdir)/../lsp-server/private/util-impl.scm \
 	$(top_srcdir)/../lsp-server/server-impl.scm \
-	$(top_srcdir)/../lsp-server/trie-impl.scm \
 	$(top_srcdir)/../main.scm $(top_srcdir)/build-aux/install-sh \
 	$(top_srcdir)/build-aux/missing \
-	$(top_srcdir)/lsp-server/adapter.sld \
-	$(top_srcdir)/lsp-server/document.sld \
-	$(top_srcdir)/lsp-server/parse.sld \
-	$(top_srcdir)/lsp-server/private.sld \
+	$(top_srcdir)/lsp-server/private/adapter.sld \
 	$(top_srcdir)/lsp-server/private/compat.sld \
+	$(top_srcdir)/lsp-server/private/document.sld \
 	$(top_srcdir)/lsp-server/private/guile.sld \
-	$(top_srcdir)/lsp-server/trie.sld build-aux/install-sh \
+	$(top_srcdir)/lsp-server/private/parse.sld \
+	$(top_srcdir)/lsp-server/private/trie.sld \
+	$(top_srcdir)/lsp-server/private/util.sld build-aux/install-sh \
 	build-aux/missing
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
 distdir = $(PACKAGE)-$(VERSION)
@@ -340,22 +342,22 @@ DEPENDENCIES = \
 
 LIBRARY_DEFINITIONS = \
   lsp-server/private/guile.sld \
-  lsp-server/private.sld    \
+  lsp-server/private/util.sld  \
   lsp-server/private/compat.sld \
-  lsp-server/document.sld   \
-  lsp-server/trie.sld       \
-  lsp-server/parse.sld      \
-  lsp-server/adapter.sld    \
+  lsp-server/private/document.sld   \
+  lsp-server/private/trie.sld       \
+  lsp-server/private/parse.sld      \
+  lsp-server/private/adapter.sld    \
   lsp-server.sld
 
 SOURCES = \
-  lsp-server/private-impl.scm    \
+  lsp-server/private/util-impl.scm    \
   lsp-server/private/compat-guile-impl.scm \
   lsp-server/private/guile-impl.scm \
-  lsp-server/document-impl.scm   \
-  lsp-server/trie-impl.scm       \
-  lsp-server/parse-impl.scm      \
-  lsp-server/adapter-impl.scm    \
+  lsp-server/private/document-impl.scm   \
+  lsp-server/private/trie-impl.scm       \
+  lsp-server/private/parse-impl.scm      \
+  lsp-server/private/adapter-impl.scm    \
   lsp-server.scm
 
 EXTRA_DIST = \
@@ -872,30 +874,30 @@ lsp-server/private/compat.scm: lsp-server/private/compat.sld lsp-server/private/
 	echo "" >> $@
 	cat lsp-server/private/compat-guile-impl.scm >> $@
 
-lsp-server/private.scm: lsp-server/private.sld lsp-server/private-impl.scm
+lsp-server/private/util.scm: lsp-server/private/util.sld lsp-server/private/util-impl.scm
 	cat $< > $@
 	echo "" >> $@
-	cat lsp-server/private-impl.scm >> $@
+	cat lsp-server/private/util-impl.scm >> $@
 
-lsp-server/document.scm: lsp-server/document.sld lsp-server/document-impl.scm
+lsp-server/private/document.scm: lsp-server/private/document.sld lsp-server/private/document-impl.scm
 	cat $< > $@
 	echo "" >> $@
-	cat lsp-server/document-impl.scm >> $@
+	cat lsp-server/private/document-impl.scm >> $@
 
-lsp-server/trie.scm: lsp-server/trie.sld lsp-server/trie-impl.scm
+lsp-server/private/trie.scm: lsp-server/private/trie.sld lsp-server/private/trie-impl.scm
 	cat $< > $@
 	echo "" >> $@
-	cat lsp-server/trie-impl.scm >> $@
+	cat lsp-server/private/trie-impl.scm >> $@
 
-lsp-server/parse.scm: lsp-server/parse.sld lsp-server/parse-impl.scm
+lsp-server/private/parse.scm: lsp-server/private/parse.sld lsp-server/private/parse-impl.scm
 	cat $< > $@
 	echo "" >> $@
-	cat lsp-server/parse-impl.scm >> $@
+	cat lsp-server/private/parse-impl.scm >> $@
 
-lsp-server/adapter.scm: lsp-server/adapter.sld lsp-server/adapter-impl.scm
+lsp-server/private/adapter.scm: lsp-server/private/adapter.sld lsp-server/private/adapter-impl.scm
 	cat $< > $@
 	echo "" >> $@
-	cat lsp-server/adapter-impl.scm >> $@
+	cat lsp-server/private/adapter-impl.scm >> $@
 
 lsp-server/private/guile.scm: lsp-server/private/guile.sld lsp-server/private/guile-impl.scm
 	cat $< > $@
@@ -906,11 +908,11 @@ distclean-local:
 	rm -Rf geiser/ \
 	       lsp-server/private/compat.scm \
 	       lsp-server/private/guile.scm \
-	       lsp-server/private.scm    \
-	       lsp-server/document.scm   \
-	       lsp-server/trie.scm       \
-	       lsp-server/parse.scm      \
-	       lsp-server/adapter.scm    \
+	       lsp-server/private/util.scm    \
+	       lsp-server/private/document.scm   \
+	       lsp-server/private/trie.scm       \
+	       lsp-server/private/parse.scm      \
+	       lsp-server/private/adapter.scm    \
 	       lsp-server/file.scm       \
 	       lsp-server/server.scm     \
 	       main.scm

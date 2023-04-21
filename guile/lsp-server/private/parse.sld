@@ -1,4 +1,4 @@
-(define-module (lsp-server parse)
+(define-module (lsp-server private parse)
 
 #:export (fetch-signature
           generate-meta-data!
@@ -24,10 +24,10 @@
                                       read-line))
 #:use-module ((scheme file) #:select (with-input-from-file))
 #:use-module (scheme read)
-#:use-module (lsp-server private)
+#:use-module (lsp-server private util)
 #:use-module (lsp-server private compat)
 #:use-module (lsp-server private guile)
-#:use-module (lsp-server trie)
+#:use-module (lsp-server private trie)
 #:use-module (system vm program)
 #:use-module (ice-9 ftw)
 

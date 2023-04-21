@@ -1,4 +1,4 @@
-(define-library (lsp-server parse)
+(define-library (lsp-server private parse)
 
 (export generate-meta-data!
         fetch-definition-locations
@@ -15,8 +15,8 @@
         (srfi 69)
         (only (scheme file) with-input-from-file)
         (scheme read)
-        (lsp-server private)
-        (lsp-server trie))
+        (lsp-server private util)
+        (lsp-server private trie))
 
 (cond-expand
  (chicken (import (scheme base)
@@ -25,14 +25,14 @@
                   (chicken file)
                   (chicken file posix)
                   (only (chicken keyword) keyword?)
-                  (lsp-server chicken util)))
+                  (lsp-server private chicken)))
  (gambit (import (scheme base)
                  (only (gambit)
                        caddr
                        file-last-modification-time
                        path-extension
                        time->seconds)
-                 (lsp-server gambit util)))
+                 (lsp-server private gambit)))
  (guile (import (only (scheme base)
                       define-record-type
                       error-object?

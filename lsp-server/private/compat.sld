@@ -9,19 +9,15 @@
         $initialize-lsp-server!
         $server-capabilities
         $server-name
-        spawn-repl-server
         $tcp-accept
         $tcp-close
         $tcp-connect
         $tcp-listen
-        $tcp-read-timeout
-        get-module-path
-        pathname-directory
-        pathname-join)
+        $tcp-read-timeout)
 
-(import (lsp-server private)
-        (lsp-server parse)
-        (lsp-server adapter)
+(import (lsp-server private util)
+        (lsp-server private adapter)
+        (lsp-server private parse)
         (json-rpc lolevel))
 
 (import (srfi 1)
@@ -59,8 +55,18 @@
           (srfi 180)
           (uri-generic)
 
-          (geiser))
+          (geiser)
+          (lsp-server private chicken))
   (include "compat-chicken-impl.scm"))
+ (gambit
+  (import (gambit)
+        (only (srfi 1) find)
+        (only (srfi 13) string-tokenize)
+        (only (srfi 14) char-set char-set-complement)
+        (srfi 28)
+        (lsp-server adapter)
+        (lsp-server private gambit))
+  (include "compat-gambit-impl.scm"))
  (guile
   (import (only (scheme base)
                 define-record-type

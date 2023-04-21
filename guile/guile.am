@@ -45,30 +45,30 @@ lsp-server/private/compat.scm: lsp-server/private/compat.sld lsp-server/private/
 	echo "" >> $@
 	cat lsp-server/private/compat-guile-impl.scm >> $@
 
-lsp-server/private.scm: lsp-server/private.sld lsp-server/private-impl.scm
+lsp-server/private/util.scm: lsp-server/private/util.sld lsp-server/private/util-impl.scm
 	cat $< > $@
 	echo "" >> $@
-	cat lsp-server/private-impl.scm >> $@
+	cat lsp-server/private/util-impl.scm >> $@
 
-lsp-server/document.scm: lsp-server/document.sld lsp-server/document-impl.scm
+lsp-server/private/document.scm: lsp-server/private/document.sld lsp-server/private/document-impl.scm
 	cat $< > $@
 	echo "" >> $@
-	cat lsp-server/document-impl.scm >> $@
+	cat lsp-server/private/document-impl.scm >> $@
 
-lsp-server/trie.scm: lsp-server/trie.sld lsp-server/trie-impl.scm
+lsp-server/private/trie.scm: lsp-server/private/trie.sld lsp-server/private/trie-impl.scm
 	cat $< > $@
 	echo "" >> $@
-	cat lsp-server/trie-impl.scm >> $@
+	cat lsp-server/private/trie-impl.scm >> $@
 
-lsp-server/parse.scm: lsp-server/parse.sld lsp-server/parse-impl.scm
+lsp-server/private/parse.scm: lsp-server/private/parse.sld lsp-server/private/parse-impl.scm
 	cat $< > $@
 	echo "" >> $@
-	cat lsp-server/parse-impl.scm >> $@
+	cat lsp-server/private/parse-impl.scm >> $@
 
-lsp-server/adapter.scm: lsp-server/adapter.sld lsp-server/adapter-impl.scm
+lsp-server/private/adapter.scm: lsp-server/private/adapter.sld lsp-server/private/adapter-impl.scm
 	cat $< > $@
 	echo "" >> $@
-	cat lsp-server/adapter-impl.scm >> $@
+	cat lsp-server/private/adapter-impl.scm >> $@
 
 lsp-server/private/guile.scm: lsp-server/private/guile.sld lsp-server/private/guile-impl.scm
 	cat $< > $@
@@ -80,11 +80,11 @@ distclean-local:
 	rm -Rf geiser/ \
 	       lsp-server/private/compat.scm \
 	       lsp-server/private/guile.scm \
-	       lsp-server/private.scm    \
-	       lsp-server/document.scm   \
-	       lsp-server/trie.scm       \
-	       lsp-server/parse.scm      \
-	       lsp-server/adapter.scm    \
+	       lsp-server/private/util.scm    \
+	       lsp-server/private/document.scm   \
+	       lsp-server/private/trie.scm       \
+	       lsp-server/private/parse.scm      \
+	       lsp-server/private/adapter.scm    \
 	       lsp-server/file.scm       \
 	       lsp-server/server.scm     \
 	       main.scm

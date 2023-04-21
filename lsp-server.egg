@@ -29,21 +29,23 @@
   "geiser/chicken/license"
   "geiser/chicken/version"
   "geiser/chicken/src/geiser/chicken5.scm"
-  "lsp-server/adapter-impl.scm"
-  "lsp-server/adapter.sld"
-  "lsp-server/document-impl.scm"
-  "lsp-server/document.sld"
+  "lsp-server/private/adapter-impl.scm"
+  "lsp-server/private/adapter.sld"
+  "lsp-server/private/chicken.sld"
+  "lsp-server/private/compat.sld"
+  "lsp-server/private/compat-impl.scm"
+  "lsp-server/private/document-impl.scm"
+  "lsp-server/private/document.sld"
+  "lsp-server/private/parse-impl.scm"
+  "lsp-server/private/parse.sld"
+  "lsp-server/private/util-impl.scm"
+  "lsp-server/private/util.sld"
+  "lsp-server/private/trie-impl.scm"
+  "lsp-server/private/trie.sld"
   "lsp-server/file-impl.scm"
-  "lsp-server/file.sld"
+  "lsp-server/server-impl.scm"
   "lsp-server.sld"
   "main.scm"
-  "lsp-server/parse-impl.scm"
-  "lsp-server/parse.sld"
-  "lsp-server/private-impl.scm"
-  "lsp-server/private.sld"
-  "lsp-server/server.scm"
-  "lsp-server/trie-impl.scm"
-  "lsp-server/trie.sld"
   "tests/run.scm"
   "tests/parse-tests.scm"
   "tests/trie-tests.scm"
@@ -59,41 +61,45 @@
            (component-dependencies lsp-server))
   (generated-source-file lsp-dummy-chicken-doc
                          (custom-build "chicken/setup-chicken-doc-for-test.sh"))
-  (extension lsp-server.private
-             (source "lsp-server/private.sld")
-             (source-dependencies "lsp-server/private-impl.scm")
-             (component-dependencies lsp-server.private.compat))
   (extension geiser
              (source "geiser/chicken/src/geiser/chicken5.scm"))
+  (extension lsp-server.private.chicken
+             (source "lsp-server/private/chicken.sld"))
+  (extension lsp-server.private.trie
+             (source "lsp-server/private/trie.sld")
+             (source-dependencies "lsp-server/private/trie-impl.scm"))
+  (extension lsp-server.private.util
+             (source "lsp-server/private/util.sld")
+             (source-dependencies "lsp-server/private/util-impl.scm")
+             (component-dependencies lsp-server.private.chicken))
+  (extension lsp-server.private.adapter
+             (source "lsp-server/private/adapter.sld")
+             (source-dependencies "lsp-server/private/adapter-impl.scm")
+             (component-dependencies geiser
+                                     lsp-server.private.util
+                                     lsp-server.private.chicken))
   (extension lsp-server.private.compat
              (source "lsp-server/private/compat.sld")
-             (source-dependencies "lsp-server/private/compat-chicken-impl.scm"))
-
-  (extension lsp-server.adapter
-             (source "lsp-server/adapter.sld")
-             (source-dependencies "lsp-server/adapter-impl.scm")
-             (component-dependencies geiser
-                                     lsp-server.parse
-                                     lsp-server.private
-                                     lsp-server.private.compat))
-  (extension lsp-server.document
-             (source "lsp-server/document.sld")
-             (source-dependencies "lsp-server/document-impl.scm")
-             (component-dependencies lsp-server.private))
-  (extension lsp-server.trie
-             (source "lsp-server/trie.sld")
-             (source-dependencies "lsp-server/trie-impl.scm"))
-  (extension lsp-server.parse
-             (source "lsp-server/parse.sld")
-             (source-dependencies "lsp-server/parse-impl.scm")
-             (component-dependencies lsp-server.trie
-                                     lsp-server.private
-                                     lsp-server.private.compat))
+             (source-dependencies "lsp-server/private/compat-chicken-impl.scm")
+             (component-dependencies lsp-server.private.adapter
+                                     lsp-server.private.chicken
+                                     lsp-server.private.parse
+                                     lsp-server.private.util))
+  (extension lsp-server.private.document
+             (source "lsp-server/private/document.sld")
+             (source-dependencies "lsp-server/private/document-impl.scm")
+             (component-dependencies lsp-server.private.util))
+  (extension lsp-server.private.parse
+             (source "lsp-server/private/parse.sld")
+             (source-dependencies "lsp-server/private/parse-impl.scm")
+             (component-dependencies lsp-server.private.util
+                                     lsp-server.private.trie))
   (extension lsp-server
              (source "lsp-server.sld")
              (source-dependencies "lsp-server/file-impl.scm"
                                   "lsp-server/server-impl.scm")
-             (component-dependencies lsp-server.document
-                                     lsp-server.parse
-                                     lsp-server.private
-                                     lsp-server.private.compat))))
+             (component-dependencies lsp-server.private.util
+                                     lsp-server.private.compat
+                                     lsp-server.private.document
+                                     lsp-server.private.parse))
+        ))

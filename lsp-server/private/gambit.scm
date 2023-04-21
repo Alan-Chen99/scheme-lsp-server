@@ -1,4 +1,4 @@
-(define-library (lsp-server gambit util)
+(define-library (lsp-server private gambit)
 
 (export alist-ref
         alist-ref/default

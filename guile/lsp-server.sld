@@ -29,11 +29,13 @@
 
 #:use-module (system vm program)
 
-#:use-module (lsp-server document)
-#:use-module (lsp-server parse)
-#:use-module (lsp-server private)
+#:use-module (lsp-server private document)
+#:use-module (lsp-server private parse)
+#:use-module (lsp-server private util)
 #:use-module (lsp-server private compat)
+#:use-module ((lsp-server private guile)
+              #:select (alist-ref))
 
-#:use-module (lsp-server adapter)
+#:use-module (lsp-server private adapter)
 
 #:declarative? #f)
