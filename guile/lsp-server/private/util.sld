@@ -47,7 +47,6 @@
 #:use-module (srfi srfi-28)
 #:use-module (srfi srfi-69)
 #:use-module (json-rpc)
-#:use-module (lsp-server private compat)
 #:use-module (lsp-server private guile)
 
 #:declarative? #f)

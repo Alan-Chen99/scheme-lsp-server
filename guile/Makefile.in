@@ -100,9 +100,9 @@ am__CONFIG_DISTCLEAN_FILES = config.status config.cache config.log \
  configure.lineno config.status.lineno
 mkinstalldirs = $(install_sh) -d
 CONFIG_CLEAN_FILES = lsp-server/private/util-impl.scm \
-	lsp-server/private/document-impl.scm lsp-server/file-impl.scm \
-	lsp-server/main.scm lsp-server/server-impl.scm \
-	lsp-server/private/trie-impl.scm \
+	lsp-server/private/document-impl.scm \
+	lsp-server/private/file-impl.scm lsp-server/main.scm \
+	lsp-server-impl.scm lsp-server/private/trie-impl.scm \
 	lsp-server/private/adapter-impl.scm \
 	lsp-server/private/parse-impl.scm \
 	lsp-server/private/compat-guile-impl.scm \
@@ -110,10 +110,10 @@ CONFIG_CLEAN_FILES = lsp-server/private/util-impl.scm \
 	geiser/utils.scm geiser/doc.scm geiser/completion.scm \
 	geiser/evaluation.scm geiser/xref.scm README.md
 CONFIG_CLEAN_VPATH_FILES = lsp-server/private/adapter.sld \
-	lsp-server/private/document.sld lsp-server/private/util.sld \
-	lsp-server/private/compat.sld lsp-server/private/guile.sld \
-	lsp-server/private/trie.sld lsp-server/private/parse.sld \
-	lsp-server.sld
+	lsp-server/private/document.sld lsp-server/private/file.sld \
+	lsp-server/private/util.sld lsp-server/private/compat.sld \
+	lsp-server/private/guile.sld lsp-server/private/trie.sld \
+	lsp-server/private/parse.sld lsp-server.sld
 am__vpath_adj_setup = srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`;
 am__vpath_adj = case $$p in \
     $(srcdir)/*) f=`echo "$$p" | sed "s|^$$srcdirstrip/||"`;; \
@@ -192,20 +192,21 @@ am__DIST_COMMON = $(srcdir)/Makefile.in $(srcdir)/guile.am \
 	$(top_srcdir)/../geiser/guile/src/geiser/modules.scm \
 	$(top_srcdir)/../geiser/guile/src/geiser/utils.scm \
 	$(top_srcdir)/../geiser/guile/src/geiser/xref.scm \
-	$(top_srcdir)/../lsp-server/file-impl.scm \
+	$(top_srcdir)/../lsp-server-impl.scm \
 	$(top_srcdir)/../lsp-server/private/adapter-impl.scm \
 	$(top_srcdir)/../lsp-server/private/compat-guile-impl.scm \
 	$(top_srcdir)/../lsp-server/private/document-impl.scm \
+	$(top_srcdir)/../lsp-server/private/file-impl.scm \
 	$(top_srcdir)/../lsp-server/private/guile-impl.scm \
 	$(top_srcdir)/../lsp-server/private/parse-impl.scm \
 	$(top_srcdir)/../lsp-server/private/trie-impl.scm \
 	$(top_srcdir)/../lsp-server/private/util-impl.scm \
-	$(top_srcdir)/../lsp-server/server-impl.scm \
 	$(top_srcdir)/../main.scm $(top_srcdir)/build-aux/install-sh \
 	$(top_srcdir)/build-aux/missing \
 	$(top_srcdir)/lsp-server/private/adapter.sld \
 	$(top_srcdir)/lsp-server/private/compat.sld \
 	$(top_srcdir)/lsp-server/private/document.sld \
+	$(top_srcdir)/lsp-server/private/file.sld \
 	$(top_srcdir)/lsp-server/private/guile.sld \
 	$(top_srcdir)/lsp-server/private/parse.sld \
 	$(top_srcdir)/lsp-server/private/trie.sld \
@@ -341,23 +342,26 @@ DEPENDENCIES = \
   geiser/xref.scm
 
 LIBRARY_DEFINITIONS = \
-  lsp-server/private/guile.sld \
   lsp-server/private/util.sld  \
+  lsp-server/private/guile.sld \
+  lsp-server/private/trie.sld       \
   lsp-server/private/compat.sld \
   lsp-server/private/document.sld   \
-  lsp-server/private/trie.sld       \
   lsp-server/private/parse.sld      \
   lsp-server/private/adapter.sld    \
+  lsp-server/private/file.sld  \
   lsp-server.sld
 
 SOURCES = \
+  lsp-server-impl.scm    \
   lsp-server/private/util-impl.scm    \
-  lsp-server/private/compat-guile-impl.scm \
   lsp-server/private/guile-impl.scm \
-  lsp-server/private/document-impl.scm   \
   lsp-server/private/trie-impl.scm       \
+  lsp-server/private/compat-guile-impl.scm \
+  lsp-server/private/document-impl.scm   \
   lsp-server/private/parse-impl.scm      \
   lsp-server/private/adapter-impl.scm    \
+  lsp-server/private/file-impl.scm    \
   lsp-server.scm
 
 EXTRA_DIST = \
@@ -852,7 +856,7 @@ uninstall-am: uninstall-binSCRIPTS uninstall-nobase_dist_modDATA \
 
 $(EXECUTABLE): lsp-server/main.scm
 	echo '#!/usr/bin/env sh' > $(EXECUTABLE)
-	echo 'exec guile --no-auto-compile -x ".sld" -e  main -s "$$0" "$$@"' >> $(EXECUTABLE)
+	echo 'exec guile --no-auto-compile -x ".scm" -e  main -s "$$0" "$$@"' >> $(EXECUTABLE)
 	echo '!#' >> $(EXECUTABLE)
 	echo >> $(EXECUTABLE)
 	cat lsp-server/main.scm >> $(EXECUTABLE)
@@ -862,17 +866,20 @@ uninstall-hook:
 	rm -f $(DESTDIR)$(godir)/$(GOBJECTS)
 	rm -f $(DESTDIR)$(bindir)/$(EXECUTABLE)
 
-lsp-server.scm: lsp-server.sld lsp-server/file-impl.scm lsp-server/server-impl.scm
+lsp-server.scm: lsp-server.sld lsp-server-impl.scm
 	cat $< > $@
 	echo "" >> $@
-	cat lsp-server/file-impl.scm >> $@
-	echo "" >> $@
-	cat lsp-server/server-impl.scm >> $@
+	cat lsp-server-impl.scm >> $@
 
 lsp-server/private/compat.scm: lsp-server/private/compat.sld lsp-server/private/compat-guile-impl.scm
 	cat $< > $@
 	echo "" >> $@
 	cat lsp-server/private/compat-guile-impl.scm >> $@
+
+lsp-server/private/file.scm: lsp-server/private/file.sld lsp-server/private/file-impl.scm
+	cat $< > $@
+	echo "" >> $@
+	cat lsp-server/private/file-impl.scm >> $@
 
 lsp-server/private/util.scm: lsp-server/private/util.sld lsp-server/private/util-impl.scm
 	cat $< > $@
@@ -909,16 +916,15 @@ distclean-local:
 	       lsp-server/private/compat.scm \
 	       lsp-server/private/guile.scm \
 	       lsp-server/private/util.scm    \
+               lsp-server/private/file.scm   \
 	       lsp-server/private/document.scm   \
 	       lsp-server/private/trie.scm       \
 	       lsp-server/private/parse.scm      \
 	       lsp-server/private/adapter.scm    \
-	       lsp-server/file.scm       \
-	       lsp-server/server.scm     \
 	       main.scm
 
 .scm.go:
-	$(PREFIX) $(GUILE_TOOLS) compile $(GUILE_WARNINGS) -x ".sld" -O0 --r7rs -o "$@" "$<"
+	$(PREFIX) $(GUILE_TOOLS) compile $(GUILE_WARNINGS) -x ".scm" -O0 --r7rs -o "$@" "$<"
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.

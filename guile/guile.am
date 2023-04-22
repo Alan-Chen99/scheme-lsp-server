@@ -9,7 +9,7 @@ nobase_go_DATA = $(GOBJECTS)
 bin_SCRIPTS = $(EXECUTABLE)
 $(EXECUTABLE): lsp-server/main.scm
 	echo '#!/usr/bin/env sh' > $(EXECUTABLE)
-	echo 'exec guile --no-auto-compile -x ".sld" -e  main -s "$$0" "$$@"' >> $(EXECUTABLE)
+	echo 'exec guile --no-auto-compile -x ".scm" -e  main -s "$$0" "$$@"' >> $(EXECUTABLE)
 	echo '!#' >> $(EXECUTABLE)
 	echo >> $(EXECUTABLE)
 	cat lsp-server/main.scm >> $(EXECUTABLE)
@@ -78,19 +78,17 @@ lsp-server/private/guile.scm: lsp-server/private/guile.sld lsp-server/private/gu
 	echo "" >> $@
 	cat lsp-server/private/guile-impl.scm >> $@
 
-
 distclean-local:
 	rm -Rf geiser/ \
 	       lsp-server/private/compat.scm \
 	       lsp-server/private/guile.scm \
 	       lsp-server/private/util.scm    \
+               lsp-server/private/file.scm   \
 	       lsp-server/private/document.scm   \
 	       lsp-server/private/trie.scm       \
 	       lsp-server/private/parse.scm      \
 	       lsp-server/private/adapter.scm    \
-	       lsp-server/file.scm       \
-	       lsp-server/server.scm     \
 	       main.scm
 
 .scm.go:
-	$(PREFIX) $(GUILE_TOOLS) compile $(GUILE_WARNINGS) -x ".sld" -O0 --r7rs -o "$@" "$<"
+	$(PREFIX) $(GUILE_TOOLS) compile $(GUILE_WARNINGS) -x ".scm" -O0 --r7rs -o "$@" "$<"

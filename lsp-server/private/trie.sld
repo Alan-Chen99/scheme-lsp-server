@@ -15,7 +15,6 @@
 (cond-expand
  (chicken (import (scheme base)))
  (gambit (import (except (scheme base) for-each)))
- (guile (import (scheme base)
-                (lsp-server private guile))))
+ (guile (import (scheme base))))
 
 (include "trie-impl.scm"))

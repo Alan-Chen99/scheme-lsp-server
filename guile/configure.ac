@@ -25,6 +25,7 @@ AC_CONFIG_LINKS([lsp-server/private/util-impl.scm:../lsp-server/private/util-imp
 
                  lsp-server/private/adapter.sld:lsp-server/private/adapter.sld
                  lsp-server/private/document.sld:lsp-server/private/document.sld
+                 lsp-server/private/file.sld:lsp-server/private/file.sld
                  lsp-server/private/util.sld:lsp-server/private/util.sld
                  lsp-server/private/compat.sld:lsp-server/private/compat.sld
                  lsp-server/private/guile.sld:lsp-server/private/guile.sld

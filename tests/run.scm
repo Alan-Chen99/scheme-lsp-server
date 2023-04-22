@@ -52,12 +52,6 @@
                         map)
                 (lsp-server private guile))))
 
-;; (include "../lsp-server/file.scm")
-;; (include "../lsp-server/server.scm")
-
-;; (include "parse-tests.scm")
-;; (include "trie-tests.scm")
-
 (cond-expand
  (chicken (import-for-syntax (only (scheme base) string->symbol)
                              (only (srfi 13) string-join)
