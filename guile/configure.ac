@@ -14,9 +14,9 @@ AC_CONFIG_FILES([Makefile])
 
 AC_CONFIG_LINKS([lsp-server/private/util-impl.scm:../lsp-server/private/util-impl.scm
                  lsp-server/private/document-impl.scm:../lsp-server/private/document-impl.scm
-                 lsp-server/file-impl.scm:../lsp-server/file-impl.scm
+                 lsp-server/private/file-impl.scm:../lsp-server/private/file-impl.scm
                  lsp-server/main.scm:../main.scm
-                 lsp-server/server-impl.scm:../lsp-server/server-impl.scm
+                 lsp-server-impl.scm:../lsp-server-impl.scm
                  lsp-server/private/trie-impl.scm:../lsp-server/private/trie-impl.scm
                  lsp-server/private/adapter-impl.scm:../lsp-server/private/adapter-impl.scm
                  lsp-server/private/parse-impl.scm:../lsp-server/private/parse-impl.scm

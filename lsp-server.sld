@@ -61,11 +61,11 @@
         (json-rpc)
         (json-rpc lolevel)
 
+        (lsp-server private file)
         (lsp-server private util)
         (lsp-server private document)
         (lsp-server private parse)
         (lsp-server private compat)
         )
 
-(include "lsp-server/file-impl.scm")
-(include "lsp-server/server-impl.scm"))
+(include "lsp-server-impl.scm"))

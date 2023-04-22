@@ -42,8 +42,9 @@
   "lsp-server/private/util.sld"
   "lsp-server/private/trie-impl.scm"
   "lsp-server/private/trie.sld"
-  "lsp-server/file-impl.scm"
-  "lsp-server/server-impl.scm"
+  "lsp-server/private/file-impl.scm"
+  "lsp-server/private/file.sld"
+  "lsp-server-impl.scm"
   "lsp-server.sld"
   "main.scm"
   "tests/run.scm"
@@ -94,12 +95,19 @@
              (source-dependencies "lsp-server/private/parse-impl.scm")
              (component-dependencies lsp-server.private.util
                                      lsp-server.private.trie))
+ (extension lsp-server.private.file
+             (source "lsp-server/private/file.sld")
+             (source-dependencies "lsp-server/private/file-impl.scm")
+             (component-dependencies lsp-server.private.chicken
+                                     lsp-server.private.compat
+                                     lsp-server.private.document
+                                     lsp-server.private.parse))
   (extension lsp-server
              (source "lsp-server.sld")
-             (source-dependencies "lsp-server/file-impl.scm"
-                                  "lsp-server/server-impl.scm")
+             (source-dependencies "lsp-server-impl.scm")
              (component-dependencies lsp-server.private.util
                                      lsp-server.private.compat
+                                     lsp-server.private.file
                                      lsp-server.private.document
                                      lsp-server.private.parse))
         ))

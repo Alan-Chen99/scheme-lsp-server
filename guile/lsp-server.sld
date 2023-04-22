@@ -37,5 +37,6 @@
               #:select (alist-ref))
 
 #:use-module (lsp-server private adapter)
+#:use-module (lsp-server private file)
 
 #:declarative? #f)

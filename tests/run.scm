@@ -22,6 +22,7 @@
  (else (import (json-rpc)
                (json-rpc lolevel)
                (lsp-server)
+               (lsp-server private file)
                (lsp-server private util)
                (lsp-server private compat)
                (lsp-server private document))))
@@ -87,9 +88,9 @@
 
 (define parse-definition-line (@@ (lsp-server private parse) parse-definition-line))
 
-(define apply-change (@@ (lsp-server) apply-change))
-(define make-change-contents (@@ (lsp-server) make-change-contents))
-(define make-range (@@ (lsp-server) make-range))
+(define apply-change (@@ (lsp-server private file) apply-change))
+(define make-change-contents (@@ (lsp-server private file) make-change-contents))
+(define make-range (@@ (lsp-server private file) make-range))
 
 (test-begin "lsp-server tests")
 

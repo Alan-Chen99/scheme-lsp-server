@@ -33,17 +33,20 @@ SUFFIXES = .scm .sld .go
 PREFIX=$(AM_V_GEN)GUILE_LOAD_COMPILED_PATH="@abs_top_builddir@/:$(GUILE_LOAD_COMPILED_PATH)"; \
       GUILE_LOAD_PATH="@abs_top_builddir@/:@abs_top_srcdir@/:$(GUILE_LOAD_PATH)"
 
-lsp-server.scm: lsp-server.sld lsp-server/file-impl.scm lsp-server/server-impl.scm
+lsp-server.scm: lsp-server.sld lsp-server-impl.scm
 	cat $< > $@
 	echo "" >> $@
-	cat lsp-server/file-impl.scm >> $@
-	echo "" >> $@
-	cat lsp-server/server-impl.scm >> $@
+	cat lsp-server-impl.scm >> $@
 
 lsp-server/private/compat.scm: lsp-server/private/compat.sld lsp-server/private/compat-guile-impl.scm
 	cat $< > $@
 	echo "" >> $@
 	cat lsp-server/private/compat-guile-impl.scm >> $@
+
+lsp-server/private/file.scm: lsp-server/private/file.sld lsp-server/private/file-impl.scm
+	cat $< > $@
+	echo "" >> $@
+	cat lsp-server/private/file-impl.scm >> $@
 
 lsp-server/private/util.scm: lsp-server/private/util.sld lsp-server/private/util-impl.scm
 	cat $< > $@
