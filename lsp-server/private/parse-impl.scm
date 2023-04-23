@@ -664,16 +664,10 @@
                                    #:test chicken-relevant-scheme-file-regex)))
                   (for-each
                    (lambda (filename)
-                     (cond ((string-contains filename
-                                             "/tests/")
-                            (write-log 'debug
-                                       (format "ignoring test file: ~a~%"
-                                               filename)))
-                           (else
-                            (write-log 'debug
-                                       (format "generate-meta-data!: processing file ~a"
-                                               filename))
-                            (parse-and-update-if-needed! filename))))
+                     (write-log 'debug
+                                (format "generate-meta-data!: processing file ~a"
+                                        filename))
+                     (parse-and-update-if-needed! filename))
                    files)))
                (else
                 (parse-and-update-if-needed! f)))))
