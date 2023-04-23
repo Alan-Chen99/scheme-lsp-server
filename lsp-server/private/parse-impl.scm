@@ -531,21 +531,25 @@
    (format "parse-and-update-table!: absolute path ~s~%" abs-source-path))
   (when abs-source-path
     (guard (condition
-            (#t (write-log 'error
-                 (format "parse-and-update-table!: error parsing file ~a: ~a"
-                         abs-source-path
-                         (cond ((error-object? condition)
-                                (error-object-message condition))
-                               (else
-                                condition))))
+            (else (write-log 'error
+                             (format "parse-and-update-table!: error parsing file ~a: ~a"
+                                     abs-source-path
+                                     (cond ((error-object? condition)
+                                            (error-object-message condition))
+                                           (else
+                                            condition))))
                 #f))
       (let ((meta-data (parse-file abs-source-path)))
         (update-identifier-to-source-meta-data-table! abs-source-path meta-data)
-        ;; (for-each (lambda (path)
-        ;;             (let ((module-path (get-module-path path)))
-        ;;               (when module-path
-        ;;                 (generate-meta-data! module-path))))
-        ;;           (source-meta-data-imports meta-data))
+        (for-each (lambda (path)
+                    (let ((module-path (get-module-path path)))
+                      (write-log 'debug
+                                 (format "parse-and-update-table!: import ~a has module-path: ~a~%"
+                                         path
+                                         module-path))
+                      (when module-path
+                        (generate-meta-data! module-path))))
+                  (source-meta-data-imports meta-data))
         ))))
 
 (define scheme-file-regex
@@ -559,7 +563,6 @@
 
 (define chicken-relevant-scheme-file-regex
   (irregex '(: (* any)
-               (~ "/tests/")
                (~ "import")
                (or ".scm"
                    ".sld"
@@ -661,10 +664,16 @@
                                    #:test chicken-relevant-scheme-file-regex)))
                   (for-each
                    (lambda (filename)
-                     (write-log 'debug
-                                (format "generate-meta-data!: processing file ~a"
-                                        filename))
-                     (parse-and-update-if-needed! filename))
+                     (cond ((string-contains filename
+                                             "/tests/")
+                            (write-log 'debug
+                                       (format "ignoring test file: ~a~%"
+                                               filename)))
+                           (else
+                            (write-log 'debug
+                                       (format "generate-meta-data!: processing file ~a"
+                                               filename))
+                            (parse-and-update-if-needed! filename))))
                    files)))
                (else
                 (parse-and-update-if-needed! f)))))

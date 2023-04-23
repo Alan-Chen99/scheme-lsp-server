@@ -10,7 +10,7 @@
 
 (import (only (srfi 1) any every filter find fold append-map)
         (only (srfi 14) char-set)
-        (only (srfi 13) string-trim-right string-prefix?)
+        (only (srfi 13) string-contains string-trim-right string-prefix?)
         (srfi 28)
         (srfi 69)
         (only (scheme file) with-input-from-file)
