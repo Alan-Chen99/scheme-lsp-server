@@ -461,11 +461,11 @@
            #f)))
   (guard
       (condition
-       (#t (write-log 'warning
-            (format "Cannot parse library name from file ~a: ~a"
-                    filename
-                    condition))
-           #f))
+       (else (write-log 'warning
+                        (format "Cannot parse library name from file ~a: ~a"
+                                filename
+                                condition))
+             #f))
     (with-input-from-file filename
       (lambda ()
         (let loop ((expr (read)))
@@ -479,11 +479,11 @@
 
 (define (parse-file filename)
   (guard (condition
-          (#t (write-log 'error
-               (format "Cannot parse file ~a: ~a"
-                       filename
-                       condition))
-              #f))
+          (else (write-log 'error
+                           (format "Cannot parse file ~a: ~a"
+                                   filename
+                                   condition))
+                #f))
     (let ((meta-data-without-location
            (with-input-from-file filename
              (lambda ()

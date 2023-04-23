@@ -99,11 +99,12 @@
         (with-output-to-string
           (lambda ()
             (guard (condition
-                    (#t (write-log 'debug
-                         (format "#fetch-documentation: documentation not found: (~a ~a)"
-                                 egg
-                                 identifier))
-                        #f))
+                    (else
+                     (write-log 'debug
+                                (format "#fetch-documentation: documentation not found: (~a ~a)"
+                                        egg
+                                        identifier))
+                     #f))
              (describe (lookup-node doc-path))))))
       #f))
 
@@ -126,40 +127,59 @@
               (null? egg))
           #f
           (guard (condition
-                  (#t (write-log 'debug
-                       (format "#fetch-signature: signature not found: (~a ~a)"
-                               egg
-                               identifier))
-                      #f))
+                  (else (write-log 'debug
+                                   (format "#fetch-signature: signature not found: (~a ~a)"
+                                           egg
+                                           identifier))
+                        #f))
                  (node-signature
                   (lookup-node (list egg identifier)))))
       ;;(lsp-geiser-signature identifier)
       (fetch-signature module identifier)))
 
+(define (file-is-egg-definition? file-path)
+  (string=? (pathname-extension file-path)
+            "egg"))
+
+(define (file-supported? file-path)
+  (not (file-is-egg-definition? file-path)))
+
 (define (load-or-import file-path)
   (guard
    (condition
-    (#t (write-log 'error
-                   (format "Can't load file ~a: ~a"
-                           file-path
-                           (with-output-to-string
-                             (lambda ()
-                               (print-error-message condition)))))))
+    (else (write-log 'error
+                     (format "Can't load file ~a: ~a"
+                             file-path
+                             (with-output-to-string
+                               (lambda ()
+                                 (print-error-message condition)))))))
    (let ((mod-name (parse-library-name-from-file file-path)))
 
-     (if (not mod-name)
-         (lsp-geiser-load-file file-path)
-         (begin (lsp-geiser-load-file file-path)
-                (eval `(import ,mod-name)))))))
+     (cond ((not (file-supported? file-path))
+            (write-log 'debug
+                       (format "ignoring unsupported file: ~a~%"
+                               file-path)))
+           ((not mod-name)
+            (lsp-geiser-load-file file-path))
+           (else (lsp-geiser-load-file file-path)
+                 (eval `(import ,mod-name)))))))
+
+
+(define (generate-meta-data-if-supported! file-path)
+  (if (file-supported? file-path)
+      (generate-meta-data! file-path)
+      (write-log 'debug
+                 (format "ignoring unsupported file: ~a~%"
+                         file-path))))
 
 ;;; Action to execute when FILE-PATH is opened. Used for side effects only.
 (define ($open-file! file-path)
-  (generate-meta-data! file-path)
+  (generate-meta-data-if-supported! file-path)
   #f)
 
 ;;; Action to execute when FILE-PATH is saved. Used for side effects only.
 (define ($save-file! file-path)
-  (generate-meta-data! file-path)
+  (generate-meta-data-if-supported! file-path)
   #f)
 
 (define (join-definition-tables! left right)

@@ -168,9 +168,9 @@
 (define (compile-and-import-if-needed file-path)
   (guard
    (condition
-    (#t (write-log 'error (format "Can't compile file ~a: ~a"
-                                  file-path
-                                  condition))))
+    (else (write-log 'error (format "Can't compile file ~a: ~a"
+                                    file-path
+                                    condition))))
    (let* ((mod-name (parse-library-name-from-file file-path))
           (mod (if mod-name
                    (resolve-module mod-name #t #:ensure #f)

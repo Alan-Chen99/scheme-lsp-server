@@ -55,7 +55,7 @@
   "tests/resources/sample-3-included.scm"
   "tests/resources/sample-r7rs-lib.scm")
  (component-options
-  (csc-options "-O3" "-X" "r7rs" "-R" "r7rs"))
+  (csc-options "-O2" "-X" "r7rs" "-R" "r7rs"))
  (components
   (program chicken-lsp-server
            (source "main.scm")

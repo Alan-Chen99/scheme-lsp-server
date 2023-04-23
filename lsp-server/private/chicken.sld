@@ -6,8 +6,9 @@
         current-directory
         get-module-path
         get-absolute-pathname
-        pathname-directory
         pathname-base
+        pathname-directory
+        pathname-extension
         pathname-join
         uri-decode
         with-input-from-string)
