@@ -1,4 +1,4 @@
-(define-module (lsp-server document)
+(define-module (lsp-server private document)
 
 #:export (make-document
           read-document
@@ -21,7 +21,7 @@
                          vector-map))
 #:use-module (scheme file)
 #:use-module (scheme write)
-#:use-module (lsp-server private)
+#:use-module (lsp-server private util)
 #:use-module (srfi srfi-13)
 #:use-module (srfi srfi-28)
 #:use-module (srfi srfi-69)

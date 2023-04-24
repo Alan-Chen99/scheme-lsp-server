@@ -9,7 +9,7 @@
 (cond-expand
  (chicken (import scheme
                   (chicken format)
-                  (lsp-server chicken)
+                  (lsp-server private chicken)
                   (only (chicken base) case-lambda)
                   (only (chicken condition) print-error-message)
                   r7rs
@@ -26,10 +26,21 @@
                        make-mutex
                        mutex-lock!
                        mutex-unlock!)
-                 (lsp-server gambit util)
-                 (lsp-server gambit))
-         (include "~~lib/_gambit#.scm")))
-
+                 (lsp-server private gambit))
+         (include "~~lib/_gambit#.scm"))
+ (guile (import (only (scheme base)
+                      define-record-type
+                      guard
+                      let-values)
+                (scheme write)
+                (srfi 1)
+                (srfi 8)
+                (srfi 18)
+                (srfi 43)
+                (ice-9 documentation)
+                (ice-9 session)
+                (system vm program)
+                (lsp-server adapter))))
 
 (import (scheme base)
         (scheme case-lambda)
@@ -50,9 +61,11 @@
         (json-rpc)
         (json-rpc lolevel)
 
-        (lsp-server document)
-        (lsp-server parse)
-        (lsp-server private))
+        (lsp-server private file)
+        (lsp-server private util)
+        (lsp-server private document)
+        (lsp-server private parse)
+        (lsp-server private compat)
+        )
 
-(include "file.scm")
-(include "server.scm"))
+(include "lsp-server-impl.scm"))

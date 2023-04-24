@@ -1,10 +1,16 @@
-(define-module (lsp-server)
+(define-module (lsp-server private file)
 
-#:export (lsp-server-log-level
-          lsp-spawner-start
-          lsp-server-start/stdio
-          lsp-server-start/tcp
-          lsp-server-version)
+#:export ( file-table
+           file-table-mutex
+           read-file!
+           update-file!
+           free-file!
+           get-word-under-cursor
+           parse-change-contents
+           apply-change
+           apply-all-changes
+           invert-range
+           normalize-range)
 
 #:re-export (lsp-server-log-file)
 
@@ -12,22 +18,12 @@
               #:select (define-record-type
                         guard
                         let-values))
-#:use-module (scheme file)
 #:use-module (scheme write)
 #:use-module (srfi srfi-1)
 #:use-module (srfi srfi-8) ;; receive
-#:use-module (srfi srfi-13)
-#:use-module (srfi srfi-18)
+#:use-module ((srfi srfi-18) #:select (make-mutex mutex-lock! mutex-unlock!))
 #:use-module (srfi srfi-28) ;; simple-format
-#:use-module (srfi srfi-43)
 #:use-module (srfi srfi-69)
-
-#:use-module (json-rpc)
-#:use-module (json-rpc lolevel)
-#:use-module (ice-9 documentation)
-#:use-module (ice-9 session)
-
-#:use-module (system vm program)
 
 #:use-module (lsp-server private document)
 #:use-module (lsp-server private parse)
@@ -36,7 +32,5 @@
 #:use-module ((lsp-server private guile)
               #:select (alist-ref))
 
-#:use-module (lsp-server private adapter)
-#:use-module (lsp-server private file)
-
 #:declarative? #f)
+

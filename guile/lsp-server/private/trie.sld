@@ -1,4 +1,4 @@
-(define-module (lsp-server trie)
+(define-module (lsp-server private trie)
 
 #:export (make-trie
           trie?
@@ -11,6 +11,5 @@
 
 #:use-module (scheme base)
 #:use-module ((srfi srfi-1) #:select (every fold))
-#:use-module (srfi srfi-69)
-#:use-module (lsp-server guile util))
+#:use-module (srfi srfi-69))
 

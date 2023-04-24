@@ -1,16 +1,15 @@
 moddir=$(datadir)/guile/site/$(GUILE_EFFECTIVE_VERSION)
 godir=$(libdir)/guile/$(GUILE_EFFECTIVE_VERSION)/site-ccache
 
-SOURCES = $(LIBRARY_DEFINITIONS:%.sld=%.scm)
-GOBJECTS = $(DEPENDENCIES:%.scm=%.go) $(SOURCES:%.scm=%.go) $(GUILE_SPECIFIC_SOURCES:%.scm=%.go)
+GOBJECTS = $(LIBRARY_DEFINITIONS:%.sld=%.go)
 EXECUTABLE = lsp-server/guile-lsp-server
 
-nobase_dist_mod_DATA = $(SOURCES) $(GUILE_SPECIFIC_SOURCES) $(DEPENDENCIES)
+nobase_dist_mod_DATA = $(SOURCES) $(DEPENDENCIES)
 nobase_go_DATA = $(GOBJECTS)
 bin_SCRIPTS = $(EXECUTABLE)
 $(EXECUTABLE): lsp-server/main.scm
 	echo '#!/usr/bin/env sh' > $(EXECUTABLE)
-	echo 'exec guile --no-auto-compile -x ".sld" -e  main -s "$$0" "$$@"' >> $(EXECUTABLE)
+	echo 'exec guile --no-auto-compile -x ".scm" -e  main -s "$$0" "$$@"' >> $(EXECUTABLE)
 	echo '!#' >> $(EXECUTABLE)
 	echo >> $(EXECUTABLE)
 	cat lsp-server/main.scm >> $(EXECUTABLE)
@@ -34,49 +33,62 @@ SUFFIXES = .scm .sld .go
 PREFIX=$(AM_V_GEN)GUILE_LOAD_COMPILED_PATH="@abs_top_builddir@/:$(GUILE_LOAD_COMPILED_PATH)"; \
       GUILE_LOAD_PATH="@abs_top_builddir@/:@abs_top_srcdir@/:$(GUILE_LOAD_PATH)"
 
-lsp-server.scm: lsp-server.sld lsp-server/file.scm lsp-server/server.scm
+lsp-server.scm: lsp-server.sld lsp-server-impl.scm
 	cat $< > $@
 	echo "" >> $@
-	cat lsp-server/file.scm >> $@
-	echo "" >> $@
-	cat lsp-server/server.scm >> $@
+	cat lsp-server-impl.scm >> $@
 
-lsp-server/private.scm: lsp-server/private.sld lsp-server/private-impl.scm
+lsp-server/private/compat.scm: lsp-server/private/compat.sld lsp-server/private/compat-guile-impl.scm
 	cat $< > $@
 	echo "" >> $@
-	cat lsp-server/private-impl.scm >> $@
+	cat lsp-server/private/compat-guile-impl.scm >> $@
 
-lsp-server/document.scm: lsp-server/document.sld lsp-server/document-impl.scm
+lsp-server/private/file.scm: lsp-server/private/file.sld lsp-server/private/file-impl.scm
 	cat $< > $@
 	echo "" >> $@
-	cat lsp-server/document-impl.scm >> $@
+	cat lsp-server/private/file-impl.scm >> $@
 
-lsp-server/trie.scm: lsp-server/trie.sld lsp-server/trie-impl.scm
+lsp-server/private/util.scm: lsp-server/private/util.sld lsp-server/private/util-impl.scm
 	cat $< > $@
 	echo "" >> $@
-	cat lsp-server/trie-impl.scm >> $@
+	cat lsp-server/private/util-impl.scm >> $@
 
-lsp-server/parse.scm: lsp-server/parse.sld lsp-server/parse-impl.scm
+lsp-server/private/document.scm: lsp-server/private/document.sld lsp-server/private/document-impl.scm
 	cat $< > $@
 	echo "" >> $@
-	cat lsp-server/parse-impl.scm >> $@
+	cat lsp-server/private/document-impl.scm >> $@
 
-lsp-server/adapter.scm: lsp-server/adapter.sld lsp-server/adapter-impl.scm
+lsp-server/private/trie.scm: lsp-server/private/trie.sld lsp-server/private/trie-impl.scm
 	cat $< > $@
 	echo "" >> $@
-	cat lsp-server/adapter-impl.scm >> $@
+	cat lsp-server/private/trie-impl.scm >> $@
 
+lsp-server/private/parse.scm: lsp-server/private/parse.sld lsp-server/private/parse-impl.scm
+	cat $< > $@
+	echo "" >> $@
+	cat lsp-server/private/parse-impl.scm >> $@
+
+lsp-server/private/adapter.scm: lsp-server/private/adapter.sld lsp-server/private/adapter-impl.scm
+	cat $< > $@
+	echo "" >> $@
+	cat lsp-server/private/adapter-impl.scm >> $@
+
+lsp-server/private/guile.scm: lsp-server/private/guile.sld lsp-server/private/guile-impl.scm
+	cat $< > $@
+	echo "" >> $@
+	cat lsp-server/private/guile-impl.scm >> $@
 
 distclean-local:
 	rm -Rf geiser/ \
-	       private.scm    \
-	       document.scm   \
-	       trie.scm       \
-	       parse.scm      \
-	       adapter.scm    \
-	       file.scm       \
-	       server.scm     \
+	       lsp-server/private/compat.scm \
+	       lsp-server/private/guile.scm \
+	       lsp-server/private/util.scm    \
+               lsp-server/private/file.scm   \
+	       lsp-server/private/document.scm   \
+	       lsp-server/private/trie.scm       \
+	       lsp-server/private/parse.scm      \
+	       lsp-server/private/adapter.scm    \
 	       main.scm
 
 .scm.go:
-	$(PREFIX) $(GUILE_TOOLS) compile $(GUILE_WARNINGS) -x ".sld" -O0 --r7rs -o "$@" "$<"
+	$(PREFIX) $(GUILE_TOOLS) compile $(GUILE_WARNINGS) -x ".scm" -O0 --r7rs -o "$@" "$<"

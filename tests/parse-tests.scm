@@ -11,9 +11,8 @@
                 (except (srfi srfi-69) hash-table-merge!)
                 (ice-9 ftw)
                 (lsp-server private)
-                (lsp-server guile)
-                (lsp-server guile util)
-                (lsp-server trie)))
+                (lsp-server private guile)
+                (lsp-server private trie)))
  (chicken (import (srfi 1)
                   (only (srfi 13) string-contains)
                   (srfi 28)
@@ -26,9 +25,7 @@
                   (chicken irregex)
                   (chicken file)
                   (chicken file posix)
-                  (lsp-server chicken)
-                  (lsp-server chicken util)
-                  (lsp-server private))))
+                  (lsp-server private util))))
 (cond-expand
  (chicken
   (define hash-table-join! hash-table-merge!)

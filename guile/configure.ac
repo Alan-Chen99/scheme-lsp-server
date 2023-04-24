@@ -12,22 +12,25 @@ fi
 
 AC_CONFIG_FILES([Makefile])
 
-AC_CONFIG_LINKS([lsp-server/private-impl.scm:../private.scm
-                 lsp-server/document-impl.scm:../document.scm
-                 lsp-server/file.scm:../file.scm
+AC_CONFIG_LINKS([lsp-server/private/util-impl.scm:../lsp-server/private/util-impl.scm
+                 lsp-server/private/document-impl.scm:../lsp-server/private/document-impl.scm
+                 lsp-server/private/file-impl.scm:../lsp-server/private/file-impl.scm
                  lsp-server/main.scm:../main.scm
-                 lsp-server/server.scm:../server.scm
-                 lsp-server/trie-impl.scm:../trie.scm
-                 lsp-server/adapter-impl.scm:../adapter.scm
-                 lsp-server/parse-impl.scm:../parse.scm
+                 lsp-server-impl.scm:../lsp-server-impl.scm
+                 lsp-server/private/trie-impl.scm:../lsp-server/private/trie-impl.scm
+                 lsp-server/private/adapter-impl.scm:../lsp-server/private/adapter-impl.scm
+                 lsp-server/private/parse-impl.scm:../lsp-server/private/parse-impl.scm
+                 lsp-server/private/compat-guile-impl.scm:../lsp-server/private/compat-guile-impl.scm
+                 lsp-server/private/guile-impl.scm:../lsp-server/private/guile-impl.scm
 
-                 lsp-server/guile.scm:lsp-server/guile.scm
-                 lsp-server/guile/util.scm:lsp-server/guile/util.scm
-                 lsp-server/adapter.sld:lsp-server/adapter.sld
-                 lsp-server/document.sld:lsp-server/document.sld
-                 lsp-server/private.sld:lsp-server/private.sld
-                 lsp-server/trie.sld:lsp-server/trie.sld
-                 lsp-server/parse.sld:lsp-server/parse.sld
+                 lsp-server/private/adapter.sld:lsp-server/private/adapter.sld
+                 lsp-server/private/document.sld:lsp-server/private/document.sld
+                 lsp-server/private/file.sld:lsp-server/private/file.sld
+                 lsp-server/private/util.sld:lsp-server/private/util.sld
+                 lsp-server/private/compat.sld:lsp-server/private/compat.sld
+                 lsp-server/private/guile.sld:lsp-server/private/guile.sld
+                 lsp-server/private/trie.sld:lsp-server/private/trie.sld
+                 lsp-server/private/parse.sld:lsp-server/private/parse.sld
                  lsp-server.sld:lsp-server.sld
 
                  geiser/modules.scm:../geiser/guile/src/geiser/modules.scm

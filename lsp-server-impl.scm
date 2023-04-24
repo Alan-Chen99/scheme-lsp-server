@@ -43,8 +43,9 @@
 
 (define-handler (initialize-handler params)
   (let ((root-path (get-root-path params)))
-    (thread-start!
-     (make-thread (lambda () ($initialize-lsp-server! root-path))))
+    ;; (thread-start!
+    ;;  (make-thread (lambda () ($initialize-lsp-server! root-path))))
+    ($initialize-lsp-server! root-path)
     (set! lsp-server-state 'on)
     `((capabilities . ,(append mandatory-capabilities
                                $server-capabilities))
@@ -213,16 +214,17 @@
                    mod-name))))
     (write-log 'debug (format "params: ~a" params))
     (guard (condition
-            (else (begin
-                    (write-log 'error (format "Error resolving ~a ~a"
-                                              mod
-                                              id))
-                    (if (satisfies-log-level? 'debug)
-                        (raise (make-json-rpc-internal-error
-                                (format "Error resolving ~a ~a"
-                                        mod
-                                        id)))
-                        'null))))
+            ((json-rpc-error? condition)
+             (write-log 'error (format "Error resolving ~a ~a"
+                                       mod
+                                       id))
+             (if (satisfies-log-level? 'debug)
+                 (raise (make-json-rpc-internal-error
+                         (format "Error resolving ~a ~a"
+                                 mod
+                                 id)))
+                 'null))
+            (else (raise condition)))
            (let ((doc (or ($fetch-documentation mod id)
                           "")))
              (cons `(documentation . ,doc)
@@ -323,13 +325,14 @@
   (parameterize (($tcp-read-timeout #f))
     (let ((listener ($tcp-listen port-num)))
       (guard
-       (condition (else (begin
-                          (write-log 'error
-                                     (format "JSON-RPC error: ~a"
-                                             condition))
-                          (cond-expand (chicken (print-error-message condition))
-                                       (else (display condition)))
-                          (raise condition))))
+       (condition (else
+                   (write-log 'error
+                              (format "LSP-SERVER: JSON-RPC error: ~a"
+                                      condition))
+                   (cond-expand (chicken (print-error-message condition))
+                                (else (display condition)))
+                   (write-log 'info "Exiting.")
+                   (exit 1)))
        (let loop ()
          (call-with-values (lambda () ($tcp-accept listener))
            (lambda (in-port out-port)

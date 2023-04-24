@@ -1,4 +1,4 @@
-(define-module (lsp-server private)
+(define-module (lsp-server private util)
 
 #:export (make-apropos-info
           apropos-info-module
@@ -47,7 +47,6 @@
 #:use-module (srfi srfi-28)
 #:use-module (srfi srfi-69)
 #:use-module (json-rpc)
-#:use-module (lsp-server guile util)
-
+#:use-module (lsp-server private guile)
 
 #:declarative? #f)

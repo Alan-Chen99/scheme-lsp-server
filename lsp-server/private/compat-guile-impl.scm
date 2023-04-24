@@ -1,44 +1,3 @@
-(define-module (lsp-server guile)
-
-#:export ($apropos-list
-          $open-file!
-          $save-file!
-          $fetch-documentation
-          $fetch-signature
-          $get-definition-locations
-          $initialize-lsp-server!
-          $server-capabilities
-          $server-name
-          $tcp-accept
-          $tcp-close
-          $tcp-connect
-          $tcp-listen
-          $tcp-read-timeout
-          spawn-repl-server)
-
-#:use-module ((scheme base)
-              #:select (define-record-type read-line guard))
-#:use-module (scheme write)
-#:use-module (srfi srfi-1)
-#:use-module ((srfi srfi-13)
-              #:select (string-join string-concatenate))
-#:use-module (srfi srfi-28)
-#:use-module (srfi srfi-69)
-#:use-module (geiser modules)
-#:use-module (ice-9 documentation)
-#:use-module (ice-9 ftw)
-#:use-module (ice-9 optargs)
-#:use-module (ice-9 session)
-#:use-module (system vm program)
-#:use-module (system repl server)
-#:use-module (json-rpc lolevel)
-#:use-module (lsp-server parse)
-#:use-module (lsp-server private)
-#:use-module (lsp-server adapter)
-#:use-module (lsp-server guile util)
-
-#:declarative? #f)
-
 (define root-path (make-parameter #f))
 (define current-path (make-parameter #f))
 
@@ -209,9 +168,9 @@
 (define (compile-and-import-if-needed file-path)
   (guard
    (condition
-    (#t (write-log 'error (format "Can't compile file ~a: ~a"
-                                  file-path
-                                  condition))))
+    (else (write-log 'error (format "Can't compile file ~a: ~a"
+                                    file-path
+                                    condition))))
    (let* ((mod-name (parse-library-name-from-file file-path))
           (mod (if mod-name
                    (resolve-module mod-name #t #:ensure #f)

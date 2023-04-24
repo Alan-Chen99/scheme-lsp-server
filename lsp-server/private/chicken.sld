@@ -1,4 +1,4 @@
-(define-library (lsp-server chicken util)
+(define-library (lsp-server private chicken)
 
 (export absolute-pathname?
         alist-ref
@@ -6,8 +6,9 @@
         current-directory
         get-module-path
         get-absolute-pathname
-        pathname-directory
         pathname-base
+        pathname-directory
+        pathname-extension
         pathname-join
         uri-decode
         with-input-from-string)

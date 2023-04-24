@@ -9,17 +9,27 @@ DEPENDENCIES =    \
   geiser/xref.scm
 
 LIBRARY_DEFINITIONS = \
-  lsp-server/private.sld    \
-  lsp-server/document.sld   \
-  lsp-server/trie.sld       \
-  lsp-server/parse.sld      \
-  lsp-server/adapter.sld    \
+  lsp-server/private/util.sld  \
+  lsp-server/private/guile.sld \
+  lsp-server/private/trie.sld       \
+  lsp-server/private/compat.sld \
+  lsp-server/private/document.sld   \
+  lsp-server/private/parse.sld      \
+  lsp-server/private/adapter.sld    \
+  lsp-server/private/file.sld  \
   lsp-server.sld
 
-GUILE_SPECIFIC_SOURCES = \
-  lsp-server/guile/util.scm \
-  lsp-server/guile.scm
-
+SOURCES = \
+  lsp-server-impl.scm    \
+  lsp-server/private/util-impl.scm    \
+  lsp-server/private/guile-impl.scm \
+  lsp-server/private/trie-impl.scm       \
+  lsp-server/private/compat-guile-impl.scm \
+  lsp-server/private/document-impl.scm   \
+  lsp-server/private/parse-impl.scm      \
+  lsp-server/private/adapter-impl.scm    \
+  lsp-server/private/file-impl.scm    \
+  lsp-server.scm
 
 EXTRA_DIST =            \
   README.md             \

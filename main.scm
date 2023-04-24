@@ -1,5 +1,5 @@
 (import (lsp-server)
-        (lsp-server private))
+        (lsp-server private util))
 
 (cond-expand
  (guile (import (except (scheme base)
@@ -8,17 +8,17 @@
                         member)
                 (srfi srfi-18)
                 (srfi srfi-28)
-                (lsp-server guile)))
+                (lsp-server private guile)))
  ((or chicken gambit)
   (import (scheme base)
           (scheme char) ;; string-downcase
           (scheme process-context)
           (srfi 28))))
 
-(cond-expand (chicken (import (lsp-server chicken)
+(cond-expand (chicken (import (lsp-server private chicken)
                               (only (srfi 1) any)
                               (srfi 18)))
-             (gambit (import (lsp-server gambit)
+             (gambit (import (lsp-server private gambit)
                              (only (srfi 1) any)))
              (guile (import (only (srfi srfi-1) any)))
              (else (import (only (srfi 1) any))))
