@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 REPO_PATH=${CHICKEN_EGG_CACHE}/../
 CHICKEN_DOC_PATH=${REPO_PATH}/share/chicken-doc
