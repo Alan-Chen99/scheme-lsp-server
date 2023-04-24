@@ -13,14 +13,21 @@
         normalize-range)
 
 (cond-expand
- (chicken (import scheme
+ (chicken (import (except scheme
+                          string-length string-ref string-set!
+                          make-string string substring string->list
+                          list->string string-fill! write-char
+                          read-char display)
                   (chicken format)
                   (lsp-server private chicken)
                   (only (chicken base) case-lambda)
                   (only (chicken condition) print-error-message)
                   r7rs
 
-                  (except (chicken io) read-string)
+                  (except (chicken io)
+                          read-string
+                          write-string
+                          read-token)
                   (only (chicken base) alist-ref)
                   (only (srfi 133) vector-fold)
                   (chicken tcp)
@@ -35,6 +42,8 @@
                        make-mutex
                        mutex-lock!
                        mutex-unlock!)
+                 (scheme base)
+                 (scheme write)
                  (lsp-server private gambit))
          (include "~~lib/_gambit#.scm"))
  (guile (import (only (scheme base)
@@ -50,9 +59,7 @@
                         mutex-unlock!)
                 (only (srfi 43) vector-fold))))
 
-(import (scheme base)
-        (scheme file)
-        (scheme write)
+(import (scheme file)
         (srfi 28)
         (srfi 69)
 
