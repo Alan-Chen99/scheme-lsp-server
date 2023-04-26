@@ -19,14 +19,20 @@
                   (only (srfi 133) vector-fold)
                   (chicken tcp)
                   apropos
+                  (only (srfi 13)
+                      string-fold
+                      string-take
+                      string-tokenize
+                      string-upcase)
                   (srfi 18)
                   (srfi 180)
                   utf8))
- (gambit (import (only (gambit)
-                       make-mutex
-                       mutex-lock!
-                       mutex-unlock!)
-                 (lsp-server private gambit))
+ (gambit (import (gambit)
+                 (lsp-server private gambit)
+                 (only (srfi 13)
+                       string-fold
+                       string-take
+                       string-tokenize))
          (include "~~lib/_gambit#.scm"))
  (guile (import (only (scheme base)
                       define-record-type
@@ -35,15 +41,19 @@
                 (scheme write)
                 (srfi 1)
                 (srfi 8)
+                (only (srfi 13)
+                      string-fold
+                      string-take
+                      string-tokenize
+                      string-upcase)
                 (srfi 18)
                 (srfi 43)
                 (ice-9 documentation)
                 (ice-9 session)
                 (system vm program)
-                (lsp-server adapter))))
+                (lsp-server private adapter))))
 
-(import (scheme base)
-        (scheme case-lambda)
+(import (scheme case-lambda)
         (scheme file)
         (scheme load)
         (only (scheme process-context)
@@ -53,11 +63,6 @@
         (only (srfi 14) char-set)
         (srfi 28)
         (srfi 69)
-        (only (srfi 13)
-              string-fold
-              string-take
-              string-tokenize
-              string-upcase)
         (json-rpc)
         (json-rpc lolevel)
 

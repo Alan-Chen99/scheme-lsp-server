@@ -39,11 +39,7 @@
                         mutex-unlock!)
                   (srfi 180)
                   utf8))
- (gambit (import (only (gambit)
-                       make-mutex
-                       mutex-lock!
-                       mutex-unlock!)
-                 (scheme base)
+ (gambit (import (gambit)
                  (scheme write)
                  (lsp-server private gambit))
          (include "~~lib/_gambit#.scm"))

@@ -20,9 +20,7 @@
         (lsp-server private parse)
         (json-rpc lolevel))
 
-(import (srfi 1)
-        (only (srfi 13) string-join string-concatenate)
-        (scheme write)
+(import (scheme write)
         (srfi 28)
         (srfi 69))
 
@@ -48,6 +46,8 @@
           chicken-doc
           r7rs
           scheme
+          (srfi 1)
+          (only (srfi 13) string-join string-concatenate)
           (srfi 18)
           (srfi 28)
           (srfi 69)
@@ -60,12 +60,11 @@
   (include "compat-chicken-impl.scm"))
  (gambit
   (import (gambit)
-        (only (srfi 1) find)
-        (only (srfi 13) string-tokenize)
-        (only (srfi 14) char-set char-set-complement)
-        (srfi 28)
-        (lsp-server adapter)
-        (lsp-server private gambit))
+          (only (srfi 13) string-tokenize)
+          (only (srfi 14) char-set char-set-complement)
+          (srfi 28)
+          (lsp-server private adapter)
+          (lsp-server private gambit))
   (include "compat-gambit-impl.scm"))
  (guile
   (import (only (scheme base)
@@ -77,6 +76,8 @@
           (ice-9 ftw)
           (ice-9 optargs)
           (ice-9 session)
+          (srfi 1)
+          (only (srfi 13) string-join string-concatenate)
           (system vm program)
           (system repl server))
   (include "compat-guile-impl.scm"))

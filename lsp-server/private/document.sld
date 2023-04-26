@@ -23,8 +23,8 @@
                   (scheme base)
                   (only (chicken port) with-input-from-string)
                   (utf8)))
- (gambit (import (lsp-server private gambit)
-                 (except (scheme base) vector-copy))
+ (gambit (import (gambit)
+                 (lsp-server private gambit))
          (include "~~lib/_gambit#.scm"))
  (guile (import (only (scheme base)
                       define-record-type
