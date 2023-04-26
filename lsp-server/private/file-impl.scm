@@ -16,22 +16,24 @@
   (end-char range-end-char)
   (length range-length))
 
-(define (read-file! path)
-  (mutex-lock! file-table-mutex)
-  (let ((result
-         (cond ((hash-table-exists? file-table path)
-                (hash-table-ref file-table path))
-               (else
-                (let ((doc (call-with-input-file path read-document)))
-                  (hash-table-update!/default file-table
-                                              path
-                                              (lambda (v)
+(define (read-text! path . args)
+  (let ((text (if (null? args)
+                  ""
+                  (car args))))
+    (mutex-lock! file-table-mutex)
+    (let ((result
+           (cond ((hash-table-exists? file-table path)
+                  (hash-table-ref file-table path))
+                 (else
+                  (let ((doc (call-with-input-string text read-document)))
+                    (hash-table-update!/default file-table
+                                                path
+                                                (lambda (v)
+                                                  doc)
                                                 doc)
-                                              doc)
-                  doc)))))
-    (mutex-unlock! file-table-mutex)
-    result))
-
+                    doc)))))
+      (mutex-unlock! file-table-mutex)
+      result)))
 
 (define (update-file! path . args)
   (let ((raw-change-contents
@@ -42,24 +44,14 @@
     (cond (raw-change-contents
            (mutex-lock! file-table-mutex)
            (let ((result
-                  (if (hash-table-exists? file-table path)
-                      (hash-table-update! file-table
-                                          path
-                                          (lambda (old-doc)
-                                            (apply-all-changes
-                                             raw-change-contents
-                                             old-doc)))
-                      (hash-table-set! file-table
-                                       path
-                                       (begin
-                                         ;;; TODO according to protocol the server shouldn't read from disk
-                                         (write-log 'debug
-                                                    (format "reading file from disk: ~a" path))
-                                         (call-with-input-file path
-                                           (lambda (p)
-                                             (apply-all-changes
-                                              raw-change-contents
-                                              (read-document p)))))))))
+                  (cond ((hash-table-exists? file-table path)
+                         (hash-table-update! file-table
+                                             path
+                                             (lambda (old-doc)
+                                               (apply-all-changes
+                                                raw-change-contents
+                                                old-doc))))
+                        (else #f))))
              (mutex-unlock! file-table-mutex)
              result))
           (else #f))))
@@ -79,7 +71,7 @@
 
 (define (get-word-under-cursor params)
   (define file-path (get-uri-path params))
-  (define doc (read-file! file-path))
+  (define doc (read-text! file-path))
   (define contents (document-contents doc))
   (define contents-length (document-length doc))
   (define line-number (alist-ref* '(position line) params))

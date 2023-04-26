@@ -2,7 +2,7 @@
 
 (export file-table
         file-table-mutex
-        read-file!
+        read-text!
         update-file!
         free-file!
         get-word-under-cursor
@@ -29,6 +29,7 @@
                           write-string
                           read-token)
                   (only (chicken base) alist-ref)
+                  (only (chicken port) call-with-input-string)
                   (only (srfi 133) vector-fold)
                   (chicken tcp)
                   apropos
@@ -57,7 +58,7 @@
                         make-mutex
                         mutex-lock!
                         mutex-unlock!)
-                (only (srfi 43) vector-fold))))
+                (only (lsp-server private guile) vector-fold))))
 
 (import (scheme file)
         (srfi 28)

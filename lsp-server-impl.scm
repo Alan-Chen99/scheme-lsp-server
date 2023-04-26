@@ -104,7 +104,7 @@
               res))))
     (cond ((and file-path file-already-read?)
            ;;(generate-meta-data! file-path)
-           (read-file! file-path)
+           (read-text! file-path)
            (update-file! file-path
                          (alist-ref 'contentChanges params))
            (write-log 'debug
@@ -142,14 +142,16 @@
     #f))
 
 (define-handler (text-document/did-open params)
-  (let ((file-path (get-uri-path params)))
-    (if file-path
-        (begin ($open-file! file-path) ;;(generate-meta-data! file-path)
-               (read-file! file-path)
-               (write-log 'debug (format "file contents read: ~a"
-                                         file-path)))
-        (write-log 'warning (format "file-path not found: ~a"
-                                    file-path)))
+  (let ((file-path (get-uri-path params))
+        (text (alist-ref* '(textDocument text) params)))
+    (cond (file-path
+           ($open-file! file-path)
+           (read-text! file-path text)
+           (write-log 'debug (format "text read: ~a"
+                                     text)))
+          (else
+           (write-log 'warning (format "file-path missing: ~a"
+                                       file-path))))
     #f))
 
 (define-handler (text-document/did-save params)

@@ -2,7 +2,7 @@
 
 #:export ( file-table
            file-table-mutex
-           read-file!
+           read-text!
            update-file!
            free-file!
            get-word-under-cursor
@@ -30,7 +30,7 @@
 #:use-module (lsp-server private util)
 #:use-module (lsp-server private compat)
 #:use-module ((lsp-server private guile)
-              #:select (alist-ref))
+              #:select (alist-ref vector-fold))
 
 #:declarative? #f)
 
