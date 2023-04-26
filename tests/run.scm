@@ -15,19 +15,13 @@
                (srfi 69)
                (srfi 64))))
 
-(cond-expand
- (gambit (import (codeberg.org/rgherdt/scheme-json-rpc json-rpc)
-                 (codeberg.org/rgherdt/scheme-json-rpc json-rpc lolevel)
-                 (codeberg.org/rgherdt/scheme-lsp-server lsp-server)))
- (else (import (json-rpc)
-               (json-rpc lolevel)
-               (lsp-server)
-               (lsp-server private file)
-               (lsp-server private util)
-               (lsp-server private compat)
-               (lsp-server private document))))
-
-
+(import (json-rpc)
+        (json-rpc lolevel)
+        (lsp-server)
+        (lsp-server private file)
+        (lsp-server private util)
+        (lsp-server private compat)
+        (lsp-server private document))
 
 (cond-expand
  (chicken (import (scheme base)
@@ -43,7 +37,7 @@
                          error
                          raise
                          map)
-                 (lsp-server private gambit)))
+                 (_test)))
  (guile (import (except (scheme base)
                         cond-expand
                         include
@@ -51,7 +45,7 @@
                         raise
                         map)
                 (lsp-server private guile))))
-
+ 
 (cond-expand
  (chicken (import-for-syntax (only (scheme base) string->symbol)
                              (only (srfi 13) string-join)
@@ -75,16 +69,30 @@
                  internal-name)))))
  (else))
 
-(define document-append (@@ (lsp-server private document) document-append))
-(define document-copy (@@ (lsp-server private document) document-copy))
-(define document-newline-positions (@@ (lsp-server private document) document-newline-positions))
-(define line/char->pos (@@ (lsp-server private document) line/char->pos))
+(cond-expand
+ (gambit
+  (define document-append codeberg.org/rgherdt/scheme-lsp-server/lsp-server/private/document#document-append)
+  (define document-copy codeberg.org/rgherdt/scheme-lsp-server/lsp-server/private/document#document-copy)
+  (define document-newline-positions codeberg.org/rgherdt/scheme-lsp-server/lsp-server/private/document#document-newline-positions)
+  (define line/char->pos codeberg.org/rgherdt/scheme-lsp-server/lsp-server/private/document#line/char->pos)
 
-(define parse-definition-line (@@ (lsp-server private parse) parse-definition-line))
+  (define parse-definition-line codeberg.org/rgherdt/scheme-lsp-server/lsp-server/private/parse#parse-definition-line)
 
-(define apply-change (@@ (lsp-server private file) apply-change))
-(define make-change-contents (@@ (lsp-server private file) make-change-contents))
-(define make-range (@@ (lsp-server private file) make-range))
+  (define apply-change codeberg.org/rgherdt/scheme-lsp-server/lsp-server/private/file#apply-change)
+  (define make-change-contents codeberg.org/rgherdt/scheme-lsp-server/lsp-server/private/file#make-change-contents)
+  (define make-range codeberg.org/rgherdt/scheme-lsp-server/lsp-server/private/file#make-range))
+ ((or chicken guile)
+  (define document-append (@@ (lsp-server private document) document-append))
+  (define document-copy (@@ (lsp-server private document) document-copy))
+  (define document-newline-positions (@@ (lsp-server private document) document-newline-positions))
+  (define line/char->pos (@@ (lsp-server private document) line/char->pos))
+
+  (define parse-definition-line (@@ (lsp-server private parse) parse-definition-line))
+
+  (define apply-change (@@ (lsp-server private file) apply-change))
+  (define make-change-contents (@@ (lsp-server private file) make-change-contents))
+  (define make-range (@@ (lsp-server private file) make-range))))
+
 
 (test-begin "lsp-server tests")
 
