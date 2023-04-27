@@ -1,10 +1,4 @@
 
-;;; A hash table mapping modules (extensions) to eggs. This is needed
-;;; to fetch the correct documentation with chicken-doc
-(define module-egg-table (make-hash-table))
-
-(define eggs-path
-  (make-pathname (system-cache-directory) "chicken-install"))
 
 (define chicken-source-path
   (or (get-environment-variable "CHICKEN_SOURCE_PATH") ""))
@@ -20,31 +14,6 @@
 (define (pick-port)
   (+ (pseudo-random-integer 2000)
      8001))
-
-(define (find-egg-directory-path egg-name)
-  (let ((path (glob (make-pathname eggs-path (format "~a" egg-name)))))
-    (if (null? path)
-        #f
-        (car path))))
-
-(define (join-module-name-parts mod)
-  (cond ((pair? mod)
-         (list
-          (string->symbol
-           (format "~a"
-                   (string-join (map (lambda (p) (format "~a" p))
-                                     mod)
-                                "-")))))
-        (else mod)))
-
-(define (find-module-path mod)
-  (let ((egg (or (hash-table-ref/default module-egg-table mod #f)
-                 (hash-table-ref/default module-egg-table
-                                         (join-module-name-parts mod)
-                                         #f))))
-    (if egg
-        (find-egg-directory-path egg)
-        #f)))
 
 ;;; Initialize LSP server to manage project at ROOT (a string). Used
 ;;; for implementation-specific side effects only.
@@ -200,7 +169,7 @@
                             (format "processing imports ~s~%"
                                     imports))
                  (for-each (lambda (imp)
-                             (let ((imp-path (find-module-path imp)))
+                             (let ((imp-path (get-module-path imp)))
                                (when imp-path
                                  (generate-meta-data! imp-path))))
                            imports))))))
@@ -254,42 +223,6 @@
 (define ($get-definition-locations mod-name identifier)
   (fetch-definition-locations identifier))
 
-(define (build-module-egg-table)
-  (define-values (in out pid)
-    (process (chicken-status) '("-c")))
-  (define (egg-line? str)
-    (irregex-match
-     '(: (submatch (+ any)) (+ space) (+ #\.) (* any))
-     str))
-  (define (extension-line? str)
-    (irregex-match
-     '(: (+ space) "extension" (+ space)
-         (submatch (+ (~ space))) (* space))
-     str))
-  (let loop ((line (read-line in))
-             (table '())
-             (cur-egg #f))
-    (cond ((eof-object? line)
-           (alist->hash-table table))
-          ((egg-line? line) =>
-           (lambda (m)
-             (loop (read-line in)
-                   table
-                   (string->symbol (irregex-match-substring m 1)))))
-          ((extension-line? line) =>
-           (lambda (m)
-             (loop (read-line in)
-                   (let ((mod (map string->symbol
-                                   (string-split (irregex-match-substring m 1)
-                                                 "."))))
-
-                     (cons (cons mod cur-egg)
-                           table))
-                   cur-egg)))
-          (else (loop (read-line in)
-                      table
-                      cur-egg)))))
-
 (define (module-name->chicken-string mod-name)
   (cond ((not mod-name)
          #f)
@@ -302,11 +235,6 @@
   (hash-table-ref/default module-egg-table
                           mod
                           #f))
-
-(define (chicken-status)
-  (make-pathname
-   (foreign-value "C_TARGET_BIN_HOME" c-string)
-   (foreign-value "C_CHICKEN_STATUS_PROGRAM" c-string)))
 
 (define (spawn-repl-server port-num)
   (nrepl port-num))
