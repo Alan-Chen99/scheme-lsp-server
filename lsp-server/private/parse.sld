@@ -6,7 +6,9 @@
         fetch-signature
         file-already-parsed?
         list-completions
-        parse-library-name-from-file)
+        parse-file
+        parse-library-name-from-file
+        source-meta-data-imports)
 
 (import (only (srfi 1) any every filter find fold append-map)
         (only (srfi 14) char-set)

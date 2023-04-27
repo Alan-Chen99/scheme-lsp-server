@@ -141,23 +141,35 @@
       (write-log 'info (format "File closed: ~a" file-path)))
     #f))
 
-(define-handler (text-document/did-open params)
+(define (apply-file-operation params proc)
   (let ((file-path (get-uri-path params))
         (text (alist-ref* '(textDocument text) params)))
     (cond (file-path
-           ($open-file! file-path)
-           (read-text! file-path text)
+           (let ((doc (read-text! file-path text)))
+             (if doc
+                 (proc file-path (document-contents doc))
+                 (proc file-path)))
            (write-log 'debug (format "text read: ~a"
                                      text)))
           (else
            (write-log 'warning (format "file-path missing: ~a"
                                        file-path))))
+    file-path))
+
+(define-handler (text-document/did-open params)
+  (let ((file-path (apply-file-operation params $open-file!)))
+    (if file-path
+        (write-log 'info (format "File opened: ~a~%" file-path))
+        (write-log 'warning (format "Invalid file-path. Params: ~a~%"
+                                    params)))
     #f))
 
 (define-handler (text-document/did-save params)
-  (let ((file-path (get-uri-path params)))
-    (write-log 'info (format "File saved: ~a." file-path))
-    ($save-file! file-path)
+  (let ((file-path (apply-file-operation params $save-file!)))
+    (if file-path
+        (write-log 'info (format "File saved: ~a~%" file-path))
+        (write-log 'warning (format "Invalid file-path. Params ~a~%"
+                                    params)))
     #f))
 
 (define-handler (text-document/completion params)

@@ -477,33 +477,39 @@
                 (else
                  (loop (read)))))))))
 
-(define (parse-file filename)
+(define (parse-file filename . args)
+  (define (read-func)
+    (let loop ((expr (read))
+               (meta-data '()))
+      (if (eof-object? expr)
+          (merge-meta-data meta-data)
+          (loop (read)
+                (let ((sub-meta-data (parse-expression expr (make-parse-context
+                                                             (pathname-directory filename)
+                                                             #f))))
+                  (if sub-meta-data
+                      (cons sub-meta-data meta-data)
+                      meta-data))))))
+
+  (define text (if (null? args)
+                   #f
+                   (car args)))
   (guard (condition
           (else (write-log 'error
                            (format "Cannot parse file ~a: ~a"
                                    filename
                                    condition))
                 #f))
-    (let ((meta-data-without-location
-           (with-input-from-file filename
-             (lambda ()
-               (let loop ((expr (read))
-                          (meta-data '()))
-                 (if (eof-object? expr)
-                     (merge-meta-data meta-data)
-                     (loop (read)
-                           (let ((sub-meta-data (parse-expression expr (make-parse-context
-                                                                        (pathname-directory filename)
-                                                                        #f))))
-                             (if sub-meta-data
-                                 (cons sub-meta-data meta-data)
-                                 meta-data)))))))))
-      (make-source-meta-data
-       (source-meta-data-library-name meta-data-without-location)
-       (collect-procedure-locations
-        (source-meta-data-procedure-info-table meta-data-without-location)
-        filename)
-       (source-meta-data-imports meta-data-without-location)))))
+         (let ((meta-data-without-location
+                (if text
+                    (with-input-from-string text read-func)
+                    (with-input-from-file filename read-func))))
+           (make-source-meta-data
+            (source-meta-data-library-name meta-data-without-location)
+            (collect-procedure-locations
+             (source-meta-data-procedure-info-table meta-data-without-location)
+             filename)
+            (source-meta-data-imports meta-data-without-location)))))
 
 (define (update-identifier-to-source-meta-data-table! source-path meta-data)
   (hash-table-walk
@@ -623,11 +629,10 @@
                          (when (or (not old-time-stamp)
                                    (< old-time-stamp
                                       (stat:mtime statinfo)))
-                           (begin
-                             (hash-table-set! (source-path-timestamps)
-                                              abs-filename
-                                              (stat:mtime statinfo))
-                             (parse-and-update-table! abs-filename))))))
+                           (hash-table-set! (source-path-timestamps)
+                                            abs-filename
+                                            (stat:mtime statinfo))
+                           (parse-and-update-table! abs-filename)))))
                     #t)))
            (filter (lambda (f)
                      (not (string=? f "")))

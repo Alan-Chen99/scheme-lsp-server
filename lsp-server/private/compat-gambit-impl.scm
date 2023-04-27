@@ -135,12 +135,12 @@
                                mod-name))
             #f)))))
 
-(define ($open-file! file-path)
+(define ($open-file! file-path text)
   (generate-meta-data! file-path)
   (compile-and-import-if-needed file-path)
   #f)
 
-(define ($save-file! file-path)
+(define ($save-file! file-path text)
   (generate-meta-data! file-path)
   (guard
    (condition

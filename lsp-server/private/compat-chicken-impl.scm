@@ -21,15 +21,39 @@
   (+ (pseudo-random-integer 2000)
      8001))
 
+(define (find-egg-directory-path egg-name)
+  (let ((path (glob (make-pathname eggs-path (format "~a" egg-name)))))
+    (if (null? path)
+        #f
+        (car path))))
+
+(define (join-module-name-parts mod)
+  (cond ((pair? mod)
+         (list
+          (string->symbol
+           (format "~a"
+                   (string-join (map (lambda (p) (format "~a" p))
+                                     mod)
+                                "-")))))
+        (else mod)))
+
+(define (find-module-path mod)
+  (let ((egg (or (hash-table-ref/default module-egg-table mod #f)
+                 (hash-table-ref/default module-egg-table
+                                         (join-module-name-parts mod)
+                                         #f))))
+    (if egg
+        (find-egg-directory-path egg)
+        #f)))
+
 ;;; Initialize LSP server to manage project at ROOT (a string). Used
 ;;; for implementation-specific side effects only.
 (define ($initialize-lsp-server! root)
   (root-path (if (and root (not (equal? root 'null)))
                  root
                  "."))
-  (verify-repository) ; needed to use chicken-doc in compiled code
+  (verify-repository)     ; needed to use chicken-doc in compiled code
   (set! module-egg-table (build-module-egg-table))
-  (generate-meta-data! eggs-path)
   (generate-meta-data! chicken-source-path)
   (generate-meta-data! (root-path))
 
@@ -165,21 +189,36 @@
                  (eval `(import ,mod-name)))))))
 
 
-(define (generate-meta-data-if-supported! file-path)
-  (if (file-supported? file-path)
-      (generate-meta-data! file-path)
-      (write-log 'debug
-                 (format "ignoring unsupported file: ~a~%"
-                         file-path))))
+(define (generate-meta-data-if-supported! file-path text)
+  (cond ((file-supported? file-path)
+         (generate-meta-data! file-path)
+         (when text
+           (let ((meta-data (parse-file file-path text)))
+             (when meta-data
+               (let ((imports (source-meta-data-imports meta-data)))
+                 (write-log 'debug
+                            (format "processing imports ~s~%"
+                                    imports))
+                 (for-each (lambda (imp)
+                             (let ((imp-path (find-module-path imp)))
+                               (when imp-path
+                                 (generate-meta-data! imp-path))))
+                           imports))))))
+        (else
+         (write-log 'debug
+                    (format "ignoring unsupported file: ~a~%"
+                            file-path)))))
 
-;;; Action to execute when FILE-PATH is opened. Used for side effects only.
-(define ($open-file! file-path)
-  (generate-meta-data-if-supported! file-path)
+;;; Action to execute when FILE-PATH is opened. TEXT contain the file
+;;; content, which is sent by the client in a didOpen request.
+;;; Used for side effects only.
+(define ($open-file! file-path text)
+  (generate-meta-data-if-supported! file-path text)
   #f)
 
 ;;; Action to execute when FILE-PATH is saved. Used for side effects only.
-(define ($save-file! file-path)
-  (generate-meta-data-if-supported! file-path)
+(define ($save-file! file-path text)
+  (generate-meta-data-if-supported! file-path text)
   #f)
 
 (define (join-definition-tables! left right)

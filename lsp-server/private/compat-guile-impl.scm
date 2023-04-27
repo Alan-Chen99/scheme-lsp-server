@@ -191,11 +191,11 @@
              (format "compile-and-import-if-needed: ignoring file ~a" file-path))
             #f)))))
 
-(define ($open-file! file-path)
+(define ($open-file! file-path text)
   (compile-and-import-if-needed file-path)
   #f)
 
-(define ($save-file! file-path)
+(define ($save-file! file-path text)
   (define mod-name (parse-library-name-from-file file-path))
   (if mod-name
       (guard
