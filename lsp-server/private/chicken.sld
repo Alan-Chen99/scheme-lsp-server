@@ -6,7 +6,8 @@
         build-module-egg-table
         current-directory
         get-module-path
-        module-egg-table
+        module-egg
+        init-module-egg-table!
         get-module-path
         get-absolute-pathname
         pathname-base
@@ -45,6 +46,9 @@
     (make-pathname
      (foreign-value "C_TARGET_BIN_HOME" c-string)
      (foreign-value "C_CHICKEN_STATUS_PROGRAM" c-string)))
+
+  (define (init-module-egg-table!)
+    (set! module-egg-table (build-module-egg-table)))
 
   (define (join-module-name-parts mod)
     (cond ((pair? mod)
@@ -124,5 +128,10 @@
     (or (alist-ref key alist)
         default))
 
-  (define uri-decode uri-decode-string))
+  (define uri-decode uri-decode-string)
+
+  (define (module-egg mod)
+    (hash-table-ref/default module-egg-table
+                            mod
+                            #f)))
 )

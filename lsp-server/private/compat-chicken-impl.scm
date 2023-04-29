@@ -22,7 +22,7 @@
                  root
                  "."))
   (verify-repository)     ; needed to use chicken-doc in compiled code
-  (set! module-egg-table (build-module-egg-table))
+  (init-module-egg-table!)
   (generate-meta-data! chicken-source-path)
   (generate-meta-data! (root-path))
 
@@ -232,11 +232,6 @@
          (let ((lib-parts (map symbol->string mod-name)))
            (string-join lib-parts ".")))
         (else (symbol->string mod-name))))
-
-(define (module-egg mod)
-  (hash-table-ref/default module-egg-table
-                          mod
-                          #f))
 
 (define (spawn-repl-server port-num)
   (nrepl port-num))
