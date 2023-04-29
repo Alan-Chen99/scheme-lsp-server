@@ -48,24 +48,26 @@
 ;;; implementations (e.g. guile) use it.
 ;;; A suggestion is a pair of strings (identifier . library)
 (define ($apropos-list module prefix)
-  (define suggestions
-    (apropos-information-list prefix #:macros? #t #:imported? #f))
-  (fold (lambda (s acc)
-          (let* ((mod-id-pair (car s))
-                 (mod (let ((fst (car mod-id-pair)))
-                        (if (eqv? fst '||)
-                            #f
-                            (map string->symbol
-                                 (string-split (symbol->string fst) ".")))))
-                 (id (cdr mod-id-pair))
-                 (type (cdr s)))
-            (if (string-prefix? prefix (symbol->string id))
-                (cons (cons (symbol->string id)
-                            (module-name->chicken-string mod))
-                      acc)
-                acc)))
-        '()
-        suggestions))
+  (list-completions prefix)
+  ;; (define suggestions
+  ;;   (apropos-information-list prefix #:macros? #t #:imported? #f))
+  ;; (fold (lambda (s acc)
+  ;;         (let* ((mod-id-pair (car s))
+  ;;                (mod (let ((fst (car mod-id-pair)))
+  ;;                       (if (eqv? fst '||)
+  ;;                           #f
+  ;;                           (map string->symbol
+  ;;                                (string-split (symbol->string fst) ".")))))
+  ;;                (id (cdr mod-id-pair))
+  ;;                (type (cdr s)))
+  ;;           (if (string-prefix? prefix (symbol->string id))
+  ;;               (cons (cons (symbol->string id)
+  ;;                           (module-name->chicken-string mod))
+  ;;                     acc)
+  ;;               acc)))
+  ;;       '()
+  ;;       suggestions)
+  )
 
 ;;; Return the documentation (a string) found for IDENTIFIER (a symbol) in
 ;;; MODULE (a symbol). Return #f if nothing found.

@@ -20,6 +20,9 @@ gsc codeberg.org/rgherdt/scheme-lsp-server/lsp-server/private/gambit \
     codeberg.org/rgherdt/scheme-lsp-server/lsp-server/private/parse \
     codeberg.org/rgherdt/scheme-lsp-server/lsp-server/private/adapter \
     codeberg.org/rgherdt/scheme-lsp-server/lsp-server/private/trie \
+    codeberg.org/rgherdt/scheme-lsp-server/lsp-server/private/compat \
+    codeberg.org/rgherdt/scheme-lsp-server/lsp-server/private/file \
+    codeberg.org/rgherdt/scheme-lsp-server/lsp-server/private/document \
     codeberg.org/rgherdt/scheme-lsp-server/lsp-server
 
 echo "Compiling gambit-lsp-server executable."
@@ -30,5 +33,8 @@ gsc -exe -nopreload ${BASE_DIR} \
     ${SOURCE_DIR}/lsp-server/private/parse.sld \
     ${SOURCE_DIR}/lsp-server/private/adapter.sld \
     ${SOURCE_DIR}/lsp-server/private/trie.sld \
+    ${SOURCE_DIR}/lsp-server/private/compat.sld \
+    ${SOURCE_DIR}/lsp-server/private/file.sld \
+    ${SOURCE_DIR}/lsp-server/private/document.sld \
     ${SOURCE_DIR}/lsp-server.sld \
     ${SOURCE_DIR}/gambit/gambit-lsp-server.scm

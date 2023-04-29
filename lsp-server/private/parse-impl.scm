@@ -596,8 +596,8 @@
                        (let ((fs
                               (find-files f
                                           (lambda (p)
-                                            (string=? (path-extension p)
-                                                      ".scm")))))
+                                            (let ((ext (path-extension p)))
+                                              (member ext (list "scm" "sld" "ss")))))))
                          (for-each
                           (lambda (filename)
                             (write-log 'debug
@@ -774,7 +774,9 @@
   (write-log 'debug
              (format "list-completions ~s" word))
   (map (lambda (entry)
-         (make-apropos-info #f (car entry) (cdr entry) #f))
+         ;;(make-apropos-info #f (car entry) (cdr entry) #f)
+         (list (car entry)
+               (cdr entry)))
        (trie-entries-with-prefix (all-identifiers)
                                  (stringify word))))
 

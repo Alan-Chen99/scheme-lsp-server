@@ -33,7 +33,7 @@
   "lsp-server/private/adapter.sld"
   "lsp-server/private/chicken.sld"
   "lsp-server/private/compat.sld"
-  "lsp-server/private/compat-impl.scm"
+  "lsp-server/private/compat-chicken-impl.scm"
   "lsp-server/private/document-impl.scm"
   "lsp-server/private/document.sld"
   "lsp-server/private/parse-impl.scm"
