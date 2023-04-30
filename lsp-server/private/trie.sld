@@ -15,6 +15,6 @@
 (cond-expand
  (chicken (import (scheme base)))
  (gambit (import (except (scheme base) for-each)))
- (guile (import (scheme base))))
+ (guile (import (only (scheme base) define-record-type))))
 
 (include "trie-impl.scm"))

@@ -5,7 +5,8 @@
         lsp-geiser-signature
         lsp-geiser-symbol-location
         lsp-geiser-compile-file
-        lsp-geiser-load-file)
+        lsp-geiser-load-file
+        lsp-geiser-module-path)
 
 (import (scheme base)
         (lsp-server private util)

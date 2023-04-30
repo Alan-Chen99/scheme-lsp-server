@@ -136,3 +136,6 @@
                                        file-path
                                        condition))))
    (load-file-fn file-path)))
+
+(define (lsp-geiser-module-path module-name)
+  (geiser-module-path module-name))

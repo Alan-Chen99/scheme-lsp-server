@@ -9,7 +9,7 @@
           trie->alist
           alist->trie)
 
-#:use-module (scheme base)
+#:use-module ((scheme base) #:select (define-record-type))
 #:use-module ((srfi srfi-1) #:select (every fold))
 #:use-module (srfi srfi-69))
 
