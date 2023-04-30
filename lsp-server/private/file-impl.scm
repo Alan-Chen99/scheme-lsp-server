@@ -16,6 +16,22 @@
   (end-char range-end-char)
   (length range-length))
 
+(define (read-file! path . args)
+  (mutex-lock! file-table-mutex)
+  (let ((result
+         (cond ((hash-table-exists? file-table path)
+                (hash-table-ref file-table path))
+               (else
+                (let ((doc (call-with-input-file path read-document)))
+                  (hash-table-update!/default file-table
+                                              path
+                                              (lambda (v)
+                                                doc)
+                                              doc)
+                  doc)))))
+    (mutex-unlock! file-table-mutex)
+    result))
+
 (define (read-text! path . args)
   (let ((text (if (null? args)
                   ""

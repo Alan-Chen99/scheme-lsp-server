@@ -2,6 +2,7 @@
 
 #:export ( file-table
            file-table-mutex
+           read-file!
            read-text!
            update-file!
            free-file!

@@ -144,13 +144,18 @@
 (define (apply-file-operation params proc)
   (let ((file-path (get-uri-path params))
         (text (alist-ref* '(textDocument text) params)))
-    (cond (file-path
+    (cond ((and file-path text)
            (let ((doc (read-text! file-path text)))
              (if doc
                  (proc file-path (document-contents doc))
                  (proc file-path)))
            (write-log 'debug (format "text read: ~a"
                                      text)))
+          (file-path
+           (let ((doc (read-file! file-path)))
+             (if doc
+                 (proc file-path (document-contents doc))
+                 (proc file-path))))
           (else
            (write-log 'warning (format "file-path missing: ~a"
                                        file-path))))

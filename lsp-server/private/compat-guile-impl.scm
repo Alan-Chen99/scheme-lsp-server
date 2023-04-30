@@ -209,6 +209,8 @@
                      'load-error
                      (format "error loading/import file ~a" file-path)))))
        (let ((mod (resolve-module mod-name #t #:ensure #f)))
+         (write-log 'debug (format "$save-file!: reloading ~a~%"
+                                   mod-name))
 
          (reload-module mod)
          (import-library-by-name mod-name)

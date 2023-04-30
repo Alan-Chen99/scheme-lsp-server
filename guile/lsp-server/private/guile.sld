@@ -23,6 +23,7 @@
 
 #:re-export (uri-decode)
 
+#:use-module (guile)
 #:use-module ((scheme base) #:select (guard))
 #:use-module (srfi srfi-1)
 #:use-module (srfi srfi-28)
