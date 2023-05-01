@@ -1,6 +1,7 @@
 (repo git "git@codeberg.org:rgherdt/scheme-lsp-server.git")
 
 (uri targz "https://codeberg.org/rgherdt/scheme-lsp-server/archive/{egg-release}.tar.gz")
+(release "0.3.0")
 (release "0.2.2")
 (release "0.2.1")
 (release "0.2.0")
