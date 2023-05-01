@@ -10,7 +10,7 @@
                 (srfi srfi-64)
                 (except (srfi srfi-69) hash-table-merge!)
                 (ice-9 ftw)
-                (lsp-server private)
+                (lsp-server private util)
                 (lsp-server private guile)
                 (lsp-server private trie)))
  (chicken (import (srfi 1)
@@ -25,49 +25,105 @@
                   (chicken irregex)
                   (chicken file)
                   (chicken file posix)
-                  (lsp-server private util))))
+                  (lsp-server private chicken)
+                  (lsp-server private parse)
+                  (lsp-server private util)
+                  (lsp-server private trie)))
+ (gambit  (import (only (srfi 1)
+                        any
+                        every
+                        lset-intersection)
+                  (only (srfi 13) string-contains)
+                  (srfi 28)
+                  (srfi 64)
+                  (srfi 69)
+                  (only (scheme file) with-input-from-file)
+                  (scheme read)
+                  (lsp-server private gambit)
+                  (lsp-server private parse)
+                  (lsp-server private util)
+                  (lsp-server private trie))))
+
 (cond-expand
  (chicken
   (define hash-table-join! hash-table-merge!)
-  (define (library-available? x) #t))
+  (define (library-available? x) #t)
+  (define cond-expand-clause-satisfied? lsp-server.private.parse#cond-expand-clause-satisfied?)
+  (define cond-expand-find-satisfied-clause
+    lsp-server.private.parse#cond-expand-find-satisfied-clause)
+  (define parse-expression lsp-server.private.parse#parse-expression)
+  (define make-parse-context lsp-server.private.parse#make-parse-context)
+  (define identifier-to-source-meta-data-table lsp-server.private.parse#identifier-to-source-meta-data-table)
+  (define parse-and-update-table! lsp-server.private.parse#parse-and-update-table!)
+  (define source-path-timestamps lsp-server.private.parse#source-path-timestamps)
+  (define tagged-expression? lsp-server.private.parse#tagged-expression?)
+  (define procedure-definition-form? lsp-server.private.parse#procedure-definition-form?)
+  (define procedure-definition-arguments lsp-server.private.parse#procedure-definition-arguments)
+  (define procedure-definition-docstring lsp-server.private.parse#procedure-definition-docstring)
+  (define procedure-definition-name lsp-server.private.parse#procedure-definition-name)
+  (define procedure-info-line lsp-server.private.parse#procedure-info-line)
+  (define procedure-info-arguments lsp-server.private.parse#procedure-info-arguments))
+ (gambit
+  (define hash-table-join! hash-table-merge!)
+  (define (library-available? x) #t)
+  (define cond-expand-clause-satisfied? codeberg.org/rgherdt/scheme-lsp-server/lsp-server/private/parse#cond-expand-clause-satisfied?)
+  (define cond-expand-find-satisfied-clause
+    codeberg.org/rgherdt/scheme-lsp-server/lsp-server/private/parse#cond-expand-find-satisfied-clause)
+  (define parse-expression codeberg.org/rgherdt/scheme-lsp-server/lsp-server/private/parse#parse-expression)
+  (define make-parse-context codeberg.org/rgherdt/scheme-lsp-server/lsp-server/private/parse#make-parse-context)
+  (define identifier-to-source-meta-data-table codeberg.org/rgherdt/scheme-lsp-server/lsp-server/private/parse#identifier-to-source-meta-data-table)
+  (define parse-and-update-table! codeberg.org/rgherdt/scheme-lsp-server/lsp-server/private/parse#parse-and-update-table!)
+  (define source-path-timestamps codeberg.org/rgherdt/scheme-lsp-server/lsp-server/private/parse#source-path-timestamps)
+  (define tagged-expression? codeberg.org/rgherdt/scheme-lsp-server/lsp-server/private/parse#tagged-expression?)
+  (define procedure-definition-form? codeberg.org/rgherdt/scheme-lsp-server/lsp-server/private/parse#procedure-definition-form?)
+  (define procedure-definition-arguments codeberg.org/rgherdt/scheme-lsp-server/lsp-server/private/parse#procedure-definition-arguments)
+  (define procedure-definition-docstring codeberg.org/rgherdt/scheme-lsp-server/lsp-server/private/parse#procedure-definition-docstring)
+  (define procedure-definition-name codeberg.org/rgherdt/scheme-lsp-server/lsp-server/private/parse#procedure-definition-name)
+  (define procedure-info-line codeberg.org/rgherdt/scheme-lsp-server/lsp-server/private/parse#procedure-info-line)
+  (define procedure-info-arguments codeberg.org/rgherdt/scheme-lsp-server/lsp-server/private/parse#procedure-info-arguments))
  (else))
-(import (lsp-server parse))
+
+(import (lsp-server private parse))
 (cond-expand
  (guile (include "../lsp-server/irregex.scm"))
  (else))
-
-(include "../lsp-server/parse.scm")
 
 (test-begin "cond-expand parse tests")
 
 (cond-expand
  (guile (test-assert (cond-expand-clause-satisfied? '(guile #t))))
- (chicken (test-assert (cond-expand-clause-satisfied? '(chicken #t)))))
+ (chicken (test-assert (cond-expand-clause-satisfied? '(chicken #t))))
+ (gambit))
 
 (cond-expand
  (guile (test-assert (cond-expand-clause-satisfied?
                       '((or gambit guile) #t))))
  (chicken (test-assert (cond-expand-clause-satisfied?
-                        '((or chibi chicken) #t)))))
+                        '((or chibi chicken) #t))))
+ (gambit))
 
 (cond-expand
  (guile (test-assert (cond-expand-clause-satisfied?
                       '((library (srfi srfi-64)) #t))))
  (chicken (test-assert (cond-expand-clause-satisfied?
-                        '((library (srfi 64)) #t)))))
+                        '((library (srfi 64)) #t))))
+ (gambit))
 
 (cond-expand
  (guile (test-assert (not (cond-expand-clause-satisfied?
                            '((not guile) #t)))))
  (chicken (test-assert (not (cond-expand-clause-satisfied?
-                             '((not chicken) #t))))))
+                             '((not chicken) #t)))))
+ (gambit))
 
 (test-equal (cond-expand (guile '(begin (import (lsp-server guile))))
                          (chicken '(begin (import (lsp-server chicken))))
+                         (gambit '(begin (import (lsp-server gambit))))
                          (else))
             (cond-expand-find-satisfied-clause
              '(cond-expand (guile (import (lsp-server guile)))
                            (chicken (import (lsp-server chicken)))
+                           (gambit (import (lsp-server gambit)))
                            (else))))
 
 (test-equal (cond-expand ((or gambit guile) '(begin "gambit or guile"))
@@ -89,7 +145,16 @@
 
 (test-assert (procedure-definition-form? '(define f (lambda (x) x))))
 
-(test-eq 'f (procedure-definition-name '(define f (lambda (x) x))))
+(cond-expand
+ (gambit
+  (let ((code '(define-procedure (hash-table-ref/default (ht      table)
+                                                                                 (key     object)
+                                                                                 (default object))
+                                         (table-ref ht key default))))
+    (test-assert (procedure-definition-form? code))))
+ (else))
+
+(test-equal 'f (procedure-definition-name '(define f (lambda (x) x))))
 
 (test-eq 'f (procedure-definition-name '(define (f x) x)))
 
@@ -140,28 +205,31 @@
   (test-equal 2 (hash-table-size (source-meta-data-procedure-info-table res)))
   (test-equal '(my lib) (source-meta-data-library-name res)))
 
-(let ((res (parse-expression
-            '(define-module (my lib)
-                #:export (f g)
-                #:use-module (srfi 1)
-                #:use-module ((srfi 69) #:select (hash-table-walk)))
-            (make-parse-context #f #f))))
-  (let ((imports (source-meta-data-imports res)))
-    (test-assert (member '(srfi 1) imports))
-    (test-assert (member '(srfi 69) imports)))
-  (test-equal '(my lib) (source-meta-data-library-name res)))
+(cond-expand
+ (guile (let ((res (parse-expression
+                    '(define-module (my lib)
+#:export (f g)
+#:use-module (srfi 1)
+#:use-module ((srfi 69) #:select (hash-table-walk)))
+                    (make-parse-context #f #f))))
+          (let ((imports (source-meta-data-imports res)))
+            (test-assert (member '(srfi 1) imports))
+            (test-assert (member '(srfi 69) imports)))
+          (test-equal '(my lib) (source-meta-data-library-name res))))
+ (else))
 
 (let ((res (parse-expression
             '(cond-expand (guile (import (system vm program))
                                  (define (f x) x))
-                          (chicken (import (apropos-api))
-                                   (define (f x) x)
-                                   (define (g x y) x))
+                          ((or gambit chicken) (import (apropos-api))
+                           (define (f x) x)
+                           (define (g x y) x))
                           (else))
             (make-parse-context #f #f))))
   (cond-expand
-   (chicken (test-equal '((apropos-api)) (source-meta-data-imports res))
-            (test-equal 2 (hash-table-size (source-meta-data-procedure-info-table res))))
+   ((or gambit chicken)
+    (test-equal '((apropos-api)) (source-meta-data-imports res))
+    (test-equal 2 (hash-table-size (source-meta-data-procedure-info-table res))))
    (guile (test-equal '((system vm program)) (source-meta-data-imports res))
           (test-equal 1 (hash-table-size (source-meta-data-procedure-info-table res))))))
 
@@ -190,7 +258,8 @@
                     (hash-table-keys
                      (hash-table-ref
                       (identifier-to-source-meta-data-table) 'f))))
-  (test-equal "(f x)" (fetch-signature #f 'f)))
+  (test-equal "(f x)" (fetch-signature #f 'f))
+  )
 
 (parameterize ((identifier-to-source-meta-data-table (make-hash-table))
                (source-path-timestamps (make-hash-table)))
@@ -206,8 +275,10 @@
                      (hash-table-ref
                       (identifier-to-source-meta-data-table) 'func))))
   (test-assert (any (lambda (k)
-                      (string-contains k
-                                       "sample-3-included.scm"))
+                      (if (string-contains k
+                                           "sample-3-included.scm")
+                          #t
+                          #f))
                     (hash-table-keys
                      (hash-table-ref
                       (identifier-to-source-meta-data-table) 'included-func))))
@@ -245,15 +316,16 @@
 (cond-expand
  (guile (test-equal '(my lib)
                     (parse-library-name-from-file "resources/sample-guile-lib.scm")))
- (r7rs (test-equal '(my lib)
-                   (parse-library-name-from-file "resources/sample-r7rs-lib.scm"))))
+ ((or gambit r7rs)
+  (test-equal '(my lib)
+              (parse-library-name-from-file "resources/sample-r7rs-lib.scm"))))
 
-(let ((meta-data (parse-file "../guile/lsp-server/parse.sld")))
-  (test-assert (member '(srfi srfi-1)
+(let ((meta-data (parse-file "../lsp-server/private/parse.sld")))
+  (test-assert (member '(srfi 1)
                        (source-meta-data-imports meta-data)))
-  (test-assert (member '(ice-9 ftw)
-                       (source-meta-data-imports meta-data)))
-  (test-assert (member '(scheme file)
+  ;; (test-assert (member '(ice-9 ftw)
+  ;;                      (source-meta-data-imports meta-data)))
+  (test-assert (member '(scheme read)
                        (source-meta-data-imports meta-data))))
 
 (test-end "parse tests")

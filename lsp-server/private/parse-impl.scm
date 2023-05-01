@@ -205,34 +205,37 @@
         (string->symbol mod-name)
         #f)))
 
-(define (parse-guile-module expression)
-  (define mod-name (cadr expression))
-  (let loop ((expr (cddr expression))
-             (previous-keyword #f)
-             (imports '()))
-    (cond ((null? expr)
-           (make-source-meta-data mod-name
-                                  (make-hash-table)
-                                  (reverse imports)))
-          ((keyword? (car expr))
-           (loop (cdr expr)
-                 (car expr)
-                 imports))
-          ((eq? previous-keyword #:use-module)
-           (loop (cdr expr)
-                 #f
-                 (if (and (not (null? expr))
-                          (list? (car expr))
-                          (not (null? (car expr)))
-                          (list? (caar expr)))
-                     ;; handle clauses of the form (ignore #:select for now):
-                     ;; #:use-module ((scheme file) #:select (with-input-from-file))
-                     (cons (caar expr) imports)
-                     (cons (car expr) imports))))
-          (else
-           (loop (cdr expr)
-                 #f
-                 imports)))))
+(cond-expand
+ (guile
+  (define (parse-guile-module expression)
+    (define mod-name (cadr expression))
+    (let loop ((expr (cddr expression))
+               (previous-keyword #f)
+               (imports '()))
+      (cond ((null? expr)
+             (make-source-meta-data mod-name
+                                    (make-hash-table)
+                                    (reverse imports)))
+            ((keyword? (car expr))
+             (loop (cdr expr)
+                   (car expr)
+                   imports))
+            ((eq? previous-keyword #:use-module)
+             (loop (cdr expr)
+                   #f
+                   (if (and (not (null? expr))
+                            (list? (car expr))
+                            (not (null? (car expr)))
+                            (list? (caar expr)))
+                       ;; handle clauses of the form (ignore #:select for now):
+                       ;; #:use-module ((scheme file) #:select (with-input-from-file))
+                       (cons (caar expr) imports)
+                       (cons (car expr) imports))))
+            (else
+             (loop (cdr expr)
+                   #f
+                   imports))))))
+ (else))
 
 (define (parse-r7rs-import-set expr)
   (cond ((symbol? expr) expr)
@@ -248,7 +251,9 @@
         ((null? expr)
          #f)
         ((guile-library-definition-form? expr)
-         (parse-guile-module expr))
+         (cond-expand
+          (guile (parse-guile-module expr))
+          (else #f)))
         ((library-definition-form? expr)
          (let* ((mod-name (cadr expr))
                 (subforms-meta-data
@@ -592,22 +597,25 @@
                          mtime)
         (parse-and-update-table! abs-filename))))
   (define (generate-meta-data! . files)
-           (for-each (lambda (f)
-                       (let ((fs
-                              (find-files f
-                                          (lambda (p)
-                                            (let ((ext (path-extension p)))
-                                              (member ext (list "scm" "sld" "ss")))))))
-                         (for-each
-                          (lambda (filename)
-                            (write-log 'debug
-                                       (format "generate-meta-data!: processing file ~a"
-                                               filename))
-                            (parse-and-update-if-needed! filename))
-                          fs)))
-                     (filter (lambda (f)
-                               (not (string=? f "")))
-                             files))))
+    (for-each
+     (lambda (f)
+       (let ((fs
+              (cond ((directory? f)
+                     (find-files f
+                                 (lambda (p)
+                                   (let ((ext (path-extension p)))
+                                     (member ext (list ".scm" ".sld" ".ss"))))))
+                    (else (list f)))))
+         (for-each
+          (lambda (filename)
+            (write-log 'debug
+                       (format "generate-meta-data!: processing file ~a"
+                               filename))
+            (parse-and-update-if-needed! filename))
+          fs)))
+     (filter (lambda (f)
+               (not (string=? f "")))
+             files))))
  (guile (define (generate-meta-data! . files)
           (write-log 'debug
                      (format "generate-meta-data! for files ~a" files))

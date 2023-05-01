@@ -1,6 +1,7 @@
 (define-library (lsp-server private gambit)
 
-(export alist-ref
+(export absolute-pathname?
+        alist-ref
         alist-ref/default
         irregex
         irregex-match
@@ -10,6 +11,8 @@
         prefix-identifier
         vector-fold
         with-input-from-string
+        regular-file?
+        directory?
 
         tcp-read-timeout
         tcp-accept
@@ -17,12 +20,13 @@
         tcp-connect
         tcp-listen
         get-absolute-pathname
+        get-module-path
         find-files
         pathname-directory
         pathname-join)
 
 (import (gambit)
-        (only (srfi 1) append-map)
+        (only (srfi 1) any append-map drop-right find)
         (only (srfi 13) string-join)
         (srfi 28)
         (github.com/ashinn/irregex irregex))
@@ -56,6 +60,12 @@
           (parameterize ((current-input-port p))
             (thunk)))
         (lambda () (close-input-port p))))
+
+  (define (absolute-pathname? pathname)
+    (and (not (string=? pathname ""))
+         (let ((c (string-ref pathname 0)))
+           (or (char=? c #\\)
+               (char=? c #\/)))))
 
   (define (alist-ref key lst)
     (define res (assoc key lst))
@@ -103,8 +113,46 @@
   (define (get-absolute-pathname p)
     (path-expand (path-normalize p)))
 
-  (define (pathname-join dirname filename)
-    (string-append dirname "/" filename))
+  (define (get-module-path mod)
+    (let* ((parts (if (list? mod)
+                      (map (lambda (f) (format "~a" f)) mod)
+                      (list (format "~a" mod))))
+           (dir-part (if (null? (cdr parts))
+                         (list ".")
+                         (drop-right parts 1)))
+           (filename (last parts))
+           (sld-filename (string-append (last parts) ".sld"))
+           (scm-filename (string-append (last parts) ".scm"))
+           (ss-filename (string-append (last parts) ".ss")))
+      (let ((roots (list (path-expand "~~lib")
+                         (path-expand "~~userlib"))))
+        (if (null? roots)
+            #f
+            (let ((dir (apply pathname-join (cons (car roots) dir-part))))
+
+              (or (find file-exists?
+                        (list (pathname-join dir filename)
+                              (pathname-join dir sld-filename)
+                              (pathname-join dir scm-filename)
+                              (pathname-join dir ss-filename)))
+                  (loop (cdr roots)))))
+)))
+
+  (define (intersperse lst delim)
+    (let loop ((remaining lst)
+               (result '()))
+      (cond ((null? remaining)
+             (reverse result))
+            ((null? (cdr remaining))
+             (reverse (cons (car remaining) result)))
+            (else
+             (loop (cdr remaining)
+                   (cons delim
+                         (cons (car remaining)
+                               result)))))))
+
+  (define (pathname-join . paths)
+    (apply string-append (intersperse paths "/")))
 
   (define pathname-directory path-directory)
 

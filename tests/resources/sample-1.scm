@@ -1,5 +1,5 @@
-(import (srfi srfi-1)
-        (srfi srfi-69))
+(import (srfi 1)
+        (srfi 69))
 
 (define (f x)
   x)

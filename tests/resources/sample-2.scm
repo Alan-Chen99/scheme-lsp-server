@@ -1,9 +1,10 @@
-(import (srfi srfi-1)
-        (srfi srfi-69))
+(import (srfi 1)
+        (srfi 69))
 
 (cond-expand
- (guile (define (func x)
-          x))
+ ((or gambit guile)
+  (define (func x)
+    x))
  (chicken (define (func x)
             x))
  (else))

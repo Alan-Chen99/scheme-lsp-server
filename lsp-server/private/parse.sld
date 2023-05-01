@@ -8,7 +8,9 @@
         list-completions
         parse-file
         parse-library-name-from-file
-        source-meta-data-imports)
+        source-meta-data-imports
+        source-meta-data-library-name
+        source-meta-data-procedure-info-table)
 
 (import (only (srfi 1) any every filter find fold append-map)
         (only (srfi 14) char-set)
@@ -17,6 +19,7 @@
         (srfi 69)
         (only (scheme file) with-input-from-file)
         (scheme read)
+        (scheme write)
         (lsp-server private util)
         (lsp-server private trie))
 
@@ -32,6 +35,7 @@
                  (only (gambit)
                        caddr
                        file-last-modification-time
+                       keyword?
                        path-extension
                        time->seconds)
                  (lsp-server private gambit)))
