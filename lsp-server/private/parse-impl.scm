@@ -562,9 +562,11 @@
                                             (error-object-message condition))
                                            (else
                                             condition))))
-                #f))
+                  (raise condition)))
       (let ((meta-data (parse-file abs-source-path)))
         (update-identifier-to-source-meta-data-table! abs-source-path meta-data)
+        (write-log 'debug (format "parse-and-update-table! imports: ~a~%"
+                                  (source-meta-data-imports meta-data)))
         (for-each (lambda (path)
                     (let ((module-path (get-module-path path)))
                       (write-log 'debug
