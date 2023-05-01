@@ -104,10 +104,17 @@
   (and (pair? (cadr expr))
        (not (null? (cddr expr)))))
 
+(define (gambit-procedure-definition? expr)
+  (and (symbol? (car expr))
+       (eq? (car expr) 'define-procedure)
+       (symbol? (cadr expr))
+       (not (null? (cddr expr)))))
+
 ;; TODO support set!
 (define (procedure-definition-form? expr)
   (and (or (tagged-expression? expr 'define)
            (tagged-expression? expr 'define*)
+           (tagged-expression? expr 'define-procedure)
            (and (list? expr)
                 (not (null? expr))
                 (let ((tag (car expr)))
@@ -115,7 +122,8 @@
        (not (null? (cdr expr)))
        (or (procedure-definition-with-case-lambda? expr)
            (procedure-definition-with-lambda? expr)
-           (procedure-definition-with-parenthesis? expr))))
+           (procedure-definition-with-parenthesis? expr)
+           (gambit-procedure-definition? expr))))
 
 (define (cond-expand-form? expr)
   (tagged-expression? expr 'cond-expand))
@@ -171,10 +179,12 @@
         (else #f)))
 
 (define (procedure-definition-name expr)
-  (cond ((procedure-definition-with-parenthesis? expr)
+  (cond ((or (procedure-definition-with-parenthesis? expr)
+             (gambit-procedure-definition? expr))
          (car (cadr expr)))
         ((procedure-definition-with-lambda? expr)
-         (cadr expr))))
+         (cadr expr))
+        ((gambit-procedure-definition? expr))))
 
 (define (procedure-definition-arguments expr)
   (cond ((procedure-definition-with-parenthesis? expr)
@@ -182,7 +192,9 @@
         ((procedure-definition-with-case-lambda? expr)
          (case-lambda-arguments (caddr expr)))
         ((procedure-definition-with-lambda? expr)
-         (lambda-arguments (caddr expr)))))
+         (lambda-arguments (caddr expr)))
+        ((gambit-procedure-definition? expr)
+         (cdr (cadr expr)))))
 
 (define (procedure-definition-docstring expr)
   (cond ((procedure-definition-with-parenthesis? expr)
@@ -193,7 +205,8 @@
         ((procedure-definition-with-lambda? expr)
          (lambda-docstring (caddr expr)))
         ((procedure-definition-with-case-lambda? expr)
-         (case-lambda-docstring (caddr expr)))))
+         (case-lambda-docstring (caddr expr)))
+        (else #f)))
 
 ;;;; Main procedures
 
