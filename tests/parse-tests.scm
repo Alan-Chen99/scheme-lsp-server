@@ -42,7 +42,8 @@
                   (lsp-server private gambit)
                   (lsp-server private parse)
                   (lsp-server private util)
-                  (lsp-server private trie))))
+                  (lsp-server private trie)
+                  (_test))))
 
 (cond-expand
  (chicken
@@ -161,6 +162,16 @@
 (test-equal '(x y) (procedure-definition-arguments '(define (f x y) x)))
 
 (test-equal '(x y) (procedure-definition-arguments '(define f (lambda (x y) x))))
+
+(let ((func-def '(define-procedure
+                   (hash-table-set! (ht table)
+                                    key
+                                    val)
+                   (table-set! ht key val))))
+  (test-equal 'hash-table-set!
+              (procedure-definition-name func-def))
+  (test-equal '((ht table) key val)
+              (procedure-definition-arguments func-def)))
 
 (test-equal '(() (x y))
             (procedure-definition-arguments
