@@ -107,7 +107,7 @@
 (define (gambit-procedure-definition? expr)
   (and (symbol? (car expr))
        (eq? (car expr) 'define-procedure)
-       (symbol? (cadr expr))
+       (pair? (cadr expr))
        (not (null? (cddr expr)))))
 
 ;; TODO support set!
@@ -182,9 +182,10 @@
   (cond ((or (procedure-definition-with-parenthesis? expr)
              (gambit-procedure-definition? expr))
          (car (cadr expr)))
-        ((procedure-definition-with-lambda? expr)
+        ((procedure-definition-with-case-lambda? expr)
          (cadr expr))
-        ((gambit-procedure-definition? expr))))
+        ((procedure-definition-with-lambda? expr)
+         (cadr expr))))
 
 (define (procedure-definition-arguments expr)
   (cond ((procedure-definition-with-parenthesis? expr)
