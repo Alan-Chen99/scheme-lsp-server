@@ -151,7 +151,7 @@
                  (proc file-path)))
            (write-log 'debug (format "text read: ~a"
                                      text)))
-          (file-path
+          ((and file-path (file-exists? file-path))
            (let ((doc (read-file! file-path)))
              (if doc
                  (proc file-path (document-contents doc))

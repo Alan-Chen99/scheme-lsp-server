@@ -42,8 +42,7 @@
                   utf8))
  (gambit (import (gambit)
                  (scheme write)
-                 (lsp-server private gambit))
-         (include "~~lib/_gambit#.scm"))
+                 (lsp-server private gambit)))
  (guile (import (only (scheme base)
                       define-record-type
                       guard

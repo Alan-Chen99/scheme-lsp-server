@@ -17,6 +17,7 @@
                   (except (chicken io) read-string)
                   (only (chicken base) alist-ref)
                   (only (srfi 133) vector-fold)
+                  (only (chicken file) file-exists?)
                   (chicken tcp)
                   apropos
                   (only (srfi 13)

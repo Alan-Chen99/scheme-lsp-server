@@ -413,47 +413,49 @@
         #f)))
 
 (define (collect-procedure-locations procedure-info-table filename)
-  (define symbol-location-map
-    (with-input-from-file filename
-      (lambda ()
-        (let loop ((line (read-line))
-                   (line-number 1)
-                   (results '()))
-          (cond ((eof-object? line)
-                 (alist->hash-table results))
-                (else
-                 (let ((parse-result (parse-definition-line line)))
-                   (if parse-result
-                       (let ((parsed-symbol (car parse-result))
-                             (line-offset (cdr parse-result)))
-                         (loop (read-line)
-                               (+ line-number 1)
-                               (cons (list (string->symbol parsed-symbol)
-                                           (- line-number 1)
-                                           line-offset)
-                                     results)))
-                       (loop (read-line)
-                             (+ line-number 1)
-                             results)))))))))
-  (hash-table-fold procedure-info-table
-                   (lambda (identifier pinfo acc)
-                     (let* ((pname (procedure-info-name pinfo))
-                            (loc (hash-table-ref/default symbol-location-map
-                                                         pname
-                                                         #f)))
-                       (hash-table-set! acc
-                                        identifier
-                                        (if loc
-                                            (make-procedure-info
-                                             pname
-                                             (procedure-info-arguments pinfo)
-                                             (procedure-info-module pinfo)
-                                             (list-ref loc 0)
-                                             (list-ref loc 1)
-                                             (procedure-info-docstring pinfo))
-                                            pinfo))
-                       acc))
-                   (make-hash-table)))
+  (if (not (file-exists? filename))
+      '()
+      (let ((symbol-location-map
+             (with-input-from-file filename
+               (lambda ()
+                 (let loop ((line (read-line))
+                            (line-number 1)
+                            (results '()))
+                   (cond ((eof-object? line)
+                          (alist->hash-table results))
+                         (else
+                          (let ((parse-result (parse-definition-line line)))
+                            (if parse-result
+                                (let ((parsed-symbol (car parse-result))
+                                      (line-offset (cdr parse-result)))
+                                  (loop (read-line)
+                                        (+ line-number 1)
+                                        (cons (list (string->symbol parsed-symbol)
+                                                    (- line-number 1)
+                                                    line-offset)
+                                              results)))
+                                (loop (read-line)
+                                      (+ line-number 1)
+                                      results))))))))))
+        (hash-table-fold procedure-info-table
+                         (lambda (identifier pinfo acc)
+                           (let* ((pname (procedure-info-name pinfo))
+                                  (loc (hash-table-ref/default symbol-location-map
+                                                               pname
+                                                               #f)))
+                             (hash-table-set! acc
+                                              identifier
+                                              (if loc
+                                                  (make-procedure-info
+                                                   pname
+                                                   (procedure-info-arguments pinfo)
+                                                   (procedure-info-module pinfo)
+                                                   (list-ref loc 0)
+                                                   (list-ref loc 1)
+                                                   (procedure-info-docstring pinfo))
+                                                  pinfo))
+                             acc))
+                         (make-hash-table)))))
 
 (define (read-escaped-string . args)
   (let ((port (if (not (null? args))
@@ -484,16 +486,18 @@
                                 filename
                                 condition))
              #f))
-    (with-input-from-file filename
-      (lambda ()
-        (let loop ((expr (read)))
-          (cond ((eof-object? expr) #f)
-                ((library-definition-form? expr)
-                 (cadr expr))
-                ((namespace-form? expr)
-                 (parse-gambit-namespace expr))
-                (else
-                 (loop (read)))))))))
+      (if (file-exists? filename)
+          (with-input-from-file filename
+            (lambda ()
+              (let loop ((expr (read)))
+                (cond ((eof-object? expr) #f)
+                      ((library-definition-form? expr)
+                       (cadr expr))
+                      ((namespace-form? expr)
+                       (parse-gambit-namespace expr))
+                      (else
+                       (loop (read)))))))
+          #f)))
 
 (define (parse-file filename . args)
   (define (read-func)
@@ -519,15 +523,18 @@
                                    condition))
                 #f))
          (let ((meta-data-without-location
-                (if text
-                    (with-input-from-string text read-func)
-                    (with-input-from-file filename read-func))))
-           (make-source-meta-data
-            (source-meta-data-library-name meta-data-without-location)
-            (collect-procedure-locations
-             (source-meta-data-procedure-info-table meta-data-without-location)
-             filename)
-            (source-meta-data-imports meta-data-without-location)))))
+                (cond (text
+                       (with-input-from-string text read-func))
+                      ((file-exists? filename)
+                       (with-input-from-file filename read-func))
+                      (else #f))))
+           (and meta-data-without-location
+                (make-source-meta-data
+                 (source-meta-data-library-name meta-data-without-location)
+                 (collect-procedure-locations
+                  (source-meta-data-procedure-info-table meta-data-without-location)
+                  filename)
+                 (source-meta-data-imports meta-data-without-location))))))
 
 (define (update-identifier-to-source-meta-data-table! source-path meta-data)
   (hash-table-walk
@@ -614,20 +621,21 @@
   (define (generate-meta-data! . files)
     (for-each
      (lambda (f)
-       (let ((fs
-              (cond ((directory? f)
-                     (find-files f
-                                 (lambda (p)
-                                   (let ((ext (path-extension p)))
-                                     (member ext (list ".scm" ".sld" ".ss"))))))
-                    (else (list f)))))
-         (for-each
-          (lambda (filename)
-            (write-log 'debug
-                       (format "generate-meta-data!: processing file ~a"
-                               filename))
-            (parse-and-update-if-needed! filename))
-          fs)))
+       (when (file-exists? f)
+         (let ((fs
+                (cond ((directory? f)
+                       (find-files f
+                                   (lambda (p)
+                                     (let ((ext (path-extension p)))
+                                       (member ext (list ".scm" ".sld" ".ss"))))))
+                      (else (list f)))))
+           (for-each
+            (lambda (filename)
+              (write-log 'debug
+                         (format "generate-meta-data!: processing file ~a"
+                                 filename))
+              (parse-and-update-if-needed! filename))
+            fs))))
      (filter (lambda (f)
                (not (string=? f "")))
              files))))
@@ -636,27 +644,28 @@
                      (format "generate-meta-data! for files ~a" files))
           (for-each
            (lambda (f)
-             (ftw f
-                  (lambda (filename statinfo flag)
-                    (write-log 'debug
-                               (format "processing file ~a" filename))
-                    (let ((abs-filename (get-absolute-pathname filename)))
-                      (when (and abs-filename
-                                 (eq? flag 'regular)
-                                 (irregex-search scheme-file-regex
-                                                 (pathname-base abs-filename)))
-                       (let ((old-time-stamp (hash-table-ref/default
-                                              (source-path-timestamps)
-                                              abs-filename
-                                              #f)))
-                         (when (or (not old-time-stamp)
-                                   (< old-time-stamp
-                                      (stat:mtime statinfo)))
-                           (hash-table-set! (source-path-timestamps)
-                                            abs-filename
-                                            (stat:mtime statinfo))
-                           (parse-and-update-table! abs-filename)))))
-                    #t)))
+             (when (file-exists? f)
+               (ftw f
+                    (lambda (filename statinfo flag)
+                      (write-log 'debug
+                                 (format "processing file ~a" filename))
+                      (let ((abs-filename (get-absolute-pathname filename)))
+                        (when (and abs-filename
+                                   (eq? flag 'regular)
+                                   (irregex-search scheme-file-regex
+                                                   (pathname-base abs-filename)))
+                          (let ((old-time-stamp (hash-table-ref/default
+                                                 (source-path-timestamps)
+                                                 abs-filename
+                                                 #f)))
+                            (when (or (not old-time-stamp)
+                                      (< old-time-stamp
+                                         (stat:mtime statinfo)))
+                              (hash-table-set! (source-path-timestamps)
+                                               abs-filename
+                                               (stat:mtime statinfo))
+                              (parse-and-update-table! abs-filename)))))
+                      #t))))
            (filter (lambda (f)
                      (not (string=? f "")))
                    files))))
@@ -680,25 +689,26 @@
                (format "generate-meta-data! for files ~a" files))
     (for-each
      (lambda (f)
-       (guard
-           (condition
-            (#t (write-log 'warning
-                 (format "generate-meta-data!: can't read file ~a"
-                         f))))
-         (cond ((directory? f)
-                (write-log 'debug (format "generate-meta-data!: processing directory ~a" f))
-                (let ((files
-                       (find-files f
-                                   #:test chicken-relevant-scheme-file-regex)))
-                  (for-each
-                   (lambda (filename)
-                     (write-log 'debug
-                                (format "generate-meta-data!: processing file ~a"
-                                        filename))
-                     (parse-and-update-if-needed! filename))
-                   files)))
-               (else
-                (parse-and-update-if-needed! f)))))
+       (when (file-exists? f)
+         (guard
+          (condition
+           (#t (write-log 'warning
+                          (format "generate-meta-data!: can't read file ~a"
+                                  f))))
+          (cond ((directory? f)
+                 (write-log 'debug (format "generate-meta-data!: processing directory ~a" f))
+                 (let ((files
+                        (find-files f
+                                    #:test chicken-relevant-scheme-file-regex)))
+                   (for-each
+                    (lambda (filename)
+                      (write-log 'debug
+                                 (format "generate-meta-data!: processing file ~a"
+                                         filename))
+                      (parse-and-update-if-needed! filename))
+                    files)))
+                (else
+                 (parse-and-update-if-needed! f))))))
      (filter (lambda (f)
                (not (string=? f "")))
              files)))))

@@ -34,6 +34,7 @@
  (gambit (import (scheme base)
                  (only (gambit)
                        caddr
+                       file-exists?
                        file-last-modification-time
                        keyword?
                        path-extension
