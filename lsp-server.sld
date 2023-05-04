@@ -32,7 +32,7 @@
                       define-record-type
                       let-values)
                  (rename (except (gambit) with-exception-handler)
-                         (r7rs-with-exception-handler with-exception-handler))
+                         (with-exception-catcher with-exception-handler))
                  (lsp-server private gambit)
                  (only (srfi 13)
                        string-fold
