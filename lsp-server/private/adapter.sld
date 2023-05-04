@@ -8,18 +8,22 @@
         lsp-geiser-load-file
         lsp-geiser-module-path)
 
-(import (scheme base)
-        (lsp-server private util)
+(import (lsp-server private util)
         (srfi 28)
         (only (srfi 13) string-join))
 
 (cond-expand
- (chicken (import (geiser)
+ (chicken (import (scheme base)
+                  (geiser)
                   (scheme)
                   (lsp-server private chicken)))
- (gambit (import (_geiser)
+ (gambit (import (except (scheme base) with-exception-handler)
+                 (rename (only (gambit) with-exception-catcher)
+                         (with-exception-catcher with-exception-handler))
+                 (_geiser)
                  (lsp-server private gambit)))
- (guile (import (prefix (geiser completion) geiser-)
+ (guile (import (scheme base)
+                (prefix (geiser completion) geiser-)
                 (geiser evaluation)
                 (prefix (geiser modules) geiser-)
                 (prefix (geiser doc) geiser-)

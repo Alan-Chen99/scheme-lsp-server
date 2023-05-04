@@ -31,14 +31,17 @@
                   (chicken file posix)
                   (only (chicken keyword) keyword?)
                   (lsp-server private chicken)))
- (gambit (import (scheme base)
-                 (only (gambit)
-                       caddr
-                       file-exists?
-                       file-last-modification-time
-                       keyword?
-                       path-extension
-                       time->seconds)
+ (gambit (import (except (scheme base) with-exception-handler)
+                 (rename (only (gambit)
+                               caddr
+                               file-exists?
+                               file-last-modification-time
+                               keyword?
+                               path-extension
+                               time->seconds
+                               with-exception-catcher)
+                         (with-exception-catcher with-exception-handler))
+                 (github.com/ashinn/irregex irregex)
                  (lsp-server private gambit)))
  (guile (import (only (scheme base)
                       define-record-type

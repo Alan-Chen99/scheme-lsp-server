@@ -246,7 +246,7 @@
                                      mod
                                      id)))
                      (k 'null)))
-                (else (k condition))))
+                (else (raise condition))))
         (lambda ()
           (let ((doc (or ($fetch-documentation mod id)
                          "")))
@@ -295,14 +295,11 @@
 (define-handler (custom/load-file params)
   (let ((file-path (get-uri-path params)))
     (write-log 'info (format "Loading file: ~a." file-path))
-    (call/cc
-     (lambda (k)
-       (with-exception-handler
-        (lambda (condition)
-          (write-log 'error (format "Error loading file: ~a."
-                                    file-path))
-          (k #f))
-        (lambda () (load file-path)))))
+    (with-exception-handler
+     (lambda (condition)
+       (write-log 'error (format "Error loading file: ~a."
+                                 file-path)))
+     (lambda () (load file-path)))
     #f))
 
 (define (parameterize-and-run out-port thunk)
@@ -351,35 +348,33 @@
 (define (lsp-server-start/tcp port-num)
   (parameterize (($tcp-read-timeout #f))
     (let ((listener ($tcp-listen port-num)))
-      (call/cc
-       (lambda (k)
-         (with-exception-handler
-          (lambda (condition)
-            (write-log 'error
-                       (format "LSP-SERVER: JSON-RPC error: ~a"
-                               condition))
-            (cond-expand (chicken (print-error-message condition))
-                         (else (display condition)))
-            (write-log 'info "Exiting.")
-            (k condition))
-          (lambda ()
-            (let loop ()
-              (call-with-values (lambda () ($tcp-accept listener))
-                (lambda (in-port out-port)
-                  (parameterize-and-run
-                   out-port
-                   (lambda ()
-                     (write-log 'info
-                                (format "listening on port ~a with log level ~a~%"
-                                        port-num
-                                        (json-rpc-log-level)))
-                     (cond ((eqv? (json-rpc-loop in-port out-port) 'json-rpc-exit)
-                            (close-input-port in-port)
-                            (close-output-port out-port)
-                            ($tcp-close listener))
-                           (else
-                            (write-log 'info "Accepted incoming request")
-                            (loop)))))))))))))))
+      (with-exception-handler
+       (lambda (condition)
+         (write-log 'error
+                    (format "LSP-SERVER: JSON-RPC error: ~a"
+                            condition))
+         (cond-expand (chicken (print-error-message condition))
+                      (else (display condition)))
+         (write-log 'info "Exiting.")
+         (raise condition))
+       (lambda ()
+         (let loop ()
+           (call-with-values (lambda () ($tcp-accept listener))
+             (lambda (in-port out-port)
+               (parameterize-and-run
+                out-port
+                (lambda ()
+                  (write-log 'info
+                             (format "listening on port ~a with log level ~a~%"
+                                     port-num
+                                     (json-rpc-log-level)))
+                  (cond ((eqv? (json-rpc-loop in-port out-port) 'json-rpc-exit)
+                         (close-input-port in-port)
+                         (close-output-port out-port)
+                         ($tcp-close listener))
+                        (else
+                         (write-log 'info "Accepted incoming request")
+                         (loop)))))))))))))
 
 (define (parameterize-log-levels thunk)
   (parameterize ((log-level (lsp-server-log-level))

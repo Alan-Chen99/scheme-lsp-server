@@ -130,16 +130,13 @@
    ((or gambit guile)
     (define load-file-fn ge:load-file))
    (chicken (define load-file-fn geiser-load-file)))
-  (call/cc
-   (lambda (k)
-     (with-exception-handler
-      (lambda (condition)
-        (write-log 'error
-                   (format "load-file ~a error: ~a"
-                           file-path
-                           condition))
-        (k #f))
-      (lambda () (load-file-fn file-path))))))
+  (with-exception-handler
+   (lambda (condition)
+     (write-log 'error
+                (format "load-file ~a error: ~a"
+                        file-path
+                        condition)))
+   (lambda () (load-file-fn file-path))))
 
 (define (lsp-geiser-module-path module-name)
   (geiser-module-path module-name))
