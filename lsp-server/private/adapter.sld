@@ -18,7 +18,7 @@
                   (scheme)
                   (lsp-server private chicken)))
  (gambit (import (except (scheme base) with-exception-handler)
-                 (rename (only (gambit) r7rs-with-exception-catcher)
+                 (rename (only (gambit) r7rs-with-exception-handler)
                          (r7rs-with-exception-handler with-exception-handler))
                  (_geiser)
                  (lsp-server private gambit)))
