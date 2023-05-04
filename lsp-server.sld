@@ -30,7 +30,6 @@
                   utf8))
  (gambit (import (only (scheme base)
                       define-record-type
-                      guard
                       let-values)
                  (rename (except (gambit) with-exception-handler)
                          (r7rs-with-exception-handler with-exception-handler))
