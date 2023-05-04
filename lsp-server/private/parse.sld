@@ -39,8 +39,8 @@
                                keyword?
                                path-extension
                                time->seconds
-                               with-exception-catcher)
-                         (with-exception-catcher with-exception-handler))
+                               r7rs-with-exception-handler)
+                         (r7rs-with-exception-handler with-exception-handler))
                  (github.com/ashinn/irregex irregex)
                  (lsp-server private gambit)))
  (guile (import (only (scheme base)
