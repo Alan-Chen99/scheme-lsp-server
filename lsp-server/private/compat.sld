@@ -60,7 +60,7 @@
   (import (rename (except (gambit) with-exception-handler)
                   (with-exception-catcher with-exception-handler))
           (only (srfi 1) find)
-          (only (srfi 13) string-tokenize)
+          (only (srfi 13) string-prefix? string-tokenize)
           (only (srfi 14) char-set char-set-complement)
           (srfi 28)
           (lsp-server private adapter)

@@ -36,7 +36,7 @@
                  (lsp-server private gambit)
                  (only (srfi 13)
                        string-fold
-                       string-tokenize))
+                       string-take))
          (include "~~lib/_gambit#.scm"))
  (guile (import (only (scheme base)
                       define-record-type
