@@ -3,11 +3,6 @@
 (export absolute-pathname?
         alist-ref
         alist-ref/default
-        irregex
-        irregex-match
-        irregex-match-substring
-        irregex-match-start-index
-        irregex-search
         prefix-identifier
         vector-fold
         with-input-from-string
@@ -28,8 +23,7 @@
 (import (gambit)
         (only (srfi 1) any append-map drop-right find)
         (only (srfi 13) string-join)
-        (srfi 28)
-        (github.com/ashinn/irregex irregex))
+        (srfi 28))
 
 (begin
   ;;; copied over from srfi-133

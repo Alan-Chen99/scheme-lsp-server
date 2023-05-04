@@ -34,6 +34,7 @@
         satisfies-log-level?
 
         delete-lines
+        string-lines
 
         compose
 

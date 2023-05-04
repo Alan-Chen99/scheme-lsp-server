@@ -28,11 +28,15 @@
                   (srfi 18)
                   (srfi 180)
                   utf8))
- (gambit (import (gambit)
+ (gambit (import (only (scheme base)
+                      define-record-type
+                      guard
+                      let-values)
+                 (rename (except (gambit) with-exception-handler)
+                         (with-exception-catcher with-exception-handler))
                  (lsp-server private gambit)
                  (only (srfi 13)
                        string-fold
-                       string-take
                        string-tokenize))
          (include "~~lib/_gambit#.scm"))
  (guile (import (only (scheme base)

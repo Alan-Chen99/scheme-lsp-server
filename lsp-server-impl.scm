@@ -92,10 +92,9 @@
 (define-handler (text-document/did-change params)
   (let* ((file-path (get-uri-path params))
          (changes
-          (string-tokenize
+          (string-lines
            (alist-ref 'text
-                      (vector-ref (alist-ref 'contentChanges params) 0))
-           (char-set #\newline #\return)))
+                      (vector-ref (alist-ref 'contentChanges params) 0))))
          (file-already-read?
           (begin
             (mutex-lock! file-table-mutex)

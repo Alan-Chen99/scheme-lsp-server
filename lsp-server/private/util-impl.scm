@@ -143,3 +143,15 @@
   (lambda args
     (f (apply g args))))
 
+  (define (string-lines str)
+    (with-input-from-string str
+      (lambda ()
+        (let loop ((line (read-line))
+                   (res '()))
+          (if (eof-object? line)
+              (reverse res)
+              (loop (read-line)
+                    (cons line res)))))))
+
+
+

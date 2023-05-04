@@ -64,7 +64,8 @@
           (only (srfi 14) char-set char-set-complement)
           (srfi 28)
           (lsp-server private adapter)
-          (lsp-server private gambit))
+          (lsp-server private gambit)
+          (github.com/ashinn/irregex irregex))
   (include "compat-gambit-impl.scm"))
  (guile
   (import (only (scheme base)
