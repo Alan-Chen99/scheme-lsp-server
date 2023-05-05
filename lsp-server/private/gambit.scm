@@ -118,8 +118,8 @@
            (sld-filename (string-append (last parts) ".sld"))
            (scm-filename (string-append (last parts) ".scm"))
            (ss-filename (string-append (last parts) ".ss")))
-      (let ((roots (list (path-expand "~~lib")
-                         (path-expand "~~userlib"))))
+      (let loop ((roots (list (path-expand "~~lib")
+                              (path-expand "~~userlib"))))
         (if (null? roots)
             #f
             (let ((dir (apply pathname-join (cons (car roots) dir-part))))
@@ -129,8 +129,7 @@
                               (pathname-join dir sld-filename)
                               (pathname-join dir scm-filename)
                               (pathname-join dir ss-filename)))
-                  (loop (cdr roots)))))
-)))
+                  (loop (cdr roots))))))))
 
   (define (intersperse lst delim)
     (let loop ((remaining lst)

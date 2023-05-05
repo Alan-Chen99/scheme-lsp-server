@@ -57,8 +57,16 @@
           (lsp-server private chicken))
   (include "compat-chicken-impl.scm"))
  (gambit
-  (import (rename (except (gambit) with-exception-handler)
+  (import (rename (only (gambit)
+                        apropos
+                        filter
+                        module-search-order-add!
+                        open-tcp-server
+                        with-exception-catcher)
                   (with-exception-catcher with-exception-handler))
+          (except (scheme base)
+                  with-exception-handler)
+          (scheme read)
           (only (srfi 1) find)
           (only (srfi 13) string-prefix? string-tokenize)
           (only (srfi 14) char-set char-set-complement)
