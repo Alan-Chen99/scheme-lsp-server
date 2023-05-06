@@ -260,7 +260,8 @@
         (else expr)))
 
 (define (parse-expression expr context)
-  (cond ((not (list? expr))
+  (cond ((not expr) #f)
+        ((not (list? expr))
          #f)
         ((null? expr)
          #f)
@@ -478,6 +479,17 @@
              (loop (read-char port)
                    (cons c res)))))))
 
+(define (read-protected)
+  (call/cc
+   (lambda (k)
+     (with-exception-handler
+      (lambda (condition)
+        (write-log 'error (format "Read error: ~a~%"
+                                  condition))
+        (k #f))
+      (lambda ()
+        (read))))))
+
 (define (parse-library-name-from-file filename)
   (cond-expand
    (gambit (define (namespace-form? expr)
@@ -497,29 +509,36 @@
         (if (file-exists? filename)
             (with-input-from-file filename
               (lambda ()
-                (let loop ((expr (read)))
-                  (cond ((eof-object? expr) #f)
+                (let loop ((expr (read-protected)))
+                  (cond ((not expr)
+                         (loop (read-protected)))
+                        ((eof-object? expr) #f)
                         ((library-definition-form? expr)
                          (cadr expr))
                         ((namespace-form? expr)
                          (parse-gambit-namespace expr))
                         (else
-                         (loop (read)))))))
+                         (loop (read-protected)))))))
             #f))))))
 
 (define (parse-file filename . args)
   (define (read-func)
-    (let loop ((expr (read))
+    (let loop ((expr (read-protected))
                (meta-data '()))
-      (if (eof-object? expr)
-          (merge-meta-data meta-data)
-          (loop (read)
-                (let ((sub-meta-data (parse-expression expr (make-parse-context
-                                                             (pathname-directory filename)
-                                                             #f))))
-                  (if sub-meta-data
-                      (cons sub-meta-data meta-data)
-                      meta-data))))))
+      (cond ((not res)
+             (loop (read-protected)
+                   meta-data))
+            ((eof-object? expr)
+             (merge-meta-data meta-data))
+            (else
+             (let ((sub-meta-data (parse-expression expr (make-parse-context
+                                                          (pathname-directory filename)
+                                                          #f))))
+               (if sub-meta-data
+                   (loop (read-protected)
+                         (cons sub-meta-data meta-data))
+                   (loop (read-protected)
+                         meta-data)))))))
 
   (define text (if (null? args)
                    #f
@@ -539,7 +558,11 @@
                       (with-input-from-string text read-func))
                      ((file-exists? filename)
                       (with-input-from-file filename read-func))
-                     (else #f))))
+                     (else
+                      (write-log 'warning
+                                 (format "File does not exist: ~a~%"
+                                         filename))
+                      #f))))
           (and meta-data-without-location
                (make-source-meta-data
                 (source-meta-data-library-name meta-data-without-location)
