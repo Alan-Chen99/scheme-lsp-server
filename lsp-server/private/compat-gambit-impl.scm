@@ -10,7 +10,7 @@
                      root-path))
   (module-search-order-add! root-path)
   ;; Disabled for now, since too slow on large projects (ex. gambit itself)
-  (generate-meta-data! root-path)
+  ;;(generate-meta-data! root-path)
   #f)
 
 (define $server-capabilities
