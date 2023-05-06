@@ -150,10 +150,12 @@
   (define pathname-directory path-directory)
 
   (define (directory? f)
-    (eq? (file-type f) 'directory))
+    (and (file-exists? f)
+         (eq? (file-type f) 'directory)))
 
   (define (regular-file? f)
-    (eq? (file-type f) 'regular))
+    (and (file-exists? f)
+         (eq? (file-type f) 'regular)))
 
   (define (find-files path test)
     (cond ((and (regular-file? path)
