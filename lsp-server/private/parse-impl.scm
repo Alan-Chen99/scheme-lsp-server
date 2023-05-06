@@ -56,7 +56,8 @@
     ;;; don't compare with '##namespace directly, since it's not a valid
     ;;; identifier and causes errors when processed by other implementations.
     (if (and (list? expr)
-             (not (null? expr)))
+             (not (null? expr))
+             (symbol? (car expr)))
         (string=? (symbol->string (car expr))
                   "##namespace")
         #f)))
@@ -525,7 +526,7 @@
   (define (read-func)
     (let loop ((expr (read-protected))
                (meta-data '()))
-      (cond ((not res)
+      (cond ((not expr)
              (loop (read-protected)
                    meta-data))
             ((eof-object? expr)
@@ -608,19 +609,19 @@
        (raise condition))
      (lambda ()
        (let ((meta-data (parse-file abs-source-path)))
-         (update-identifier-to-source-meta-data-table! abs-source-path meta-data)
-         (write-log 'debug (format "parse-and-update-table! imports: ~a~%"
-                                   (source-meta-data-imports meta-data)))
-         (for-each (lambda (path)
-                     (let ((module-path (get-module-path path)))
-                       (write-log 'debug
-                                  (format "parse-and-update-table!: import ~a has module-path: ~a~%"
-                                          path
-                                          module-path))
-                       (when module-path
-                         (generate-meta-data! module-path))))
-                   (source-meta-data-imports meta-data))
-         )))))
+         (when meta-data
+           (update-identifier-to-source-meta-data-table! abs-source-path meta-data)
+           (write-log 'debug (format "parse-and-update-table! imports: ~a~%"
+                                     (source-meta-data-imports meta-data)))
+           (for-each (lambda (path)
+                       (let ((module-path (get-module-path path)))
+                         (write-log 'debug
+                                    (format "parse-and-update-table!: import ~a has module-path: ~a~%"
+                                            path
+                                            module-path))
+                         (when module-path
+                           (generate-meta-data! module-path))))
+                     (source-meta-data-imports meta-data))))))))
 
 (define scheme-file-regex
   (irregex '(: bos
