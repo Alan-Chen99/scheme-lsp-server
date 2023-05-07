@@ -41,7 +41,7 @@
                                time->seconds
                                with-exception-catcher)
                          (with-exception-catcher with-exception-handler))
-                 (github.com/ashinn/irregex irregex)
+                 (github.com/ashinn/irregex)
                  (lsp-server private gambit)))
  (guile (import (only (scheme base)
                       define-record-type

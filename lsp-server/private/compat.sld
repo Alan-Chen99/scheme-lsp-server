@@ -73,7 +73,7 @@
           (srfi 28)
           (lsp-server private adapter)
           (lsp-server private gambit)
-          (github.com/ashinn/irregex irregex))
+          (github.com/ashinn/irregex))
   (include "compat-gambit-impl.scm"))
  (guile
   (import (only (scheme base)
