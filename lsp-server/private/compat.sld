@@ -59,7 +59,9 @@
  (gambit
   (import (rename (only (gambit)
                         apropos
+                        eval
                         filter
+                        load
                         module-search-order-add!
                         open-tcp-server
                         with-exception-catcher)
