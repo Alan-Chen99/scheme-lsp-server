@@ -115,28 +115,25 @@
           (srfi 69))))
 
 (define (compile-and-import-if-needed file-path)
-  (call/cc
-   (lambda (k)
-     (with-exception-handler
-      (lambda (condition)
-        (write-log 'error
-                   (format "Error compiling file ~a: ~a"
-                           file-path
-                           (cond ((error-object? condition)
-                                  (error-object-message condition))
-                                 (else condition))))
-        (k #f))
-      (lambda ()
-        (let ((mod-name (parse-library-name-from-file file-path)))
-          (cond ((and mod-name
-                      (not (lsp-server-dependency? mod-name)))
-                 (write-log 'info (format "Importing module ~s" mod-name))
-                 (eval `(import ,mod-name)))
-                (else
-                 (write-log 'debug
-                            (format "Ignoring LSP-server dependency ~a"
-                                    mod-name))
-                 #f))))))))
+  (guard
+   (condition
+    (else (write-log 'error
+                     (format "Error compiling file ~a: ~a"
+                             file-path
+                             (cond ((error-object? condition)
+                                    (error-object-message condition))
+                                   (else condition))))
+          #f))
+   (let ((mod-name (parse-library-name-from-file file-path)))
+     (cond ((and mod-name
+                 (not (lsp-server-dependency? mod-name)))
+            (write-log 'info (format "Importing module ~s" mod-name))
+            (eval `(import ,mod-name)))
+           (else
+            (write-log 'debug
+                       (format "Ignoring LSP-server dependency ~a"
+                               mod-name))
+            #f)))))
 
 (define ($open-file! file-path text)
   (generate-meta-data! file-path)
@@ -145,22 +142,19 @@
 
 (define ($save-file! file-path text)
   (generate-meta-data! file-path)
-  (call/cc
-   (lambda (k)
-     (with-exception-handler
-      (lambda (condition)
-        (write-log 'error
-                   (format "Error loading file ~a: ~a"
-                           file-path
-                           condition))
-        (k #f))
-      (lambda ()
-        (let ((mod-name (parse-library-name-from-file file-path)))
-          (if (not (lsp-server-dependency? mod-name))
-              (load file-path)
-              (write-log 'info
-                         (format "Skip reload of lsp dependency: ~a"
-                                 mod-name))))))))
+  (guard
+   (condition
+    (else (write-log 'error
+                     (format "Error loading file ~a: ~a"
+                             file-path
+                             condition))
+          #f))
+   (let ((mod-name (parse-library-name-from-file file-path)))
+     (if (not (lsp-server-dependency? mod-name))
+         (load file-path)
+         (write-log 'info
+                    (format "Skip reload of lsp dependency: ~a"
+                            mod-name)))))
   #f)
 
 (define ($fetch-documentation mod-name identifier)
