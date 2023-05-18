@@ -31,8 +31,8 @@
  (gambit (import (only (scheme base)
                       define-record-type
                       let-values)
-                 (rename (except (gambit) guard)
-                         (r7rs-guard guard))
+                 (rename (except (gambit) with-exception-handler)
+                         (with-exception-catcher with-exception-handler))
                  (lsp-server private gambit)
                  (only (srfi 13)
                        string-fold

@@ -31,7 +31,7 @@
                   (chicken file posix)
                   (only (chicken keyword) keyword?)
                   (lsp-server private chicken)))
- (gambit (import (except (scheme base) guard)
+ (gambit (import (except (scheme base) with-exception-handler)
                  (rename (only (gambit)
                                caddr
                                file-exists?
@@ -39,8 +39,8 @@
                                keyword?
                                path-extension
                                time->seconds
-                               r7rs-guard)
-                         (r7rs-guard guard))
+                               with-exception-catcher)
+                         (with-exception-catcher with-exception-handler))
                  (github.com/ashinn/irregex)
                  (lsp-server private gambit)))
  (guile (import (only (scheme base)
