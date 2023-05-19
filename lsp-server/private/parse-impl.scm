@@ -86,7 +86,8 @@
   (tagged-expression? expr 'begin))
 
 (define (lambda-form? expr)
-  (tagged-expression? expr 'lambda))
+  (or (tagged-expression? expr 'lambda)
+      (tagged-expression? expr 'c-lambda)))
 
 (define (case-lambda-form? expr)
   (tagged-expression? expr 'case-lambda))
@@ -116,6 +117,7 @@
   (and (or (tagged-expression? expr 'define)
            (tagged-expression? expr 'define*)
            (tagged-expression? expr 'define-procedure)
+           (tagged-expression? expr 'c-define)
            (and (list? expr)
                 (not (null? expr))
                 (let ((tag (car expr)))
