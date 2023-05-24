@@ -18,7 +18,8 @@
 (import (lsp-server private util)
         (lsp-server private adapter)
         (lsp-server private parse)
-        (json-rpc lolevel))
+        (json-rpc lolevel)
+        (json-rpc))
 
 (import (scheme write)
         (srfi 28)
@@ -59,12 +60,18 @@
  (gambit
   (import (rename (only (gambit)
                         apropos
+                        continuation-capture
+                        display-exception
+                        display-continuation-backtrace
                         eval
                         filter
                         load
                         module-search-order-add!
                         open-tcp-server
-                        with-exception-catcher)
+                        with-exception-catcher
+                        with-input-from-string
+                        with-output-to-file
+                        with-output-to-string)
                   (with-exception-catcher with-exception-handler))
           (except (scheme base)
                   with-exception-handler)
