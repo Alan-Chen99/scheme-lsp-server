@@ -31,6 +31,7 @@
 #:use-module (ice-9 session)
 #:use-module (system vm program)
 #:use-module (system repl server)
+#:use-module (json-rpc)
 #:use-module (json-rpc lolevel)
 #:use-module (lsp-server private util)
 #:use-module (lsp-server private adapter)

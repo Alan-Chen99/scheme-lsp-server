@@ -36,6 +36,7 @@
           $string-split
 
           delete-lines
+          string-lines
           compose
           server-out-port)
 
@@ -48,5 +49,6 @@
 #:use-module (srfi srfi-69)
 #:use-module (json-rpc)
 #:use-module (lsp-server private guile)
+#:use-module (ice-9 rdelim)
 
 #:declarative? #f)
