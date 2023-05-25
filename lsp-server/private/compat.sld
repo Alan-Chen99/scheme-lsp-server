@@ -1,6 +1,7 @@
 (define-library (lsp-server private compat)
 
 (export $apropos-list
+        $compute-diagnostics
         $open-file!
         $save-file!
         $fetch-documentation
@@ -17,6 +18,7 @@
 
 (import (lsp-server private util)
         (lsp-server private adapter)
+        (lsp-server private diagnostics)
         (lsp-server private document)
         (lsp-server private file)
         (lsp-server private parse)

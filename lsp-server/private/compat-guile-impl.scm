@@ -168,67 +168,20 @@
             (module-uses mod)))
 
 
-(define (send-diagnostics file-path line-num char-num msg)
-  (let* ((doc (read-text! file-path))
-         (word (get-word-at-position doc
-                                     line-num
-                                     char-num
-                                     (lambda (c)
-                                       (or (identifier-char? c)
-                                           (char=? c #\()
-                                           (char=? c #\{)
-                                           (char=? c #\[)))
-                                     (lambda (c)
-                                       (or (identifier-char? c)
-                                           (char=? c #\space)
-                                           (char=? c #\))
-                                           (char=? c #\})
-                                           (char=? c #\]))))))
-    (let* ((end (or (and word
-                         (editor-word-end-char word))
-                    79))
-           (start (if (> (- end char-num) 1)
-                      char-num
-                      0)))
-      (json-rpc-send-notification
-       (server-out-port)
-       "textDocument/publishDiagnostics"
-       `((uri . ,file-path)
-         (diagnostics . #(((message . ,msg)
-                           (source . "interpreter")
-                           (range . ((start . ((line . ,line-num)
-                                               (character . ,start)))
-                                     (end . ((line . ,line-num)
-                                             (character . ,end))))))))))))
-  #f)
-
-(define (clear-diagnostics file-path)
-  (json-rpc-send-notification
-   (server-out-port)
-   "textDocument/publishDiagnostics"
-   `((uri . ,file-path)
-     (diagnostics . #()))))
-
-(define (compile-and-send-diagnostics file-path)
+(define ($compute-diagnostics file-path)
   (cond ((externally-compile-file file-path parse-compiler-output)
          => (lambda (diags)
               (write-log 'debug (format "compile-and-send-diagnostics: diagnostics found: ~a"
-                                          diags))
-              (let ((diag
-                     (find (lambda (d)
-                             (let ((fname (alist-ref 'filename d)))
-                               (and fname
-                                    (string-contains file-path fname))))
-                           diags)))
-                (if diag
-                    (send-diagnostics (alist-ref 'filename diag)
-                                    (alist-ref 'line-number diag)
-                                    (alist-ref 'char-number diag)
-                                    (alist-ref 'message diag))
-                    (clear-diagnostics file-path)))))
+                                        diags))
+              (let ((matching-diags
+                     (filter (lambda (d)
+                               (let ((fname (diagnostic-file-path d)))
+                                 (and fname
+                                      (string-contains file-path fname))))
+                             diags)))
+                matching-diags)))
         (else
-         (clear-diagnostics file-path)))
-  #f)
+         '())))
 
 (define (compile-and-import-if-needed file-path)
   (guard
@@ -261,7 +214,6 @@
 
 (define ($open-file! file-path text)
   (compile-and-import-if-needed file-path)
-  (compile-and-send-diagnostics file-path)
 
   #f)
 
@@ -285,8 +237,7 @@
           (reload-module mod)
           (import-library-by-name mod-name)
           #f)
-        (load file-path)))
-  (compile-and-send-diagnostics file-path))
+        (load file-path))))
 
 
 (define (build-procedure-signature module name proc-obj)
@@ -354,10 +305,11 @@
        (else #f))
     (let ((fields (string-split str #\:)))
       (if (> (length fields) 3)
-          `((filename . ,(car fields))
-            (line-number . ,(- (string->number (cadr fields)) 1))
-            (char-number . ,(string->number (caddr fields)))
-            (message . ,(string-join (drop fields 3))))
+          (make-diagnostic "guile"
+                           (car fields)
+                           (- (string->number (cadr fields)) 1)
+                           (string->number (caddr fields))
+                           (string-join (drop fields 3)))
           #f))))
 
 (define (externally-compile-file file-path proc)

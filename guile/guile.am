@@ -38,6 +38,11 @@ lsp-server.scm: lsp-server.sld lsp-server-impl.scm
 	echo "" >> $@
 	cat lsp-server-impl.scm >> $@
 
+lsp-server/private/diagnostics.scm: lsp-server/private/diagnostics.sld lsp-server/private/diagnostics-impl.scm
+	cat $< > $@
+	echo "" >> $@
+	cat lsp-server/private/diagnostics-impl.scm >> $@
+
 lsp-server/private/compat.scm: lsp-server/private/compat.sld lsp-server/private/compat-guile-impl.scm
 	cat $< > $@
 	echo "" >> $@
@@ -80,6 +85,7 @@ lsp-server/private/guile.scm: lsp-server/private/guile.sld lsp-server/private/gu
 
 distclean-local:
 	rm -Rf geiser/ \
+	       lsp-server/private/diagnostics.scm \
 	       lsp-server/private/compat.scm \
 	       lsp-server/private/guile.scm \
 	       lsp-server/private/util.scm    \

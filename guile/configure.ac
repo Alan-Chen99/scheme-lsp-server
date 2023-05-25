@@ -13,6 +13,7 @@ fi
 AC_CONFIG_FILES([Makefile])
 
 AC_CONFIG_LINKS([lsp-server/private/util-impl.scm:../lsp-server/private/util-impl.scm
+                 lsp-server/private/diagnostics-impl.scm:../lsp-server/private/diagnostics-impl.scm
                  lsp-server/private/document-impl.scm:../lsp-server/private/document-impl.scm
                  lsp-server/private/file-impl.scm:../lsp-server/private/file-impl.scm
                  lsp-server/main.scm:../main.scm
@@ -24,6 +25,7 @@ AC_CONFIG_LINKS([lsp-server/private/util-impl.scm:../lsp-server/private/util-imp
                  lsp-server/private/guile-impl.scm:../lsp-server/private/guile-impl.scm
 
                  lsp-server/private/adapter.sld:lsp-server/private/adapter.sld
+                 lsp-server/private/diagnostics.sld:lsp-server/private/diagnostics.sld
                  lsp-server/private/document.sld:lsp-server/private/document.sld
                  lsp-server/private/file.sld:lsp-server/private/file.sld
                  lsp-server/private/util.sld:lsp-server/private/util.sld

@@ -1,6 +1,7 @@
 (define-module (lsp-server private compat)
 
 #:export ($apropos-list
+          $compute-diagnostics
           $open-file!
           $save-file!
           $fetch-documentation
@@ -34,6 +35,7 @@
 #:use-module (system repl server)
 #:use-module (json-rpc)
 #:use-module (json-rpc lolevel)
+#:use-module (lsp-server private diagnostics)
 #:use-module (lsp-server private document)
 #:use-module (lsp-server private file)
 #:use-module (lsp-server private util)

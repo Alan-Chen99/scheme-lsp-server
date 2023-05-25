@@ -166,6 +166,10 @@
         (write-log 'info (format "File opened: ~a~%" file-path))
         (write-log 'warning (format "Invalid file-path. Params: ~a~%"
                                     params)))
+    (let ((diags ($compute-diagnostics file-path)))
+      (if (not (null? diags))
+          (send-diagnostics file-path diags)
+          (clear-diagnostics file-path)))
     #f))
 
 (define-handler (text-document/did-save params)
@@ -174,6 +178,10 @@
         (write-log 'info (format "File saved: ~a~%" file-path))
         (write-log 'warning (format "Invalid file-path. Params ~a~%"
                                     params)))
+    (let ((diags ($compute-diagnostics file-path)))
+      (if (not (null? diags))
+          (send-diagnostics file-path diags)
+          (clear-diagnostics file-path)))
     #f))
 
 (define-handler (text-document/completion params)

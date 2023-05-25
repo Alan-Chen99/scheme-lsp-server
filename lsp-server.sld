@@ -70,6 +70,7 @@
         (json-rpc)
         (json-rpc lolevel)
 
+        (lsp-server private diagnostics)
         (lsp-server private file)
         (lsp-server private util)
         (lsp-server private document)

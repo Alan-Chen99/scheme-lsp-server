@@ -11,6 +11,7 @@ DEPENDENCIES =    \
 LIBRARY_DEFINITIONS = \
   lsp-server/private/util.sld  \
   lsp-server/private/guile.sld \
+  lsp-server/private/diagnostics.sld \
   lsp-server/private/trie.sld       \
   lsp-server/private/compat.sld \
   lsp-server/private/document.sld   \
@@ -23,6 +24,7 @@ SOURCES = \
   lsp-server-impl.scm    \
   lsp-server/private/util-impl.scm    \
   lsp-server/private/guile-impl.scm \
+  lsp-server/private/diagnostics-impl.scm   \
   lsp-server/private/trie-impl.scm       \
   lsp-server/private/compat-guile-impl.scm \
   lsp-server/private/document-impl.scm   \
