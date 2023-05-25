@@ -85,13 +85,19 @@
     (mutex-unlock! file-table-mutex)
     result))
 
-(define (get-word-in-document doc line-number char-number)
+(define (get-word-at-position doc line-number char-number . args)
   (define text-pos
     (min (line/char->pos doc line-number char-number)
          (max (- (document-length doc) 1)
               0)))
   (define contents (document-contents doc))
   (define contents-length (document-length doc))
+  (define valid-left-char? (if (null? args)
+                               identifier-char?
+                               (car args)))
+  (define valid-right-char? (if (null? args)
+                                identifier-char?
+                                (car args)))
 
   (write-log 'debug
              (format "contents-length: ~a; text-pos: ~a"
@@ -106,18 +112,18 @@
                             (cn char-number))
                    (cond ((>= pos contents-length)
                           cn)
-                         ((identifier-char? (string-ref contents pos))
+                         ((valid-right-char? (string-ref contents pos))
                           (loop (+ pos 1) (+ cn 1)))
                          (else cn))))
                 (word-start
                  (if (<= text-pos 0)
-                     (if (identifier-char? (string-ref contents text-pos))
+                     (if (valid-left-char? (string-ref contents text-pos))
                          0
                          #f)
                      (let loop ((pos (- text-pos 1))
                                 (cn (- char-number 1)))
                        (cond ((= pos 0)
-                              (if (identifier-char? (string-ref contents 0))
+                              (if (valid-left-char? (string-ref contents 0))
                                   0
                                   (+ cn 1)))
                              ((>= pos contents-length)
@@ -129,7 +135,7 @@
                               (let ((c (string-ref contents pos)))
                                 (cond ((char=? c #\newline)
                                        (+ cn 1))
-                                      ((identifier-char? c)
+                                      ((valid-left-char? c)
                                        (if (= cn 0)
                                            0
                                            (loop (- pos 1)
@@ -162,7 +168,7 @@
   (define doc (read-text! file-path))
   (define line-number (alist-ref* '(position line) params))
   (define char-number (alist-ref* '(position character) params))
-  (get-word-in-document doc line-number char-number))
+  (get-word-at-position doc line-number char-number))
 
 (define (parse-change-contents change-contents)
   (define range-contents (alist-ref 'range change-contents))

@@ -2,7 +2,7 @@
 
 #:export ( file-table
            file-table-mutex
-           get-word-in-document
+           get-word-at-position
            get-word-under-cursor
            read-file!
            read-text!

@@ -170,17 +170,36 @@
 
 (define (send-diagnostics file-path line-num char-num msg)
   (let* ((doc (read-text! file-path))
-         (word (get-word-in-document doc line-num char-num)))
-    (json-rpc-send-notification
-     (server-out-port)
-     "textDocument/publishDiagnostics"
-     `((uri . ,file-path)
-       (diagnostics . #(((message . ,msg)
-                         (source . "interpreter")
-                         (range . ((start . ((line . ,line-num)
-                                             (character . ,char-num)))
-                                   (end . ((line . ,line-num)
-                                           (character . ,(editor-word-end-char word))))))))))))
+         (word (get-word-at-position doc
+                                     line-num
+                                     char-num
+                                     (lambda (c)
+                                       (or (identifier-char? c)
+                                           (char=? c #\()
+                                           (char=? c #\{)
+                                           (char=? c #\[)))
+                                     (lambda (c)
+                                       (or (identifier-char? c)
+                                           (char=? c #\space)
+                                           (char=? c #\))
+                                           (char=? c #\})
+                                           (char=? c #\]))))))
+    (let* ((end (or (and word
+                         (editor-word-end-char word))
+                    79))
+           (start (if (> (- end char-num) 1)
+                      char-num
+                      0)))
+      (json-rpc-send-notification
+       (server-out-port)
+       "textDocument/publishDiagnostics"
+       `((uri . ,file-path)
+         (diagnostics . #(((message . ,msg)
+                           (source . "interpreter")
+                           (range . ((start . ((line . ,line-num)
+                                               (character . ,start)))
+                                     (end . ((line . ,line-num)
+                                             (character . ,end))))))))))))
   #f)
 
 (define (clear-diagnostics file-path)
@@ -191,17 +210,25 @@
      (diagnostics . #()))))
 
 (define (compile-and-send-diagnostics file-path)
-  (let ((cmd-output (externally-compile-file file-path)))
-    (if cmd-output
-        (let ((parsed (parse-compiler-output cmd-output)))
-          (if parsed
-              (send-diagnostics (alist-ref 'filename parsed)
-                                (alist-ref 'line-number parsed)
-                                (alist-ref 'char-number parsed)
-                                (alist-ref 'message parsed))
-              (clear-diagnostics file-path)))
-        (clear-diagnostics file-path))
-    #f))
+  (cond ((externally-compile-file file-path parse-compiler-output)
+         => (lambda (diags)
+              (write-log 'debug (format "compile-and-send-diagnostics: diagnostics found: ~a"
+                                          diags))
+              (let ((diag
+                     (find (lambda (d)
+                             (let ((fname (alist-ref 'filename d)))
+                               (and fname
+                                    (string-contains file-path fname))))
+                           diags)))
+                (if diag
+                    (send-diagnostics (alist-ref 'filename diag)
+                                    (alist-ref 'line-number diag)
+                                    (alist-ref 'char-number diag)
+                                    (alist-ref 'message diag))
+                    (clear-diagnostics file-path)))))
+        (else
+         (clear-diagnostics file-path)))
+  #f)
 
 (define (compile-and-import-if-needed file-path)
   (guard
@@ -248,12 +275,7 @@
                            mod-name
                            condition))
 
-        (raise-exception
-         (make-json-rpc-custom-error
-          'load-error
-          (format "error loading/import file ~a" file-path)))))
-
-    (compile-and-send-diagnostics file-path)
+        #f))
 
     (if mod-name
         (let ((mod (resolve-module mod-name #t #:ensure #f)))
@@ -263,7 +285,8 @@
           (reload-module mod)
           (import-library-by-name mod-name)
           #f)
-        (load file-path))))
+        (load file-path)))
+  (compile-and-send-diagnostics file-path))
 
 
 (define (build-procedure-signature module name proc-obj)
@@ -337,18 +360,19 @@
             (message . ,(string-join (drop fields 3))))
           #f))))
 
-(define (externally-compile-file file-path)
+(define (externally-compile-file file-path proc)
   ;; TODO: check return code
   (let ((p (open-input-pipe
-            (format "guile --r7rs ~a 2>&1" file-path))))
+            (format "guile --r7rs --no-auto-compile ~a 2>&1" file-path))))
     (let loop ((line (read-line p))
-               (last-line #f))
-      (if (eof-object? line)
-          (let ((status (close-port p)))
-            (if status
-                last-line
-                #f))
-          (loop (read-line p)
-                line)))))
+               (diags '()))
+      (write-log 'debug (format "compile command line: ~a" line))
+      (cond ((eof-object? line)
+             (reverse diags))
+            ((proc line) => (lambda (diag)
+                              (loop (read-line p)
+                                    (cons diag diags))))
+            (else (loop (read-line p)
+                        diags))))))
 
 

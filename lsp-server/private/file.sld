@@ -6,7 +6,7 @@
         read-text!
         update-file!
         free-file!
-        get-word-in-document
+        get-word-at-position
         get-word-under-cursor
         parse-change-contents
         apply-change
