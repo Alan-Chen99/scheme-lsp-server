@@ -34,6 +34,8 @@
 #:use-module (system repl server)
 #:use-module (json-rpc)
 #:use-module (json-rpc lolevel)
+#:use-module (lsp-server private document)
+#:use-module (lsp-server private file)
 #:use-module (lsp-server private util)
 #:use-module (lsp-server private adapter)
 #:use-module (lsp-server private parse)

@@ -17,6 +17,8 @@
 
 (import (lsp-server private util)
         (lsp-server private adapter)
+        (lsp-server private document)
+        (lsp-server private file)
         (lsp-server private parse)
         (json-rpc lolevel)
         (json-rpc))

@@ -85,19 +85,13 @@
     (mutex-unlock! file-table-mutex)
     result))
 
-(define (get-word-under-cursor params)
-  (define file-path (get-uri-path params))
-  (define doc (read-text! file-path))
-  (define contents (document-contents doc))
-  (define contents-length (document-length doc))
-  (define line-number (alist-ref* '(position line) params))
-  (define char-number (alist-ref* '(position character) params))
+(define (get-word-in-document doc line-number char-number)
   (define text-pos
     (min (line/char->pos doc line-number char-number)
          (max (- (document-length doc) 1)
               0)))
-  (write-log 'debug (format "get-word-under-cursor: params: ~a"
-                            params))
+  (define contents (document-contents doc))
+  (define contents-length (document-length doc))
 
   (write-log 'debug
              (format "contents-length: ~a; text-pos: ~a"
@@ -128,9 +122,9 @@
                                   (+ cn 1)))
                              ((>= pos contents-length)
                               (write-log 'warning
-                               (format "pos ~a bigger than contents-length ~a"
-                                       pos
-                                       contents-length)))
+                                         (format "pos ~a bigger than contents-length ~a"
+                                                 pos
+                                                 contents-length)))
                              (else
                               (let ((c (string-ref contents pos)))
                                 (cond ((char=? c #\newline)
@@ -162,6 +156,13 @@
                                       line-number
                                       word-start
                                       word-end))))))))
+
+(define (get-word-under-cursor params)
+  (define file-path (get-uri-path params))
+  (define doc (read-text! file-path))
+  (define line-number (alist-ref* '(position line) params))
+  (define char-number (alist-ref* '(position character) params))
+  (get-word-in-document doc line-number char-number))
 
 (define (parse-change-contents change-contents)
   (define range-contents (alist-ref 'range change-contents))

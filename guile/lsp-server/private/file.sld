@@ -2,11 +2,12 @@
 
 #:export ( file-table
            file-table-mutex
+           get-word-in-document
+           get-word-under-cursor
            read-file!
            read-text!
            update-file!
            free-file!
-           get-word-under-cursor
            parse-change-contents
            apply-change
            apply-all-changes

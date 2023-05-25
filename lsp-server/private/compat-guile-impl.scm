@@ -169,16 +169,18 @@
 
 
 (define (send-diagnostics file-path line-num char-num msg)
-  (json-rpc-send-notification
-   (server-out-port)
-   "textDocument/publishDiagnostics"
-   `((uri . ,file-path)
-     (diagnostics . #(((message . ,msg)
-                       (source . "gsi")
-                       (range . ((start . ((line . ,line-num)
-                                           (character . ,char-num)))
-                                 (end . ((line . ,line-num)
-                                         (character . ,(and char-num (+ char-num 5))))))))))))
+  (let* ((doc (read-text! file-path))
+         (word (get-word-in-document doc line-num char-num)))
+    (json-rpc-send-notification
+     (server-out-port)
+     "textDocument/publishDiagnostics"
+     `((uri . ,file-path)
+       (diagnostics . #(((message . ,msg)
+                         (source . "interpreter")
+                         (range . ((start . ((line . ,line-num)
+                                             (character . ,char-num)))
+                                   (end . ((line . ,line-num)
+                                           (character . ,(editor-word-end-char word))))))))))))
   #f)
 
 (define (clear-diagnostics file-path)
@@ -194,9 +196,9 @@
         (let ((parsed (parse-compiler-output cmd-output)))
           (if parsed
               (send-diagnostics (alist-ref 'filename parsed)
-                              (alist-ref 'line-number parsed)
-                              (alist-ref 'char-number parsed)
-                              (alist-ref 'message parsed))
+                                (alist-ref 'line-number parsed)
+                                (alist-ref 'char-number parsed)
+                                (alist-ref 'message parsed))
               (clear-diagnostics file-path)))
         (clear-diagnostics file-path))
     #f))
