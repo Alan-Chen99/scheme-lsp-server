@@ -168,90 +168,91 @@
             (module-uses mod)))
 
 
-(define (send-diagnostics file-path text)
-  (let* ((ht (parse-backtrace-text text))
-         (loc (hash-table-ref/default ht file-path #f)))
-    (with-output-to-file "/tmp/before-send-nodification.txt"
-      (lambda ()
-        (write file-path)
-        (newline)
-        (write text)))
+(define (send-diagnostics file-path line-num char-num msg)
+  (json-rpc-send-notification
+   (server-out-port)
+   "textDocument/publishDiagnostics"
+   `((uri . ,file-path)
+     (diagnostics . #(((message . ,msg)
+                       (source . "gsi")
+                       (range . ((start . ((line . ,line-num)
+                                           (character . ,char-num)))
+                                 (end . ((line . ,line-num)
+                                         (character . ,(and char-num (+ char-num 5))))))))))))
+  #f)
 
+(define (clear-diagnostics file-path)
+  (json-rpc-send-notification
+   (server-out-port)
+   "textDocument/publishDiagnostics"
+   `((uri . ,file-path)
+     (diagnostics . #()))))
 
-    (when loc
-      (let ((line-num (car loc))
-            (char-num (cadr loc))
-            (msg (caddr loc)))
-        (with-output-to-file "/tmp/send-notification.txt"
-          (lambda ()
-            (write `((uri . ,file-path)
-                     (diagnostics . #(((message . ,msg)
-                                       (source . "gsi")
-                                       (range . ((start . ((line . ,line-num)
-                                                           (character . ,char-num)))
-                                                 (end . ((line . ,(and line-num (+ line-num 1)))
-                                                         (character . ,(and char-num (+ char-num 1))))))))))))))
-        (json-rpc-send-notification
-         (server-out-port)
-         "textDocument/publishDiagnostics"
-         `((uri . ,file-path)
-           (diagnostics . #(((message . ,msg)
-                             (source . "gsi")
-                             (range . ((start . ((line . ,line-num)
-                                                 (character . ,char-num)))
-                                       (end . ((line . ,(and line-num (+ line-num 1)))
-                                               (character . ,(and char-num (+ char-num 1))))))))))))
-        #f))))
+(define (compile-and-send-diagnostics file-path)
+  (let ((cmd-output (externally-compile-file file-path)))
+    (if cmd-output
+        (let ((parsed (parse-compiler-output cmd-output)))
+          (if parsed
+              (send-diagnostics (alist-ref 'filename parsed)
+                              (alist-ref 'line-number parsed)
+                              (alist-ref 'char-number parsed)
+                              (alist-ref 'message parsed))
+              (clear-diagnostics file-path)))
+        (clear-diagnostics file-path))
+    #f))
 
 (define (compile-and-import-if-needed file-path)
   (guard
-   (condition
-    (else (write-log 'warning (format "Can't compile file ~a: ~a"
-                                      file-path
-                                      condition))
-          (write-log 'debug "compile-and-import-if-needed ANTES")
-          (let ((str (with-output-to-string backtrace)))
-            (send-diagnostics file-path str))))
+      (condition
+       (else (write-log 'warning (format "Can't compile file ~a: ~a"
+                                         file-path
+                                         condition))
+             #f
+             ))
 
-   (let* ((mod-name (parse-library-name-from-file file-path))
-          (mod (if mod-name
-                   (resolve-module mod-name #t #:ensure #f)
-                   #f)))
-     (cond ((and mod-name (not mod))
-            (write-log 'debug
-             (format "compile-and-import-if-needed: compiling ~a and importing ~a"
-                     file-path
-                     mod-name))
-            (lsp-geiser-compile-file file-path)
-            (import-library-by-name mod-name))
-           ((and mod-name mod)
-            (write-log 'debug
-             (format "compile-and-import-if-needed: importing ~a" mod-name))
-            (import-library-by-name mod-name))
-           (else
-            (write-log 'debug
-             (format "compile-and-import-if-needed: ignoring file ~a" file-path))
-            #f)))))
+    (let* ((mod-name (parse-library-name-from-file file-path))
+           (mod (if mod-name
+                    (resolve-module mod-name #t #:ensure #f)
+                    #f)))
+      (cond ((and mod-name (not mod))
+             (write-log 'debug
+                        (format "compile-and-import-if-needed: compiling ~a and importing ~a"
+                                file-path
+                                mod-name))
+             (lsp-geiser-compile-file file-path)
+             (import-library-by-name mod-name))
+            ((and mod-name mod)
+             (write-log 'debug
+                        (format "compile-and-import-if-needed: importing ~a" mod-name))
+             (import-library-by-name mod-name))
+            (else
+             (write-log 'debug
+                        (format "compile-and-import-if-needed: ignoring file ~a" file-path))
+             #f)))))
 
 (define ($open-file! file-path text)
   (compile-and-import-if-needed file-path)
+  (compile-and-send-diagnostics file-path)
+
   #f)
 
 (define ($save-file! file-path text)
   (define mod-name (parse-library-name-from-file file-path))
   (guard
-      (condition (#t
-                  (write-log 'error
-                             (format "$save-file: error reloading module ~a: ~a"
-                                     mod-name
-                                     condition))
-                  (let ((str (with-output-to-string
-                               (lambda () (backtrace)))))
-                    (send-diagnostics file-path str))
-                  (raise-exception
-                   (make-json-rpc-custom-error
-                    'load-error
-                    (format "error loading/import file ~a" file-path)))))
+      (condition
+       (else
+        (write-log 'error
+                   (format "$save-file: error reloading module ~a: ~a"
+                           mod-name
+                           condition))
+
+        (raise-exception
+         (make-json-rpc-custom-error
+          'load-error
+          (format "error loading/import file ~a" file-path)))))
+
+    (compile-and-send-diagnostics file-path)
+
     (if mod-name
         (let ((mod (resolve-module mod-name #t #:ensure #f)))
           (write-log 'debug (format "$save-file!: reloading ~a~%"
@@ -322,47 +323,30 @@
 (define ($tcp-close conn)
   (close conn))
 
-(define (parse-backtrace-text text)
-  (with-input-from-string text
-    (lambda ()
-      (let loop ((line (read-line))
-                 (filename #f)
-                 (table (make-hash-table)))
-        (cond ((eof-object? line)
-               table)
-              ((irregex-search (irregex '(: "In " (submatch (+ (~ whitespace))) #\: eol))
-                               line)
-               => (lambda (m)
-                    (loop (read-line)
-                          (irregex-match-substring m 1)
-                          table)))
-              ((irregex-search (irregex '(: (* whitespace)
-                                            (submatch (+ num))
-                                            #\:
-                                            (submatch (+ num))
-                                            (+ whitespace)
-                                            (+ num)
-                                            (+ whitespace)
-                                            (submatch (+ graphic))))
-                               line)
-               => (lambda (m)
-                    (guard
-                        (condition
-                         (else (loop (read-line)
-                                     filename
-                                     table)))
-                      (let ((line-num (string->number (irregex-match-substring m 1)))
-                            (char-num (string->number (irregex-match-substring m 2)))
-                            (text (irregex-match-substring m 3)))
-                        (when filename
-                          (hash-table-set!
-                           table
-                           filename
-                           (list line-num char-num text)))
-                        (loop (read-line)
-                              filename
-                              table)))))
-              (else (loop (read-line)
-                          filename
-                          table)))))))
+(define (parse-compiler-output str)
+  (guard
+      (condition
+       (else #f))
+    (let ((fields (string-split str #\:)))
+      (if (> (length fields) 3)
+          `((filename . ,(car fields))
+            (line-number . ,(- (string->number (cadr fields)) 1))
+            (char-number . ,(string->number (caddr fields)))
+            (message . ,(string-join (drop fields 3))))
+          #f))))
+
+(define (externally-compile-file file-path)
+  ;; TODO: check return code
+  (let ((p (open-input-pipe
+            (format "guile --r7rs ~a 2>&1" file-path))))
+    (let loop ((line (read-line p))
+               (last-line #f))
+      (if (eof-object? line)
+          (let ((status (close-port p)))
+            (if status
+                last-line
+                #f))
+          (loop (read-line p)
+                line)))))
+
 

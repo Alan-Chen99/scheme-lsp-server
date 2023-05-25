@@ -16,8 +16,9 @@
           $tcp-read-timeout
           spawn-repl-server)
 
+#:use-module (ice-9 popen)
 #:use-module ((scheme base)
-              #:select (define-record-type read-line guard))
+              #:select (define-record-type let-values guard read-line))
 #:use-module (scheme write)
 #:use-module (srfi srfi-1)
 #:use-module ((srfi srfi-13)

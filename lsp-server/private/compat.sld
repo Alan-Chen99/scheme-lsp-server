@@ -87,12 +87,14 @@
  (guile
   (import (only (scheme base)
                 define-record-type
+                let-values
                 read-line
                 guard)
           (geiser modules)
           (ice-9 documentation)
           (ice-9 ftw)
           (ice-9 optargs)
+          (ice-9 popen)
           (ice-9 session)
           (srfi 1)
           (only (srfi 13) string-join string-concatenate)
