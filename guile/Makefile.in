@@ -317,7 +317,7 @@ moddir = $(datadir)/guile/site/$(GUILE_EFFECTIVE_VERSION)
 godir = $(libdir)/guile/$(GUILE_EFFECTIVE_VERSION)/site-ccache
 GOBJECTS = $(LIBRARY_DEFINITIONS:%.sld=%.go)
 EXECUTABLE = lsp-server/guile-lsp-server
-nobase_dist_mod_DATA = $(SOURCES) $(DEPENDENCIES)
+nobase_dist_mod_DATA = $(LIBRARY_DEFINITIONS:%.sld=%.scm) $(DEPENDENCIES)
 nobase_go_DATA = $(GOBJECTS)
 bin_SCRIPTS = $(EXECUTABLE)
 

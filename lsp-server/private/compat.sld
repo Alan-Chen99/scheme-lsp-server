@@ -18,7 +18,8 @@
 (import (lsp-server private util)
         (lsp-server private adapter)
         (lsp-server private parse)
-        (json-rpc lolevel))
+        (json-rpc lolevel)
+        (json-rpc))
 
 (import (scheme write)
         (srfi 28)
