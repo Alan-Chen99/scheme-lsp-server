@@ -11,7 +11,6 @@
           diagnostic-message
           diagnostic? 
 
-          generic-compute-diagnostics
           send-diagnostics)
 
 #:use-module (lsp-server private document)
@@ -20,5 +19,9 @@
 #:use-module (lsp-server private util)
 #:use-module (json-rpc)
 #:use-module (scheme base)
+#:use-module ((srfi srfi-1) #:select (filter))
+#:use-module ((srfi srfi-13) #:select (string-contains))
+#:use-module (srfi srfi-28)
+
 
 #:declarative? #f)

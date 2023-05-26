@@ -264,5 +264,16 @@
                            (irregex-match-substring m 4))
           #f))))
 
-(define $compute-diagnostics
-  (generic-compute-diagnostics externally-compile-file parse-compiler-output))
+(define ($compute-diagnostics file-path)
+  (cond ((externally-compile-file file-path parse-compiler-output)
+           => (lambda (diags)
+                (let ((matching-diags
+                       (filter (lambda (d)
+                                 (let ((fname (diagnostic-file-path d)))
+                                   (and fname
+                                        (string=? (get-absolute-pathname file-path)
+                                                  (get-absolute-pathname fname)))))
+                               diags)))
+                  matching-diags)))
+          (else
+           '())))

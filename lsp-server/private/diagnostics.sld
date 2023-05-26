@@ -13,11 +13,11 @@
         diagnostic-source-set!
         diagnostic?
 
-        generic-compute-diagnostics
         send-diagnostics)
 
 (import (lsp-server private document)
         (lsp-server private file)
+        (lsp-server private guile)
         (lsp-server private util)
         (json-rpc)
         (scheme base)
