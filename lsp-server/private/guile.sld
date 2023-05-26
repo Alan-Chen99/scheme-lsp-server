@@ -6,6 +6,7 @@
         create-directory
 
         absolute-pathname?
+        get-module-path
         pathname-directory
         pathname-base
         pathname-join

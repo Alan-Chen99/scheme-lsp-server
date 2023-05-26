@@ -10,6 +10,8 @@
           diagnostic-line-number
           diagnostic-message
           diagnostic? 
+
+          generic-compute-diagnostics
           send-diagnostics)
 
 #:use-module (lsp-server private document)

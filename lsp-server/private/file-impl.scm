@@ -150,7 +150,7 @@
                                (line/char->pos doc line-number word-start)
                                (line/char->pos doc line-number word-end))))
                     (write-log 'debug
-                               (format "word-start: ~a (~a), word-end: ~a ~a~%"
+                               (format "word-start: ~a (~a), word-end: ~a (~a)~%"
                                        word-start
                                        (line/char->pos doc line-number word-start)
                                        word-end

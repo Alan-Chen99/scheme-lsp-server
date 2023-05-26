@@ -30,7 +30,6 @@
 #:use-module (lsp-server private document)
 #:use-module (lsp-server private parse)
 #:use-module (lsp-server private util)
-#:use-module (lsp-server private compat)
 #:use-module ((lsp-server private guile)
               #:select (alist-ref vector-fold))
 

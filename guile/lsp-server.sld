@@ -29,7 +29,6 @@
 
 #:use-module (system vm program)
 
-#:use-module (lsp-server private diagnostics)
 #:use-module (lsp-server private document)
 #:use-module (lsp-server private parse)
 #:use-module (lsp-server private util)
@@ -39,5 +38,6 @@
 
 #:use-module (lsp-server private adapter)
 #:use-module (lsp-server private file)
+#:use-module (lsp-server private diagnostics)
 
 #:declarative? #f)

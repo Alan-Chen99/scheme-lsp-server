@@ -64,7 +64,6 @@
         (lsp-server private util)
         (lsp-server private document)
         (lsp-server private parse)
-        (lsp-server private compat)
         )
 
 (include "file-impl.scm"))

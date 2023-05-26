@@ -14,9 +14,7 @@
   #f)
 
 (define $server-capabilities
-  '((definitionProvider . ())
-    (diagnosticsProvider . ((interFileDiagnostics . #t)
-                            (workspaceDiagnostics . #t)))))
+  '((definitionProvider . ())))
 
 (define ($tcp-listen port-number)
   (open-tcp-server port-number))
@@ -116,123 +114,29 @@
           (srfi 28)
           (srfi 69))))
 
-(define (parse-location str)
-  ;;; we consume contents starting at the string end. Gambit's displayed
-  ;;; location is of the form <filename>@<line-num>:<char-num>
-  (guard
-      (condition
-       (else #f))
-    (let loop ((i (- (string-length str) 1))
-               (char-num #f)
-               (line-num #f)
-               (acc ""))
-      (cond ((= i 0)
-             (list acc line-num char-num))
-            (else
-             (let ((c (string-ref str i)))
-               (cond ((not char-num)
-                      (case c
-                        ((#\:)
-                         (loop (- i 1)
-                               (string->number acc)
-                               line-num
-                               ""))
-                        (else (loop (- i 1)
-                                    char-num
-                                    line-num
-                                    (string-append (string c) acc)))))
-                     ((not line-num)
-                      (case c
-                        ((#\@)
-                         (loop (- i 1)
-                               char-num
-                               (string->number acc)
-                               ""))
-                        (else (loop (- i 1)
-                                    char-num
-                                    line-num
-                                    (string-append (string c) acc)))))
-                     (else
-                      (loop (- i 1)
-                            char-num
-                            line-num
-                            (string-append (string c) acc))))))))))
-
-(define (parse-continuation-location c)
-  (let ((str (with-output-to-string
-               (lambda ()
-                 (display-continuation-backtrace c)))))
-    (write-log 'info (format "parse-continuation-location str~s"
-                             str))
-    (with-input-from-string str
-      (lambda ()
-        (let loop ((line (read-line))
-                   (res '()))
-          (if (eof-object? line)
-              (reverse res)
-              (let ((contents (string-split line " ")))
-                (write-log 'info (format "parse-continuation-location line: ~s, contents: ~s"
-                                         line
-                                         contents))
-                (if (< (length contents) 3)
-                    (loop (read-line))
-                    (let ((loc (parse-location (list-ref contents 2))))
-                      (if (and loc
-                               (not (null? loc)))
-                          (loop (read-line)
-                                (cons loc res))
-                          (loop (read-line) res)))))))))))
-
-(define (send-diagnostics file-path k condition)
-  (let ((frames (parse-continuation-location k))
-        (msg (condition->string condition)))
-    (write-log 'debug (format "send-diagnostics frames: ~s, msg: ~s, length: ~s"
-                              frames
-                              msg
-                              (length frames)))
-    ;; (for-each (lambda (f)
-    ;;             (write-log 'debug (format "frame ~a" f)))
-    ;;           frames)
-    ;; (when (> (length diags) 2)
-    ;;   (let ((line-num (list-ref diags 1))
-    ;;         (char-num (list-ref diags 2)))
-    ;;     (json-rpc-send-notification
-    ;;      (server-out-port)
-    ;;      "textDocument/publishDiagnostics"
-    ;;      `((uri . ,file-path)
-    ;;        (diagnostics . #(((message . ,msg)
-    ;;                          (source . "gsi")
-    ;;                          (range . ((start . ((line . ,line-num)
-    ;;                                              (character . ,char-num)))
-    ;;                                    (end . ((line . ,(and line-num (+ line-num 1)))
-    ;;                                            (character . ,(and char-num (+ char-num 1))))))))))))
-        
-        
-    ;;     ))
-    ))
-
 (define (compile-and-import-if-needed file-path)
-  (continuation-capture
+  (call/cc
    (lambda (k)
      (with-exception-handler
-         (lambda (condition)
-           (write-log 'error
-                      (format "Error compiling file ~a: ~a"
-                              file-path
-                              (condition->string condition)))
-           (send-diagnostics file-path k condition)
-           #f)
-       (lambda ()
-         (let ((mod-name (parse-library-name-from-file file-path)))
-           (cond ((and mod-name
-                       (not (lsp-server-dependency? mod-name)))
-                  (write-log 'info (format "Importing module ~s" mod-name))
-                  (eval `(import ,mod-name)))
-                 (else
-                  (write-log 'debug
-                             (format "Ignoring LSP-server dependency ~a"
-                                     mod-name))
-                  #f))))))))
+      (lambda (condition)
+        (write-log 'error
+                   (format "Error compiling file ~a: ~a"
+                           file-path
+                           (cond ((error-object? condition)
+                                  (error-object-message condition))
+                                 (else condition))))
+        (k #f))
+      (lambda ()
+        (let ((mod-name (parse-library-name-from-file file-path)))
+          (cond ((and mod-name
+                      (not (lsp-server-dependency? mod-name)))
+                 (write-log 'info (format "Importing module ~s" mod-name))
+                 (eval `(import ,mod-name)))
+                (else
+                 (write-log 'debug
+                            (format "Ignoring LSP-server dependency ~a"
+                                    mod-name))
+                 #f))))))))
 
 (define ($open-file! file-path text)
   (generate-meta-data! file-path)
@@ -241,16 +145,15 @@
 
 (define ($save-file! file-path text)
   (generate-meta-data! file-path)
-  (continuation-capture
+  (call/cc
    (lambda (k)
      (with-exception-handler
       (lambda (condition)
         (write-log 'error
                    (format "Error loading file ~a: ~a"
                            file-path
-                           (condition->string condition)))
-        (send-diagnostics file-path k condition)
-        #f)
+                           condition))
+        (k #f))
       (lambda ()
         (let ((mod-name (parse-library-name-from-file file-path)))
           (if (not (lsp-server-dependency? mod-name))
@@ -319,3 +222,47 @@
                                         (cons s cur-mod))
                                       suggestions)
                                  result))))))))))
+
+(define error-line-regex
+  (irregex '(: "*** ERROR IN "
+               (: #\" (submatch (+ any)) #\")
+               #\@
+               (submatch (+ num))
+               #\.
+               (submatch (+ num))
+               " -- "
+               (* space)
+               (submatch (+ any)))))
+
+(define (externally-compile-file file-path proc)
+  ;; TODO: check return code
+  (let ((p (##open-input-process (list path: "gsi"
+                                       arguments: (list file-path)))))
+    (let loop ((line (read-line p))
+               (diags '()))
+      (write-log 'debug (format "compile command line: ~a" line))
+      (cond ((eof-object? line)
+             (reverse diags))
+            ((proc line) => (lambda (diag)
+                              (loop (read-line p)
+                                    (cons diag diags))))
+            (else (loop (read-line p)
+                        diags))))))
+
+(define (parse-compiler-output str)
+  (let ((m (irregex-search error-line-regex str)))
+    (guard
+        (condition
+         (else #f))
+      (if m
+          (make-diagnostic "gsi"
+                           (irregex-match-substring m 1)
+                           (max (- (string->number (irregex-match-substring m 2)) 1)
+                                0)
+                           (max (- (string->number (irregex-match-substring m 3)) 1)
+                                0)
+                           (irregex-match-substring m 4))
+          #f))))
+
+(define $compute-diagnostics
+  (generic-compute-diagnostics externally-compile-file parse-compiler-output))

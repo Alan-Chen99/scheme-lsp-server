@@ -21,12 +21,31 @@
                    (alist-ref 'char-number alist)
                    (alist-ref 'message alist)))
 
+(define (generic-compute-diagnostics collect-proc parse-proc)
+  (lambda (file-path)
+    (cond ((collect-proc file-path parse-proc)
+           => (lambda (diags)
+                (write-log 'debug
+                           (format "diagnostics found: ~a"
+                                   diags))
+                (let ((matching-diags
+                       (filter (lambda (d)
+                                 (let ((fname (diagnostic-file-path d)))
+                                   (and fname
+                                        (string=? (get-absolute-pathname file-path)
+                                                  (get-absolute-pathname fname)))))
+                               diags)))
+                  matching-diags)))
+          (else
+           '()))))
+
 (define (send-diagnostics file-path diags)
   (let ((diags-as-lists
          (map (lambda (diag)
                 (let* ((file-path (diagnostic-file-path diag))
                        (line-num (diagnostic-line-number diag))
-                       (char-num (diagnostic-char-number diag))
+                       (char-num (or (diagnostic-char-number diag)
+                                     0))
                        (msg (diagnostic-message diag))
                        (doc (read-text! file-path))
                        (word (get-word-at-position doc
@@ -64,3 +83,4 @@
        `((uri . ,file-path)
          (diagnostics . ,(list->vector diags-as-lists))))))
   #f)
+

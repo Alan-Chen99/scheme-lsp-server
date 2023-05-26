@@ -32,6 +32,9 @@
 
 (define current-directory getcwd)
 
+(define (get-module-path mod)
+  #f)
+
 (define (pathname-join dir-name file-name)
   (string-concatenate (list dir-name
                             file-name-separator-string
@@ -4007,3 +4010,4 @@
      start
      end)))
 ;;;; END irregex.scm -- IrRegular Expressions
+

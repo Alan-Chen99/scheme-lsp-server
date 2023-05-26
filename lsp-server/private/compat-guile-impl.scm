@@ -168,21 +168,6 @@
             (module-uses mod)))
 
 
-(define ($compute-diagnostics file-path)
-  (cond ((externally-compile-file file-path parse-compiler-output)
-         => (lambda (diags)
-              (write-log 'debug (format "compile-and-send-diagnostics: diagnostics found: ~a"
-                                        diags))
-              (let ((matching-diags
-                     (filter (lambda (d)
-                               (let ((fname (diagnostic-file-path d)))
-                                 (and fname
-                                      (string-contains file-path fname))))
-                             diags)))
-                matching-diags)))
-        (else
-         '())))
-
 (define (compile-and-import-if-needed file-path)
   (guard
       (condition
@@ -326,5 +311,10 @@
                                     (cons diag diags))))
             (else (loop (read-line p)
                         diags))))))
+
+(define $compute-diagnostics
+  (generic-compute-diagnostics externally-compile-file
+                               parse-compiler-output))
+
 
 
