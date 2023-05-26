@@ -862,7 +862,7 @@ uninstall-am: uninstall-binSCRIPTS uninstall-nobase_dist_modDATA \
 
 $(EXECUTABLE): lsp-server/main.scm
 	echo '#!/usr/bin/env sh' > $(EXECUTABLE)
-	echo 'exec guile --no-auto-compile -x ".scm" -e  main -s "$$0" "$$@"' >> $(EXECUTABLE)
+	echo 'exec guile --fresh-auto-compile -x ".scm" -e  main -s "$$0" "$$@"' >> $(EXECUTABLE)
 	echo '!#' >> $(EXECUTABLE)
 	echo >> $(EXECUTABLE)
 	cat lsp-server/main.scm >> $(EXECUTABLE)

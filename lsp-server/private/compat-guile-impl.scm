@@ -207,7 +207,7 @@
   (guard
       (condition
        (else
-        (write-log 'error
+        (write-log 'warning
                    (format "$save-file: error reloading module ~a: ~a"
                            mod-name
                            condition))
@@ -315,6 +315,9 @@
 (define ($compute-diagnostics file-path)
   (cond ((externally-compile-file file-path parse-compiler-output)
            => (lambda (diags)
+                (write-log 'debug
+                           (format "diagnotics found: ~a"
+                                   diags))
                 (let ((matching-diags
                        (filter (lambda (d)
                                  (let ((fname (diagnostic-file-path d)))
