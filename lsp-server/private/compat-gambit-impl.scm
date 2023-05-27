@@ -142,7 +142,12 @@
 
 (define ($open-file! file-path text)
   (generate-meta-data! file-path)
-  (compile-and-import-if-needed file-path)
+  (let* ((ldef (find-library-definition-file file-path))
+         (file-to-compile (or ldef file-path)))
+    (when (and ldef (not (string=? ldef file-path)))
+      (generate-meta-data! ldef))
+    (compile-and-import-if-needed file-path))
+  
   #f)
 
 (define ($save-file! file-path text)

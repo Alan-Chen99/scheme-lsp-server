@@ -198,7 +198,11 @@
              #f)))))
 
 (define ($open-file! file-path text)
-  (compile-and-import-if-needed file-path)
+  (let* ((ldef (find-library-definition-file file-path))
+         (file-to-compile (or ldef file-path)))
+    (when (and ldef (not (string=? ldef file-path)))
+      (compile-and-import-if-needed ldef))
+    (compile-and-import-if-needed file-path))
 
   #f)
 
