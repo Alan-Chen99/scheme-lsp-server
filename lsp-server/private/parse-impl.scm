@@ -538,9 +538,10 @@
 (define (find-library-definition-file file-path)
   (if (parse-library-name-from-file file-path)
       file-path
-      (let ((without-ext (pathname-strip-extension file-path)))
-        (or (parse-library-name-from-file
-             (string-append without-ext ".sld"))
+      (let* ((without-ext (pathname-strip-extension file-path))
+             (sld-file (string-append without-ext ".sld")))
+        (if (parse-library-name-from-file sld-file)
+            sld-file
             (let ((m (irregex-search implementation-regex
                                      file-path)))
               (and m
