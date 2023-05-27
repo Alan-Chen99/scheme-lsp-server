@@ -4,6 +4,7 @@
         alist-ref
         alist-ref/default
         build-module-egg-table
+        chicken-program-path
         current-directory
         get-module-path
         module-egg
@@ -13,6 +14,7 @@
         pathname-base
         pathname-directory
         pathname-extension
+        pathname-strip-extension
         pathname-join
         uri-decode
         with-input-from-string)
@@ -46,6 +48,11 @@
     (make-pathname
      (foreign-value "C_TARGET_BIN_HOME" c-string)
      (foreign-value "C_CHICKEN_STATUS_PROGRAM" c-string)))
+
+  (define (chicken-program-path)
+    (make-pathname
+     (foreign-value "C_TARGET_BIN_HOME" c-string)
+     (foreign-value "C_CSC_PROGRAM" c-string)))
 
   (define (init-module-egg-table!)
     (set! module-egg-table (build-module-egg-table)))

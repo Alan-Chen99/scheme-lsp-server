@@ -2,11 +2,12 @@
 
 #:export ( file-table
            file-table-mutex
+           get-word-at-position
+           get-word-under-cursor
            read-file!
            read-text!
            update-file!
            free-file!
-           get-word-under-cursor
            parse-change-contents
            apply-change
            apply-all-changes
@@ -29,7 +30,6 @@
 #:use-module (lsp-server private document)
 #:use-module (lsp-server private parse)
 #:use-module (lsp-server private util)
-#:use-module (lsp-server private compat)
 #:use-module ((lsp-server private guile)
               #:select (alist-ref vector-fold))
 

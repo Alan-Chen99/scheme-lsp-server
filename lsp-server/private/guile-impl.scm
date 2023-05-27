@@ -32,6 +32,9 @@
 
 (define current-directory getcwd)
 
+(define (get-module-path mod)
+  #f)
+
 (define (pathname-join dir-name file-name)
   (string-concatenate (list dir-name
                             file-name-separator-string
@@ -42,6 +45,26 @@
 
 (define (pathname-base path)
   (basename path))
+
+(define (pathname-strip-extension path)
+  (define len (string-length path))
+
+  (if (= len 0)
+      path
+      (let loop ((i (- len 1)))
+        (if (= i 0)
+            path
+            (let ((c (string-ref path i)))
+               (cond ((file-name-separator? c)
+                      path)
+                     ((char=? c #\.)
+                      (if (or (= i (- len 1))
+                              (= i 0)
+                              (file-name-separator?
+                               (string-ref path (- i 1))))
+                          path
+                          (string-take path i)))
+                     (else (loop (- i 1)))))))))
 
 (define absolute-pathname? absolute-file-name?)
 
@@ -4007,3 +4030,4 @@
      start
      end)))
 ;;;; END irregex.scm -- IrRegular Expressions
+

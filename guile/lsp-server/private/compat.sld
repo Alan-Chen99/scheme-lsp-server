@@ -1,6 +1,7 @@
 (define-module (lsp-server private compat)
 
 #:export ($apropos-list
+          $compute-diagnostics
           $open-file!
           $save-file!
           $fetch-documentation
@@ -16,8 +17,9 @@
           $tcp-read-timeout
           spawn-repl-server)
 
+#:use-module (ice-9 popen)
 #:use-module ((scheme base)
-              #:select (define-record-type read-line guard))
+              #:select (define-record-type let-values guard read-line))
 #:use-module (scheme write)
 #:use-module (srfi srfi-1)
 #:use-module ((srfi srfi-13)
@@ -33,6 +35,9 @@
 #:use-module (system repl server)
 #:use-module (json-rpc)
 #:use-module (json-rpc lolevel)
+#:use-module (lsp-server private diagnostics)
+#:use-module (lsp-server private document)
+#:use-module (lsp-server private file)
 #:use-module (lsp-server private util)
 #:use-module (lsp-server private adapter)
 #:use-module (lsp-server private parse)

@@ -6,9 +6,11 @@
         create-directory
 
         absolute-pathname?
+        get-module-path
         pathname-directory
         pathname-base
         pathname-join
+        pathname-strip-extension
         get-absolute-pathname
         hash-table-join!
         intersperse

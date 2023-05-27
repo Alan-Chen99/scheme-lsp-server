@@ -3,14 +3,16 @@
 
   ;;; Ignored for now
 (define $tcp-read-timeout (make-parameter #f))
+(define root-path (make-parameter #f))
 
-(define ($initialize-lsp-server! root-path)
+(define ($initialize-lsp-server! r-path)
+  (root-path r-path)
   (write-log 'info
              (format "initializing LSP server with root ~a"
-                     root-path))
-  (module-search-order-add! root-path)
+                     r-path))
+  (module-search-order-add! r-path)
   ;; Disabled for now, since too slow on large projects (ex. gambit itself)
-  ;;(generate-meta-data! root-path)
+  ;;(generate-meta-data! r-path)
   #f)
 
 (define $server-capabilities
@@ -140,7 +142,12 @@
 
 (define ($open-file! file-path text)
   (generate-meta-data! file-path)
-  (compile-and-import-if-needed file-path)
+  (let* ((ldef (find-library-definition-file file-path))
+         (file-to-compile (or ldef file-path)))
+    (when (and ldef (not (string=? ldef file-path)))
+      (generate-meta-data! ldef))
+    (compile-and-import-if-needed file-path))
+  
   #f)
 
 (define ($save-file! file-path text)
@@ -222,3 +229,66 @@
                                         (cons s cur-mod))
                                       suggestions)
                                  result))))))))))
+
+(define error-line-regex
+  (irregex '(: "*** ERROR IN "
+               (: #\" (submatch (+ any)) #\")
+               #\@
+               (submatch (+ num))
+               #\.
+               (submatch (+ num))
+               " -- "
+               (* space)
+               (submatch (+ any)))))
+
+(define (externally-compile-file file-path proc)
+  ;; TODO: check return code
+  (let* ((search-path (if (root-path)
+                          (format "-:search=~a" (root-path))
+                          "."))
+         (ldef-path (find-library-definition-file file-path))
+         (path-to-compile (or ldef-path file-path))
+         (p (##open-input-process (list path: "gsi"
+                                        arguments: (list search-path
+                                                         path-to-compile)))))
+    (write-log 'debug (format "externally-compile-file: compiled ~a"
+                              path-to-compile))
+    (let loop ((line (read-line p))
+               (diags '()))
+      (write-log 'debug (format "compile command line: ~a" line))
+      (cond ((eof-object? line)
+             (reverse diags))
+            ((proc line) => (lambda (diag)
+                              (loop (read-line p)
+                                    (cons diag diags))))
+            (else (loop (read-line p)
+                        diags))))))
+
+(define (parse-compiler-output str)
+  (let ((m (irregex-search error-line-regex str)))
+    (guard
+        (condition
+         (else #f))
+      (if m
+          (make-diagnostic "gsi"
+                           (irregex-match-substring m 1)
+                           (max (- (string->number (irregex-match-substring m 2)) 1)
+                                0)
+                           (max (- (string->number (irregex-match-substring m 3)) 1)
+                                0)
+                           (irregex-match-substring m 4))
+          #f))))
+
+(define ($compute-diagnostics file-path)
+  (cond ((externally-compile-file file-path parse-compiler-output)
+           => (lambda (diags)
+                (let ((matching-diags
+                       (filter (lambda (d)
+                                 (let ((fname (diagnostic-file-path d)))
+                                   (and fname
+                                        (string=? (get-absolute-pathname file-path)
+                                                  (get-absolute-pathname fname)))))
+                               diags)))
+                  matching-diags)))
+          (else
+           '())))

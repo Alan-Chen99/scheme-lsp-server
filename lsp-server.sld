@@ -31,8 +31,8 @@
  (gambit (import (only (scheme base)
                       define-record-type
                       let-values)
-                 (rename (except (gambit) with-exception-handler)
-                         (with-exception-catcher with-exception-handler))
+                 (rename (except (gambit) guard)
+                         (r7rs-guard guard))
                  (lsp-server private gambit)
                  (only (srfi 13)
                        string-fold
@@ -70,6 +70,7 @@
         (json-rpc)
         (json-rpc lolevel)
 
+        (lsp-server private diagnostics)
         (lsp-server private file)
         (lsp-server private util)
         (lsp-server private document)

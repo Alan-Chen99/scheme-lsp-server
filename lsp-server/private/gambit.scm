@@ -3,6 +3,7 @@
 (export absolute-pathname?
         alist-ref
         alist-ref/default
+        condition->string
         prefix-identifier
         vector-fold
         with-input-from-string
@@ -18,7 +19,10 @@
         get-module-path
         find-files
         pathname-directory
-        pathname-join)
+        pathname-base
+        pathname-strip-extension
+        pathname-join
+        string-split)
 
 (import (gambit)
         (only (srfi 1) any append-map drop-right find)
@@ -147,7 +151,11 @@
   (define (pathname-join . paths)
     (apply string-append (intersperse paths "/")))
 
-  (define pathname-directory path-directory)
+  (define pathname-directory ##path-directory)
+
+  (define pathname-base ##path-strip-directory)
+
+  (define pathname-strip-extension ##path-strip-extension)
 
   (define (directory? f)
     (and (file-exists? f)
@@ -170,4 +178,32 @@
                              files)
                      (append-map (lambda (d) (find-files d test))
                                  (filter directory? files)))))
-          (else '())))))
+          (else '())))
+
+  (define (string-split s #!optional (delim " \r\n"))
+    (define len (string-length s))
+    (let loop ((i 0)
+               (cur-word "")
+               (res '()))
+      (if (or (>= i len)
+              (eof-object? (string-ref s i)))
+          (reverse (cons cur-word res))
+          (let ((c (string-ref s i)))
+            (cond ((string-contains delim (string c))
+                   (if (string=? cur-word "")
+                       (loop (+ i 1)
+                             ""
+                             res)
+                       (loop (+ i 1)
+                             ""
+                             (cons cur-word res))))
+                  (else
+                   (loop (+ i 1)
+                         (string-append cur-word (string c))
+                         res)))))))
+
+  (define (condition->string exc)
+    (with-output-to-string (lambda ()
+                             (display-exception exc))))
+
+))

@@ -38,5 +38,6 @@
 
 #:use-module (lsp-server private adapter)
 #:use-module (lsp-server private file)
+#:use-module (lsp-server private diagnostics)
 
 #:declarative? #f)

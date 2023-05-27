@@ -29,7 +29,9 @@
 ;;; Note: These capabilities are joined to the implementation independent
 ;;; mandatory-capabilities (see server.scm).
 (define $server-capabilities
-  `((definitionProvider . ())))
+  `((definitionProvider . ())
+    (diagnosticsProvider . ((interFileDiagnostics . #t)
+                            (workspaceDiagnostics . #t)))))
 
 ;;; Return a socket listening on PORT-NUMBER at the localhost.
 (define ($tcp-listen port-number)
@@ -165,57 +167,66 @@
                       (interaction-environment))))
             (module-uses mod)))
 
+
 (define (compile-and-import-if-needed file-path)
   (guard
-   (condition
-    (else (write-log 'error (format "Can't compile file ~a: ~a"
-                                    file-path
-                                    condition))))
-   (let* ((mod-name (parse-library-name-from-file file-path))
-          (mod (if mod-name
-                   (resolve-module mod-name #t #:ensure #f)
-                   #f)))
-     (cond ((and mod-name (not mod))
-            (write-log 'debug
-             (format "compile-and-import-if-needed: compiling ~a and importing ~a"
-                     file-path
-                     mod-name))
-            (lsp-geiser-compile-file file-path)
-            (import-library-by-name mod-name))
-           ((and mod-name mod)
-            (write-log 'debug
-             (format "compile-and-import-if-needed: importing ~a" mod-name))
-            (import-library-by-name mod-name))
-           (else
-            (write-log 'debug
-             (format "compile-and-import-if-needed: ignoring file ~a" file-path))
-            #f)))))
+      (condition
+       (else (write-log 'warning (format "Can't compile file ~a: ~a"
+                                         file-path
+                                         condition))
+             #f
+             ))
+
+    (let* ((mod-name (parse-library-name-from-file file-path))
+           (mod (if mod-name
+                    (resolve-module mod-name #t #:ensure #f)
+                    #f)))
+      (cond ((and mod-name (not mod))
+             (write-log 'debug
+                        (format "compile-and-import-if-needed: compiling ~a and importing ~a"
+                                file-path
+                                mod-name))
+             (lsp-geiser-compile-file file-path)
+             (import-library-by-name mod-name))
+            ((and mod-name mod)
+             (write-log 'debug
+                        (format "compile-and-import-if-needed: importing ~a" mod-name))
+             (import-library-by-name mod-name))
+            (else
+             (write-log 'debug
+                        (format "compile-and-import-if-needed: ignoring file ~a" file-path))
+             #f)))))
 
 (define ($open-file! file-path text)
-  (compile-and-import-if-needed file-path)
+  (let* ((ldef (find-library-definition-file file-path))
+         (file-to-compile (or ldef file-path)))
+    (when (and ldef (not (string=? ldef file-path)))
+      (compile-and-import-if-needed ldef))
+    (compile-and-import-if-needed file-path))
+
   #f)
 
 (define ($save-file! file-path text)
   (define mod-name (parse-library-name-from-file file-path))
-  (if mod-name
-      (guard
-       (condition (#t
-                   (write-log 'error
-                    (format "$save-file: error reloading module ~a: ~a"
-                            mod-name
-                            condition))
-                   (raise-exception
-                    (make-json-rpc-custom-error
-                     'load-error
-                     (format "error loading/import file ~a" file-path)))))
-       (let ((mod (resolve-module mod-name #t #:ensure #f)))
-         (write-log 'debug (format "$save-file!: reloading ~a~%"
-                                   mod-name))
+  (guard
+      (condition
+       (else
+        (write-log 'warning
+                   (format "$save-file: error reloading module ~a: ~a"
+                           mod-name
+                           condition))
 
-         (reload-module mod)
-         (import-library-by-name mod-name)
-         #f))
-      (lsp-geiser-load-file file-path)))
+        #f))
+
+    (if mod-name
+        (let ((mod (resolve-module mod-name #t #:ensure #f)))
+          (write-log 'debug (format "$save-file!: reloading ~a~%"
+                                    mod-name))
+
+          (reload-module mod)
+          (import-library-by-name mod-name)
+          #f)
+        (load file-path))))
 
 
 (define (build-procedure-signature module name proc-obj)
@@ -276,3 +287,54 @@
 
 (define ($tcp-close conn)
   (close conn))
+
+(define (parse-compiler-output str)
+  (guard
+      (condition
+       (else #f))
+    (let ((fields (string-split str #\:)))
+      (if (> (length fields) 3)
+          (make-diagnostic "guile"
+                           (car fields)
+                           (- (string->number (cadr fields)) 1)
+                           (string->number (caddr fields))
+                           (string-join (drop fields 3)))
+          #f))))
+
+(define (externally-compile-file file-path proc)
+  ;; TODO: check return code
+  (let* ((ldef-path (find-library-definition-file file-path))
+         (path-to-compile (or ldef-path file-path))
+         (p (open-input-pipe
+             (format "guile --r7rs --no-auto-compile ~a 2>&1" path-to-compile))))
+    (write-log 'debug (format "externally-compile-file: compiled ~a"
+                              path-to-compile))
+    (let loop ((line (read-line p))
+               (diags '()))
+      (write-log 'debug (format "compile command line: ~a" line))
+      (cond ((eof-object? line)
+             (reverse diags))
+            ((proc line) => (lambda (diag)
+                              (loop (read-line p)
+                                    (cons diag diags))))
+            (else (loop (read-line p)
+                        diags))))))
+
+(define ($compute-diagnostics file-path)
+  (cond ((externally-compile-file file-path parse-compiler-output)
+           => (lambda (diags)
+                (write-log 'debug
+                           (format "diagnotics found: ~a"
+                                   diags))
+                (let ((matching-diags
+                       (filter (lambda (d)
+                                 (let ((fname (diagnostic-file-path d)))
+                                   (and fname
+                                        (string=? (get-absolute-pathname file-path)
+                                                  (get-absolute-pathname fname)))))
+                               diags)))
+                  matching-diags)))
+          (else
+           '())))
+
+

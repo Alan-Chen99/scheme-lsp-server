@@ -6,6 +6,7 @@
         read-text!
         update-file!
         free-file!
+        get-word-at-position
         get-word-under-cursor
         parse-change-contents
         apply-change
@@ -63,7 +64,6 @@
         (lsp-server private util)
         (lsp-server private document)
         (lsp-server private parse)
-        (lsp-server private compat)
         )
 
 (include "file-impl.scm"))

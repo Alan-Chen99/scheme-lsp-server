@@ -166,6 +166,10 @@
         (write-log 'info (format "File opened: ~a~%" file-path))
         (write-log 'warning (format "Invalid file-path. Params: ~a~%"
                                     params)))
+    (let ((diags ($compute-diagnostics file-path)))
+      (if (not (null? diags))
+          (send-diagnostics file-path diags)
+          (clear-diagnostics file-path)))
     #f))
 
 (define-handler (text-document/did-save params)
@@ -174,6 +178,10 @@
         (write-log 'info (format "File saved: ~a~%" file-path))
         (write-log 'warning (format "Invalid file-path. Params ~a~%"
                                     params)))
+    (let ((diags ($compute-diagnostics file-path)))
+      (if (not (null? diags))
+          (send-diagnostics file-path diags)
+          (clear-diagnostics file-path)))
     #f))
 
 (define-handler (text-document/completion params)
@@ -231,26 +239,22 @@
                    (split-module-name m)
                    mod-name))))
     (write-log 'debug (format "params: ~a" params))
-    (call/cc
-     (lambda (k)
-       (with-exception-handler
-        (lambda (condition)
-          (cond ((json-rpc-error? condition)
-                 (write-log 'error (format "Error resolving ~a ~a"
-                                           mod
-                                           id))
-                 (if (satisfies-log-level? 'debug)
-                     (raise (make-json-rpc-internal-error
-                             (format "Error resolving ~a ~a"
-                                     mod
-                                     id)))
-                     (k 'null)))
-                (else (raise condition))))
-        (lambda ()
-          (let ((doc (or ($fetch-documentation mod id)
-                         "")))
-            (cons `(documentation . ,doc)
-                  params))))))))
+    (guard
+        (condition
+         ((json-rpc-error? condition)
+          (write-log 'error (format "Error resolving ~a ~a"
+                                    mod
+                                    id))
+          (if (satisfies-log-level? 'debug)
+              (raise (make-json-rpc-internal-error
+                      (format "Error resolving ~a ~a"
+                              mod
+                              id)))
+              'null)))
+      (let ((doc (or ($fetch-documentation mod id)
+                     "")))
+        (cons `(documentation . ,doc)
+              params)))))
 
 (define (fetch-signature-under-cursor params)
   (let* ((editor-word
@@ -294,11 +298,11 @@
 (define-handler (custom/load-file params)
   (let ((file-path (get-uri-path params)))
     (write-log 'info (format "Loading file: ~a." file-path))
-    (with-exception-handler
-     (lambda (condition)
-       (write-log 'error (format "Error loading file: ~a."
-                                 file-path)))
-     (lambda () (load file-path)))
+    (guard
+        (condition
+         (else (write-log 'error (format "Error loading file: ~a."
+                                         file-path))))
+      (load file-path))
     #f))
 
 (define (parameterize-and-run out-port thunk)
@@ -317,6 +321,9 @@
         `(("initialize" . ,initialize-handler)
           ("initialized" . ,initialized-handler)
           ("textDocument/definition" . ,text-document/definition)
+          ("textDocument/diagnostic" . ,(lambda (p)
+                                          (write-log 'error "textDocument/diagnostic not implemented")
+                                          #f))
           ("textDocument/didChange" . ,text-document/did-change)
           ("workspace/didChangeConfiguration" . ,ignore-request)
           ("textDocument/didClose" . ,text-document/did-close)
@@ -347,33 +354,32 @@
 (define (lsp-server-start/tcp port-num)
   (parameterize (($tcp-read-timeout #f))
     (let ((listener ($tcp-listen port-num)))
-      (with-exception-handler
-       (lambda (condition)
-         (write-log 'error
+      (guard
+       (condition
+        (else (write-log 'error
                     (format "LSP-SERVER: JSON-RPC error: ~a"
                             condition))
-         (cond-expand (chicken (print-error-message condition))
-                      (else (display condition)))
-         (write-log 'info "Exiting.")
-         (raise condition))
-       (lambda ()
-         (let loop ()
-           (call-with-values (lambda () ($tcp-accept listener))
-             (lambda (in-port out-port)
-               (parameterize-and-run
-                out-port
-                (lambda ()
-                  (write-log 'info
-                             (format "listening on port ~a with log level ~a~%"
-                                     port-num
-                                     (json-rpc-log-level)))
-                  (cond ((eqv? (json-rpc-loop in-port out-port) 'json-rpc-exit)
-                         (close-input-port in-port)
-                         (close-output-port out-port)
-                         ($tcp-close listener))
-                        (else
-                         (write-log 'info "Accepted incoming request")
-                         (loop)))))))))))))
+              (cond-expand (chicken (print-error-message condition))
+                           (else (display condition)))
+              (write-log 'info "Exiting.")
+              (raise condition)))
+       (let loop ()
+         (call-with-values (lambda () ($tcp-accept listener))
+           (lambda (in-port out-port)
+             (parameterize-and-run
+              out-port
+              (lambda ()
+                (write-log 'info
+                           (format "listening on port ~a with log level ~a~%"
+                                   port-num
+                                   (json-rpc-log-level)))
+                (cond ((eqv? (json-rpc-loop in-port out-port) 'json-rpc-exit)
+                       (close-input-port in-port)
+                       (close-output-port out-port)
+                       ($tcp-close listener))
+                      (else
+                       (write-log 'info "Accepted incoming request")
+                       (loop))))))))))))
 
 (define (parameterize-log-levels thunk)
   (parameterize ((log-level (lsp-server-log-level))

@@ -1,6 +1,7 @@
 (define-library (lsp-server private compat)
 
 (export $apropos-list
+        $compute-diagnostics
         $open-file!
         $save-file!
         $fetch-documentation
@@ -17,6 +18,9 @@
 
 (import (lsp-server private util)
         (lsp-server private adapter)
+        (lsp-server private diagnostics)
+        (lsp-server private document)
+        (lsp-server private file)
         (lsp-server private parse)
         (json-rpc lolevel)
         (json-rpc))
@@ -60,12 +64,18 @@
  (gambit
   (import (rename (only (gambit)
                         apropos
+                        continuation-capture
+                        display-exception
+                        display-continuation-backtrace
                         eval
                         filter
                         load
                         module-search-order-add!
                         open-tcp-server
-                        with-exception-catcher)
+                        with-exception-catcher
+                        with-input-from-string
+                        with-output-to-file
+                        with-output-to-string)
                   (with-exception-catcher with-exception-handler))
           (except (scheme base)
                   with-exception-handler)
@@ -81,12 +91,14 @@
  (guile
   (import (only (scheme base)
                 define-record-type
+                let-values
                 read-line
                 guard)
           (geiser modules)
           (ice-9 documentation)
           (ice-9 ftw)
           (ice-9 optargs)
+          (ice-9 popen)
           (ice-9 session)
           (srfi 1)
           (only (srfi 13) string-join string-concatenate)

@@ -9,7 +9,7 @@ nobase_go_DATA = $(GOBJECTS)
 bin_SCRIPTS = $(EXECUTABLE)
 $(EXECUTABLE): lsp-server/main.scm
 	echo '#!/usr/bin/env sh' > $(EXECUTABLE)
-	echo 'exec guile --no-auto-compile -x ".scm" -e  main -s "$$0" "$$@"' >> $(EXECUTABLE)
+	echo 'exec guile --fresh-auto-compile -x ".scm" -e  main -s "$$0" "$$@"' >> $(EXECUTABLE)
 	echo '!#' >> $(EXECUTABLE)
 	echo >> $(EXECUTABLE)
 	cat lsp-server/main.scm >> $(EXECUTABLE)
@@ -37,6 +37,11 @@ lsp-server.scm: lsp-server.sld lsp-server-impl.scm
 	cat $< > $@
 	echo "" >> $@
 	cat lsp-server-impl.scm >> $@
+
+lsp-server/private/diagnostics.scm: lsp-server/private/diagnostics.sld lsp-server/private/diagnostics-impl.scm
+	cat $< > $@
+	echo "" >> $@
+	cat lsp-server/private/diagnostics-impl.scm >> $@
 
 lsp-server/private/compat.scm: lsp-server/private/compat.sld lsp-server/private/compat-guile-impl.scm
 	cat $< > $@
@@ -80,6 +85,7 @@ lsp-server/private/guile.scm: lsp-server/private/guile.sld lsp-server/private/gu
 
 distclean-local:
 	rm -Rf geiser/ \
+	       lsp-server/private/diagnostics.scm \
 	       lsp-server/private/compat.scm \
 	       lsp-server/private/guile.scm \
 	       lsp-server/private/util.scm    \

@@ -127,8 +127,8 @@
                                            egg
                                            identifier))
                         #f))
-                 (node-signature
-                  (lookup-node (list egg identifier)))))
+            (node-signature
+             (lookup-node (list egg identifier)))))
       ;;(lsp-geiser-signature identifier)
       (fetch-signature module identifier)))
 
@@ -235,4 +235,103 @@
 
 (define (spawn-repl-server port-num)
   (nrepl port-num))
+
+(define error-line-regex
+  (irregex '(: "Error: "
+               (submatch (+ any)))))
+
+(define in-file-regex
+  (irregex '(: (* whitespace)
+               "In file `"
+               (submatch (+ any))
+               #\')))
+
+(define on-line-regex
+  (irregex '(: (* whitespace)
+               "On line "
+               (submatch (+ num)))))
+
+(define (compile-and-collect-output file-path)
+  (with-input-from-pipe (format "~a -R r7rs -to-stdout ~a 2>&1 > /dev/null"
+                                (or (chicken-program-path)
+                                    "csc")
+                                file-path)
+                        (lambda ()
+                          (let loop ((line (read-line))
+                                     (res '()))
+                            (if (eof-object? line)
+                                (reverse res)
+                                (loop (read-line)
+                                      (cons line res)))))))
+
+(define (externally-compile-file file-path)
+  ;; TODO: check return code
+  (define ldef-path (find-library-definition-file file-path))
+  (define path-to-compile (or ldef-path file-path))
+  (define lines (compile-and-collect-output path-to-compile))
+  (write-log 'debug (format "externally-compile-file: compiled ~a"
+                            path-to-compile))
+  
+  (let loop ((rem lines)
+             (msg "")
+             (filename #f)
+             (diags '()))
+    (if (null? rem)
+        (reverse diags)
+        (let ((line (car rem)))
+          (cond
+           ((irregex-search error-line-regex line)
+            => (lambda (m)
+                 (loop (cdr rem)
+                       (irregex-match-substring m 1)
+                       filename
+                       diags)))
+           ((irregex-search in-file-regex line)
+            => (lambda (m)
+                 (loop (cdr rem)
+                       msg
+                       (irregex-match-substring m 1)
+                       diags)))
+           ((irregex-search on-line-regex line)
+            => (lambda (m)
+                 (let ((line-num
+                        (max (- (string->number
+                                 (irregex-match-substring m 1))
+                                1)
+                             0)))
+                   (loop (cdr rem)
+                         ""
+                         #f
+                         (cons (make-diagnostic "csc"
+                                                filename
+                                                line-num
+                                                0
+                                                msg)
+                               diags)))))
+           ((string=? line "")
+            (loop (cdr rem)
+                  msg
+                  filename
+                  diags))
+           (else
+            (loop (cdr rem)
+                  (string-append msg ": " line)
+                  filename
+                  diags)))))))
+
+(define ($compute-diagnostics file-path)
+  (define abs-file-path (get-absolute-pathname file-path))
+  (let ((diags (externally-compile-file file-path)))
+    (write-log 'debug (format "$compute-diagnostics ~a"
+                              diags))
+    (filter (lambda (d)
+              (write-log 'debug
+                         (format "comparing ~s with ~s~%"
+                                 (get-absolute-pathname
+                                  (diagnostic-file-path d))
+                                 abs-file-path))
+              (string=? (get-absolute-pathname
+                         (diagnostic-file-path d))
+                        abs-file-path))
+            diags)))
 

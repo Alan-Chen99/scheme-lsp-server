@@ -34,6 +34,8 @@
   "lsp-server/private/chicken.sld"
   "lsp-server/private/compat.sld"
   "lsp-server/private/compat-chicken-impl.scm"
+  "lsp-server/private/diagnostics-impl.scm"
+  "lsp-server/private/diagnostics.sld"
   "lsp-server/private/document-impl.scm"
   "lsp-server/private/document.sld"
   "lsp-server/private/parse-impl.scm"
@@ -73,6 +75,12 @@
              (source "lsp-server/private/util.sld")
              (source-dependencies "lsp-server/private/util-impl.scm")
              (component-dependencies lsp-server.private.chicken))
+  (extension lsp-server.private.diagnostics
+             (source "lsp-server/private/diagnostics.sld")
+             (source-dependencies "lsp-server/private/diagnostics-impl.scm")
+             (component-dependencies lsp-server.private.util
+                                     lsp-server.private.file
+                                     lsp-server.private.document))
   (extension lsp-server.private.adapter
              (source "lsp-server/private/adapter.sld")
              (source-dependencies "lsp-server/private/adapter-impl.scm")
@@ -84,6 +92,7 @@
              (source-dependencies "lsp-server/private/compat-chicken-impl.scm")
              (component-dependencies lsp-server.private.adapter
                                      lsp-server.private.chicken
+                                     lsp-server.private.diagnostics
                                      lsp-server.private.parse
                                      lsp-server.private.util))
   (extension lsp-server.private.document
@@ -99,7 +108,6 @@
              (source "lsp-server/private/file.sld")
              (source-dependencies "lsp-server/private/file-impl.scm")
              (component-dependencies lsp-server.private.chicken
-                                     lsp-server.private.compat
                                      lsp-server.private.document
                                      lsp-server.private.parse))
   (extension lsp-server
@@ -107,6 +115,7 @@
              (source-dependencies "lsp-server-impl.scm")
              (component-dependencies lsp-server.private.util
                                      lsp-server.private.compat
+                                     lsp-server.private.diagnostics
                                      lsp-server.private.file
                                      lsp-server.private.document
                                      lsp-server.private.parse))

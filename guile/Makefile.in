@@ -100,6 +100,7 @@ am__CONFIG_DISTCLEAN_FILES = config.status config.cache config.log \
  configure.lineno config.status.lineno
 mkinstalldirs = $(install_sh) -d
 CONFIG_CLEAN_FILES = lsp-server/private/util-impl.scm \
+	lsp-server/private/diagnostics-impl.scm \
 	lsp-server/private/document-impl.scm \
 	lsp-server/private/file-impl.scm lsp-server/main.scm \
 	lsp-server-impl.scm lsp-server/private/trie-impl.scm \
@@ -110,6 +111,7 @@ CONFIG_CLEAN_FILES = lsp-server/private/util-impl.scm \
 	geiser/utils.scm geiser/doc.scm geiser/completion.scm \
 	geiser/evaluation.scm geiser/xref.scm README.md
 CONFIG_CLEAN_VPATH_FILES = lsp-server/private/adapter.sld \
+	lsp-server/private/diagnostics.sld \
 	lsp-server/private/document.sld lsp-server/private/file.sld \
 	lsp-server/private/util.sld lsp-server/private/compat.sld \
 	lsp-server/private/guile.sld lsp-server/private/trie.sld \
@@ -195,6 +197,7 @@ am__DIST_COMMON = $(srcdir)/Makefile.in $(srcdir)/guile.am \
 	$(top_srcdir)/../lsp-server-impl.scm \
 	$(top_srcdir)/../lsp-server/private/adapter-impl.scm \
 	$(top_srcdir)/../lsp-server/private/compat-guile-impl.scm \
+	$(top_srcdir)/../lsp-server/private/diagnostics-impl.scm \
 	$(top_srcdir)/../lsp-server/private/document-impl.scm \
 	$(top_srcdir)/../lsp-server/private/file-impl.scm \
 	$(top_srcdir)/../lsp-server/private/guile-impl.scm \
@@ -205,6 +208,7 @@ am__DIST_COMMON = $(srcdir)/Makefile.in $(srcdir)/guile.am \
 	$(top_srcdir)/build-aux/missing \
 	$(top_srcdir)/lsp-server/private/adapter.sld \
 	$(top_srcdir)/lsp-server/private/compat.sld \
+	$(top_srcdir)/lsp-server/private/diagnostics.sld \
 	$(top_srcdir)/lsp-server/private/document.sld \
 	$(top_srcdir)/lsp-server/private/file.sld \
 	$(top_srcdir)/lsp-server/private/guile.sld \
@@ -344,6 +348,7 @@ DEPENDENCIES = \
 LIBRARY_DEFINITIONS = \
   lsp-server/private/util.sld  \
   lsp-server/private/guile.sld \
+  lsp-server/private/diagnostics.sld \
   lsp-server/private/trie.sld       \
   lsp-server/private/compat.sld \
   lsp-server/private/document.sld   \
@@ -356,6 +361,7 @@ SOURCES = \
   lsp-server-impl.scm    \
   lsp-server/private/util-impl.scm    \
   lsp-server/private/guile-impl.scm \
+  lsp-server/private/diagnostics-impl.scm   \
   lsp-server/private/trie-impl.scm       \
   lsp-server/private/compat-guile-impl.scm \
   lsp-server/private/document-impl.scm   \
@@ -856,7 +862,7 @@ uninstall-am: uninstall-binSCRIPTS uninstall-nobase_dist_modDATA \
 
 $(EXECUTABLE): lsp-server/main.scm
 	echo '#!/usr/bin/env sh' > $(EXECUTABLE)
-	echo 'exec guile --no-auto-compile -x ".scm" -e  main -s "$$0" "$$@"' >> $(EXECUTABLE)
+	echo 'exec guile --fresh-auto-compile -x ".scm" -e  main -s "$$0" "$$@"' >> $(EXECUTABLE)
 	echo '!#' >> $(EXECUTABLE)
 	echo >> $(EXECUTABLE)
 	cat lsp-server/main.scm >> $(EXECUTABLE)
@@ -870,6 +876,11 @@ lsp-server.scm: lsp-server.sld lsp-server-impl.scm
 	cat $< > $@
 	echo "" >> $@
 	cat lsp-server-impl.scm >> $@
+
+lsp-server/private/diagnostics.scm: lsp-server/private/diagnostics.sld lsp-server/private/diagnostics-impl.scm
+	cat $< > $@
+	echo "" >> $@
+	cat lsp-server/private/diagnostics-impl.scm >> $@
 
 lsp-server/private/compat.scm: lsp-server/private/compat.sld lsp-server/private/compat-guile-impl.scm
 	cat $< > $@
@@ -913,6 +924,7 @@ lsp-server/private/guile.scm: lsp-server/private/guile.sld lsp-server/private/gu
 
 distclean-local:
 	rm -Rf geiser/ \
+	       lsp-server/private/diagnostics.scm \
 	       lsp-server/private/compat.scm \
 	       lsp-server/private/guile.scm \
 	       lsp-server/private/util.scm    \
