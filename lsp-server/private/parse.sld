@@ -27,20 +27,24 @@
 (cond-expand
  (chicken (import (scheme base)
                   (scheme)
+                  (chicken condition)
                   (chicken irregex)
                   (chicken file)
+                  (chicken port)
                   (chicken file posix)
                   (only (chicken keyword) keyword?)
                   (lsp-server private chicken)))
- (gambit (import (except (scheme base) with-exception-handler)
+ (gambit (import (except (scheme base) guard with-exception-handler)
                  (rename (only (gambit)
                                caddr
                                file-exists?
                                file-last-modification-time
                                keyword?
                                path-extension
+                               r7rs-guard
                                time->seconds
                                with-exception-catcher)
+                         (r7rs-guard guard)
                          (with-exception-catcher with-exception-handler))
                  (github.com/ashinn/irregex)
                  (lsp-server private gambit)))
