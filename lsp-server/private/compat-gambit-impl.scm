@@ -101,10 +101,12 @@
           (json-rpc)
           (json-rpc private)
           (json-rpc lolevel)
-          (json-rpc gambit)
+          (json-rpc private compat)
           (lsp-server)
           (lsp-server private adapter)
+          (lsp-server private diagnostics)
           (lsp-server private document)
+          (lsp-server private file)
           (lsp-server private gambit)
           (lsp-server private compat)
           (lsp-server private parse)
@@ -146,7 +148,7 @@
          (file-to-compile (or ldef file-path)))
     (when (and ldef (not (string=? ldef file-path)))
       (generate-meta-data! ldef))
-    (compile-and-import-if-needed file-path))
+    (compile-and-import-if-needed file-to-compile))
   
   #f)
 

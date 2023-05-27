@@ -21,6 +21,7 @@
 
 (import (scheme base)
         (chicken base)
+        (chicken condition)
         (chicken file)
         (chicken foreign)
         (chicken irregex)
@@ -140,5 +141,9 @@
   (define (module-egg mod)
     (hash-table-ref/default module-egg-table
                             mod
-                            #f)))
+                            #f))
+
+  (define (condition->string exc)
+    (with-output-to-string
+      (lambda () (print-error-message exc)))))
 )

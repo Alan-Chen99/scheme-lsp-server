@@ -6,6 +6,7 @@
         create-directory
 
         absolute-pathname?
+        condition-string
         get-module-path
         pathname-directory
         pathname-base

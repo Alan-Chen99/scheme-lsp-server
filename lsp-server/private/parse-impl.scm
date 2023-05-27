@@ -490,7 +490,7 @@
      (with-exception-handler
       (lambda (condition)
         (write-log 'error (format "Read error: ~a~%"
-                                  condition))
+                                  (condition->string condition)))
         (k #f))
       (lambda ()
         (read))))))

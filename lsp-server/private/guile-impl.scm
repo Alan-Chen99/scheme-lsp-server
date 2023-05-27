@@ -127,6 +127,9 @@
                        (cons (car remaining)
                              result)))))))
 
+(define (condition->string exc)
+  (format "~a" exc))
+
 ;;;; irregex.scm -- IrRegular Expressions
 ;;
 ;; Copyright (c) 2005-2021 Alex Shinn.  All rights reserved.
