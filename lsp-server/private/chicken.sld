@@ -14,6 +14,7 @@
         pathname-base
         pathname-directory
         pathname-extension
+        pathname-strip-extension
         pathname-join
         uri-decode
         with-input-from-string)

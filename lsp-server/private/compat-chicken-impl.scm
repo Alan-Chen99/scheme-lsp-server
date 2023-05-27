@@ -266,7 +266,11 @@
 
 (define (externally-compile-file file-path)
   ;; TODO: check return code
-  (define lines (compile-and-collect-output file-path))
+  (define ldef-path (find-library-definition-file file-path))
+  (define path-to-compile (or ldef-path file-path))
+  (define lines (compile-and-collect-output path-to-compile))
+  (write-log 'debug (format "externally-compile-file: compiled ~a"
+                            path-to-compile))
   
   (let loop ((rem lines)
              (msg "")

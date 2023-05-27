@@ -19,6 +19,8 @@
         get-module-path
         find-files
         pathname-directory
+        pathname-base
+        pathname-strip-extension
         pathname-join
         string-split)
 
@@ -149,7 +151,11 @@
   (define (pathname-join . paths)
     (apply string-append (intersperse paths "/")))
 
-  (define pathname-directory path-directory)
+  (define pathname-directory ##path-directory)
+
+  (define pathname-base ##path-strip-directory)
+
+  (define pathname-strip-extension ##path-strip-extension)
 
   (define (directory? f)
     (and (file-exists? f)

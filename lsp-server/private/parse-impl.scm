@@ -525,6 +525,31 @@
                          (loop (read-protected)))))))
             #f))))))
 
+
+(define implementation-regex
+  (irregex '(: (submatch (+ any))
+               (or "-impl"
+                   "-implementation")
+               (or ".scm"
+                   ".sld"
+                   ".ss"))))
+
+(define (find-library-definition-file file-path)
+  (if (parse-library-name-from-file file-path)
+      file-path
+      (let ((without-ext (pathname-strip-extension file-path)))
+        (or (parse-library-name-from-file
+             (string-append without-ext ".sld"))
+            (let ((m (irregex-search implementation-regex
+                                     file-path)))
+              (and m
+                   (let ((base
+                          (irregex-match-substring m 1)))
+                     (find parse-library-name-from-file
+                           (list (string-append base ".sld")
+                                 (string-append base ".scm")
+                                 (string-append base ".ss"))))))))))
+
 (define (parse-file filename . args)
   (define (read-func)
     (let loop ((expr (read-protected))
@@ -550,30 +575,30 @@
   (call/cc
    (lambda (k)
      (with-exception-handler
-      (lambda (condition)
-        (write-log 'error
-                   (format "Cannot parse file ~a: ~a"
-                           filename
-                           condition))
-        (k #f))
-      (lambda ()
-        (let ((meta-data-without-location
-               (cond (text
-                      (with-input-from-string text read-func))
-                     ((file-exists? filename)
-                      (with-input-from-file filename read-func))
-                     (else
-                      (write-log 'warning
-                                 (format "File does not exist: ~a~%"
-                                         filename))
-                      #f))))
-          (and meta-data-without-location
-               (make-source-meta-data
-                (source-meta-data-library-name meta-data-without-location)
-                (collect-procedure-locations
-                 (source-meta-data-procedure-info-table meta-data-without-location)
-                 filename)
-                (source-meta-data-imports meta-data-without-location)))))))))
+         (lambda (condition)
+           (write-log 'error
+                      (format "Cannot parse file ~a: ~a"
+                              filename
+                              condition))
+           (k #f))
+       (lambda ()
+         (let ((meta-data-without-location
+                (cond (text
+                       (with-input-from-string text read-func))
+                      ((file-exists? filename)
+                       (with-input-from-file filename read-func))
+                      (else
+                       (write-log 'warning
+                                  (format "File does not exist: ~a~%"
+                                          filename))
+                       #f))))
+           (and meta-data-without-location
+                (make-source-meta-data
+                 (source-meta-data-library-name meta-data-without-location)
+                 (collect-procedure-locations
+                  (source-meta-data-procedure-info-table meta-data-without-location)
+                  filename)
+                 (source-meta-data-imports meta-data-without-location)))))))))
 
 (define (update-identifier-to-source-meta-data-table! source-path meta-data)
   (hash-table-walk

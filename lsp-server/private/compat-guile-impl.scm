@@ -299,8 +299,12 @@
 
 (define (externally-compile-file file-path proc)
   ;; TODO: check return code
-  (let ((p (open-input-pipe
-            (format "guile --r7rs --no-auto-compile ~a 2>&1" file-path))))
+  (let* ((ldef-path (find-library-definition-file file-path))
+         (path-to-compile (or ldef-path file-path))
+         (p (open-input-pipe
+             (format "guile --r7rs --no-auto-compile ~a 2>&1" path-to-compile))))
+    (write-log 'debug (format "externally-compile-file: compiled ~a"
+                              path-to-compile))
     (let loop ((line (read-line p))
                (diags '()))
       (write-log 'debug (format "compile command line: ~a" line))

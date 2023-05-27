@@ -3,14 +3,16 @@
 
   ;;; Ignored for now
 (define $tcp-read-timeout (make-parameter #f))
+(define root-path (make-parameter #f))
 
-(define ($initialize-lsp-server! root-path)
+(define ($initialize-lsp-server! r-path)
+  (root-path r-path)
   (write-log 'info
              (format "initializing LSP server with root ~a"
-                     root-path))
-  (module-search-order-add! root-path)
+                     r-path))
+  (module-search-order-add! r-path)
   ;; Disabled for now, since too slow on large projects (ex. gambit itself)
-  ;;(generate-meta-data! root-path)
+  ;;(generate-meta-data! r-path)
   #f)
 
 (define $server-capabilities
@@ -236,8 +238,16 @@
 
 (define (externally-compile-file file-path proc)
   ;; TODO: check return code
-  (let ((p (##open-input-process (list path: "gsi"
-                                       arguments: (list file-path)))))
+  (let* ((search-path (if (root-path)
+                          (format "-:search=~a" (root-path))
+                          "."))
+         (ldef-path (find-library-definition-file file-path))
+         (path-to-compile (or ldef-path file-path))
+         (p (##open-input-process (list path: "gsi"
+                                        arguments: (list search-path
+                                                         path-to-compile)))))
+    (write-log 'debug (format "externally-compile-file: compiled ~a"
+                              path-to-compile))
     (let loop ((line (read-line p))
                (diags '()))
       (write-log 'debug (format "compile command line: ~a" line))

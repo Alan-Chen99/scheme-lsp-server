@@ -7,6 +7,7 @@
           file-already-parsed?
           list-completions
           parse-file
+          find-library-definition-file
           parse-library-name-from-file
           source-meta-data-imports)
 
