@@ -347,11 +347,12 @@
           '()))
         ((or (include-form? expr)
              (load-form? expr))
-         (when (and (not (null? (cdr expr)))
-                    (string? (cadr expr)))
-           (generate-meta-data!
-            (pathname-join (parse-context-directory context)
-                           (cadr expr))))
+         ;; (when (and (not (null? (cdr expr)))
+         ;;            (string? (cadr expr)))
+         ;;   (generate-meta-data!
+         ;;    (pathname-join (parse-context-directory context)
+         ;;                   (cadr expr))))
+         
          #f)
         (else #f)))
 
@@ -634,7 +635,7 @@
                                          (error-object-message condition))
                                         (else
                                          condition))))
-               (raise condition)))
+               #f))
      (let ((meta-data (parse-file abs-source-path)))
        (when meta-data
          (update-identifier-to-source-meta-data-table! abs-source-path meta-data)
@@ -743,8 +744,9 @@
                             (source-path-timestamps)
                             abs-filename
                             #f)))
-      (when (or (not old-time-stamp)
-                (> mtime old-time-stamp))
+      (when (and (not (symbolic-link? abs-filename))
+                 (or (not old-time-stamp)
+                     (> mtime old-time-stamp)))
         (hash-table-set! (source-path-timestamps)
                          abs-filename
                          mtime)
@@ -754,7 +756,7 @@
                (format "generate-meta-data! for files ~a" files))
     (for-each
      (lambda (f)
-       (when (file-exists? f)
+       (when (and (file-exists? f) (not (symbolic-link? f)))
          (guard
              (condition
               (else
@@ -766,12 +768,14 @@
                                     (with-output-to-string
                                       (lambda ()
                                         (print-error-message condition))))
-                                   (else condition))))))
+                                   (else condition))))
+               #f))
           (cond ((directory? f)
                  (write-log 'debug (format "generate-meta-data!: processing directory ~a" f))
                  (let ((files
                         (find-files f
-                                    #:test chicken-relevant-scheme-file-regex)))
+                                    #:test chicken-relevant-scheme-file-regex
+                                    #:follow-symlinks #f)))
                    (for-each
                     (lambda (filename)
                       (write-log 'debug

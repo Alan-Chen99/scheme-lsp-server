@@ -127,8 +127,8 @@
                                            egg
                                            identifier))
                         #f))
-                 (node-signature
-                  (lookup-node (list egg identifier)))))
+            (node-signature
+             (lookup-node (list egg identifier)))))
       ;;(lsp-geiser-signature identifier)
       (fetch-signature module identifier)))
 
