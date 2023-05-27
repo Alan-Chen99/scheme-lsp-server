@@ -206,6 +206,16 @@ Run `guile-lsp-server --help` for more information.
 <td class="org-left">X</td>
 </tr>
 </tbody>
+
+<tbody>
+<tr>
+<td class="org-left">Diagnostics</td>
+<td class="org-left">X</td>
+<td class="org-left">X</td>
+<td class="org-left">X</td>
+</tr>
+</tbody>
+
 </table>
 
 ## <a name="user-content-specific-implementations"></a>Notes to specific implementations
