@@ -248,7 +248,7 @@
   (let* ((ldef-path (find-library-definition-file file-path))
          (path-to-compile (or ldef-path file-path))
          (p (##open-input-process (list path: "gsi"
-                                        arguments: (list "-:search=~a"
+                                        arguments: (list "-:search=."
                                                          path-to-compile)))))
     (write-log 'debug (format "externally-compile-file: compiled ~a"
                               path-to-compile))

@@ -162,17 +162,17 @@
 
 (define-handler (text-document/did-open params)
   (let ((file-path (apply-file-operation params $open-file!)))
-    (if file-path
-        (write-log 'info (format "File opened: ~a~%" file-path))
-        (write-log 'warning (format "Invalid file-path. Params: ~a~%"
-                                    params)))
-    (thread-start!
-     (make-thread (lambda ()
-                    (let ((diags ($compute-diagnostics file-path)))
-                      (if (not (null? diags))
-                          (send-diagnostics file-path diags)
-                          (clear-diagnostics file-path))))))
-    
+    (cond (file-path
+           (write-log 'info (format "File opened: ~a~%" file-path))
+           (thread-start!
+            (make-thread (lambda ()
+                           (let ((diags ($compute-diagnostics file-path)))
+                             (if (not (null? diags))
+                                 (send-diagnostics file-path diags)
+                                 (clear-diagnostics file-path)))))))
+          (else
+           (write-log 'warning (format "Invalid file-path. Params: ~a~%"
+                                       params))))
     #f))
 
 (define-handler (text-document/did-save params)
