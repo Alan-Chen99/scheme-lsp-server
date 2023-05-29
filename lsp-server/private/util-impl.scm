@@ -123,10 +123,10 @@
   (let ((msg-type (+ (get-log-level target-level) 1)))
     (when (satisfies-log-level? target-level)
       (json-rpc-send-notification
-       (server-out-port)
        "window/logMessage"
        `((message . ,msg)
-         (type . ,msg-type))))))
+         (type . ,msg-type))
+       (server-out-port)))))
 
 (define (stringify elem)
   (format "~a" elem))

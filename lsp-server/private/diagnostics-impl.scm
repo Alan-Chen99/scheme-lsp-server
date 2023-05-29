@@ -9,10 +9,10 @@
 
 (define (clear-diagnostics file-path)
   (json-rpc-send-notification
-   (server-out-port)
    "textDocument/publishDiagnostics"
    `((uri . ,file-path)
-     (diagnostics . #()))))
+     (diagnostics . #()))
+   (server-out-port)))
 
 (define (alist->diagnostic alist)
   (make-diagnostic #f
@@ -60,9 +60,9 @@
               diags)))
     (when (not (null? diags-as-lists))
       (json-rpc-send-notification
-       (server-out-port)
        "textDocument/publishDiagnostics"
        `((uri . ,file-path)
-         (diagnostics . ,(list->vector diags-as-lists))))))
+         (diagnostics . ,(list->vector diags-as-lists)))
+       (server-out-port))))
   #f)
 
