@@ -245,13 +245,10 @@
 
 (define (externally-compile-file file-path proc)
   ;; TODO: check return code
-  (let* ((search-path (if (root-path)
-                          (format "-:search=~a" (root-path))
-                          "."))
-         (ldef-path (find-library-definition-file file-path))
+  (let* ((ldef-path (find-library-definition-file file-path))
          (path-to-compile (or ldef-path file-path))
          (p (##open-input-process (list path: "gsi"
-                                        arguments: (list search-path
+                                        arguments: (list "-:search=~a"
                                                          path-to-compile)))))
     (write-log 'debug (format "externally-compile-file: compiled ~a"
                               path-to-compile))
