@@ -293,12 +293,15 @@
       (condition
        (else #f))
     (let ((fields (string-split str #\:)))
-      (if (> (length fields) 3)
-          (make-diagnostic "guile"
-                           (car fields)
-                           (- (string->number (cadr fields)) 1)
-                           (string->number (caddr fields))
-                           (string-join (drop fields 3)))
+      (if (> (length fields) 4)
+          (let ((msg-type (string-trim (list-ref fields 3))))
+            (and (or (string=? msg-type "warning")
+                     (string=? msg-type "error"))
+                 (make-diagnostic "guile"
+                                  (car fields)
+                                  (- (string->number (list-ref fields 1)) 1)
+                                  (string->number (list-ref fields 2))
+                                  (string-join (drop fields 3) ": "))))
           #f))))
 
 (define (externally-compile-file file-path proc)
@@ -306,7 +309,7 @@
   (let* ((ldef-path (find-library-definition-file file-path))
          (path-to-compile (or ldef-path file-path))
          (p (open-input-pipe
-             (format "guile --r7rs --no-auto-compile ~a 2>&1" path-to-compile))))
+             (format "/usr/bin/env guild compile ~a 2>&1" path-to-compile))))
     (write-log 'debug (format "externally-compile-file: compiled ~a"
                               path-to-compile))
     (let loop ((line (read-line p))
