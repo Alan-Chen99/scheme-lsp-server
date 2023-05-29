@@ -5,6 +5,7 @@
         alist-ref/default
         build-module-egg-table
         chicken-program-path
+        condition->string
         current-directory
         get-module-path
         module-egg
@@ -27,7 +28,7 @@
         (chicken irregex)
         (chicken pathname)
         (chicken platform)
-        (only (chicken port) with-input-from-string)
+        (only (chicken port) with-input-from-string with-output-to-string)
         (chicken process)
         (chicken process-context)
         (chicken tcp)
