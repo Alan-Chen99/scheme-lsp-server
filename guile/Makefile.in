@@ -936,7 +936,7 @@ distclean-local:
 	       main.scm
 
 .scm.go:
-	$(PREFIX) $(GUILE_TOOLS) compile $(GUILE_WARNINGS) -x ".scm" -O0 --r7rs -o "$@" "$<"
+	$(PREFIX) $(GUILE_TOOLS) compile $(GUILE_WARNINGS) -x ".scm" --r7rs -o "$@" "$<"
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.

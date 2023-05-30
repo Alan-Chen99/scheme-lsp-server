@@ -309,7 +309,7 @@
   (let* ((ldef-path (find-library-definition-file file-path))
          (path-to-compile (or ldef-path file-path))
          (p (open-input-pipe
-             (format "/usr/bin/env guild compile ~a 2>&1" path-to-compile))))
+             (format "/usr/bin/env guild compile --r7rs -L . ~a 2>&1" path-to-compile))))
     (write-log 'debug (format "externally-compile-file: compiled ~a"
                               path-to-compile))
     (let loop ((line (read-line p))

@@ -69,20 +69,22 @@
 (define absolute-pathname? absolute-file-name?)
 
 (define (get-absolute-pathname path)
-  (define base-path
-    (find (lambda (load-path)
-            (file-exists? (string-append load-path "/" path)))
-          %load-path))
-  (guard
-   (condition
-    (#t (write-log 'error
-                   (format "error getting absolute path of ~s: ~a"
-                           path
-                           condition))
-        #f))
-   (if base-path
-      (canonicalize-path (string-append base-path "/" path))
-      #f)))
+  (if (absolute-file-name? path)
+      path
+      (let ((base-path
+             (find (lambda (load-path)
+                     (file-exists? (string-append load-path "/" path)))
+                   %load-path)))
+        (guard
+            (condition
+             (#t (write-log 'error
+                            (format "error getting absolute path of ~s: ~a"
+                                    path
+                                    condition))
+                 #f))
+          (if base-path
+              (canonicalize-path (string-append base-path "/" path))
+              #f)))))
 
 (define (hash-table-join! ht other-ht)
   (hash-table-fold

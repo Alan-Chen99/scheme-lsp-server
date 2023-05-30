@@ -97,4 +97,4 @@ distclean-local:
 	       main.scm
 
 .scm.go:
-	$(PREFIX) $(GUILE_TOOLS) compile $(GUILE_WARNINGS) -x ".scm" -O0 --r7rs -o "$@" "$<"
+	$(PREFIX) $(GUILE_TOOLS) compile $(GUILE_WARNINGS) -x ".scm" --r7rs -o "$@" "$<"
