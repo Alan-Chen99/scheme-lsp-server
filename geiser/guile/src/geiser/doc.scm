@@ -9,7 +9,7 @@
 
 ;; Start date: Sun Feb 08, 2009 18:44
 
-(define-module (geiser doc)
+(define-module (lsp-server geiser doc)
   #:export (autodoc
             symbol-documentation
             module-exports

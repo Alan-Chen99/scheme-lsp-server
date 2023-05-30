@@ -9,7 +9,7 @@
 
 ;; Start date: Sun Feb 08, 2009 18:39
 
-(define-module (geiser emacs)
+(define-module (lsp-server geiser emacs)
   #:use-module (ice-9 match)
   #:use-module (system repl command)
   #:use-module (system repl error-handling)

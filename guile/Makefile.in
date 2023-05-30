@@ -107,9 +107,11 @@ CONFIG_CLEAN_FILES = lsp-server/private/util-impl.scm \
 	lsp-server/private/adapter-impl.scm \
 	lsp-server/private/parse-impl.scm \
 	lsp-server/private/compat-guile-impl.scm \
-	lsp-server/private/guile-impl.scm geiser/modules.scm \
-	geiser/utils.scm geiser/doc.scm geiser/completion.scm \
-	geiser/evaluation.scm geiser/xref.scm README.md
+	lsp-server/private/guile-impl.scm \
+	lsp-server/geiser/modules.scm lsp-server/geiser/utils.scm \
+	lsp-server/geiser/doc.scm lsp-server/geiser/completion.scm \
+	lsp-server/geiser/evaluation.scm lsp-server/geiser/xref.scm \
+	README.md
 CONFIG_CLEAN_VPATH_FILES = lsp-server/private/adapter.sld \
 	lsp-server/private/diagnostics.sld \
 	lsp-server/private/document.sld lsp-server/private/file.sld \
@@ -338,12 +340,12 @@ PREFIX = $(AM_V_GEN)GUILE_LOAD_COMPILED_PATH="@abs_top_builddir@/:$(GUILE_LOAD_C
       GUILE_LOAD_PATH="@abs_top_builddir@/:@abs_top_srcdir@/:$(GUILE_LOAD_PATH)"
 
 DEPENDENCIES = \
-  geiser/utils.scm          \
-  geiser/modules.scm        \
-  geiser/completion.scm     \
-  geiser/doc.scm            \
-  geiser/evaluation.scm     \
-  geiser/xref.scm
+  lsp-server/geiser/utils.scm          \
+  lsp-server/geiser/modules.scm        \
+  lsp-server/geiser/completion.scm     \
+  lsp-server/geiser/doc.scm            \
+  lsp-server/geiser/evaluation.scm     \
+  lsp-server/geiser/xref.scm
 
 LIBRARY_DEFINITIONS = \
   lsp-server/private/util.sld  \
@@ -924,6 +926,7 @@ lsp-server/private/guile.scm: lsp-server/private/guile.sld lsp-server/private/gu
 
 distclean-local:
 	rm -Rf geiser/ \
+               lsp-server/geiser/ \
 	       lsp-server/private/diagnostics.scm \
 	       lsp-server/private/compat.scm \
 	       lsp-server/private/guile.scm \

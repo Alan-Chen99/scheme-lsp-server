@@ -26,7 +26,7 @@
               #:select (string-join string-concatenate))
 #:use-module (srfi srfi-28)
 #:use-module (srfi srfi-69)
-#:use-module (geiser modules)
+#:use-module (lsp-server geiser modules)
 #:use-module (ice-9 documentation)
 #:use-module (ice-9 ftw)
 #:use-module (ice-9 optargs)

@@ -11,7 +11,7 @@
 
 (cond-expand
   (guile-2.2
-   (define-module (geiser evaluation)
+   (define-module (lsp-server geiser evaluation)
      #:export (ge:compile
                ge:eval
                ge:macroexpand
@@ -30,7 +30,7 @@
      #:use-module (ice-9 textual-ports)
      #:use-module (system vm loader)))
   (else
-   (define-module (geiser evaluation)
+   (define-module (lsp-server geiser evaluation)
      #:export (ge:compile
                ge:eval
                ge:macroexpand

@@ -94,7 +94,7 @@
                 let-values
                 read-line
                 guard)
-          (geiser modules)
+          (lsp-server geiser modules)
           (ice-9 documentation)
           (ice-9 ftw)
           (ice-9 optargs)

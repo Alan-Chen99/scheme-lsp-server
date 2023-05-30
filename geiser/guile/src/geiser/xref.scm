@@ -9,7 +9,7 @@
 
 ;; Start date: Mon Mar 02, 2009 02:37
 
-(define-module (geiser xref)
+(define-module (lsp-server geiser xref)
   #:export (symbol-location
             generic-methods
             callers

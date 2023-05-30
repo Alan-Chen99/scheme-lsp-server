@@ -9,7 +9,7 @@
 
 ;; Start date: Mon Mar 02, 2009 01:48
 
-(define-module (geiser utils)
+(define-module (lsp-server geiser utils)
   #:export (make-location
             symbol->object
             pair->list

@@ -1,12 +1,12 @@
 include guile.am
 
 DEPENDENCIES =    \
-  geiser/utils.scm          \
-  geiser/modules.scm        \
-  geiser/completion.scm     \
-  geiser/doc.scm            \
-  geiser/evaluation.scm     \
-  geiser/xref.scm
+  lsp-server/geiser/utils.scm          \
+  lsp-server/geiser/modules.scm        \
+  lsp-server/geiser/completion.scm     \
+  lsp-server/geiser/doc.scm            \
+  lsp-server/geiser/evaluation.scm     \
+  lsp-server/geiser/xref.scm
 
 LIBRARY_DEFINITIONS = \
   lsp-server/private/util.sld  \

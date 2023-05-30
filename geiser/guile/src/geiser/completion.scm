@@ -9,7 +9,7 @@
 
 ;; Start date: Mon Mar 02, 2009 02:22
 
-(define-module (geiser completion)
+(define-module (lsp-server geiser completion)
   #:export (completions module-completions)
   #:use-module (geiser utils)
   #:use-module (geiser modules)

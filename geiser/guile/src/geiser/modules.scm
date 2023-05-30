@@ -9,7 +9,7 @@
 
 ;; Start date: Mon Mar 02, 2009 02:00
 
-(define-module (geiser modules)
+(define-module (lsp-server geiser modules)
   #:export (symbol-module
             program-module
             module-name?
