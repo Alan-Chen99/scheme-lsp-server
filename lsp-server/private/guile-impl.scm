@@ -73,7 +73,9 @@
       path
       (let ((base-path
              (find (lambda (load-path)
-                     (file-exists? (string-append load-path "/" path)))
+                     (file-exists? (string-append load-path
+                                                  file-name-separator-string
+                                                  path)))
                    %load-path)))
         (guard
             (condition
@@ -83,7 +85,9 @@
                                     condition))
                  #f))
           (if base-path
-              (canonicalize-path (string-append base-path "/" path))
+              (canonicalize-path (string-append base-path
+                                                file-name-separator-string
+                                                path))
               #f)))))
 
 (define (hash-table-join! ht other-ht)
