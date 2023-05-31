@@ -926,7 +926,7 @@ lsp-server/private/guile.scm: lsp-server/private/guile.sld lsp-server/private/gu
 
 distclean-local:
 	rm -Rf geiser/ \
-               lsp-server/geiser/ \
+	       lsp-server/geiser/ \
 	       lsp-server/private/diagnostics.scm \
 	       lsp-server/private/compat.scm \
 	       lsp-server/private/guile.scm \

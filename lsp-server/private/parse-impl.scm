@@ -9,21 +9,26 @@
   (docstring procedure-info-docstring))
 
 (define-record-type <source-meta-data>
-  (make-source-meta-data library-name procedure-info-table imports)
+  (make-source-meta-data library-name library-definition-variant procedure-info-table imports)
   source-meta-data?
   (library-name source-meta-data-library-name set-source-meta-data-library-name!)
+  (library-definition-variant source-meta-data-library-definition-variant set-source-meta-data-library-definition-variant!)
   (procedure-info-table source-meta-data-procedure-info-table)
   (imports source-meta-data-imports))
 
 (define-record-type <parse-context>
-  (make-parse-context directory library-name)
+  (make-parse-context directory library-name library-definition-variant)
   parse-context?
   (directory parse-context-directory)
-  (library-name parse-context-library-name))
+  (library-name parse-context-library-name)
+  (library-definition-variant parse-context-library-definition-variant))
 
 ;;;; Parameters
 
 (define identifier-to-source-meta-data-table
+  (make-parameter (make-hash-table)))
+
+(define file-meta-data-table
   (make-parameter (make-hash-table)))
 
 (define source-path-timestamps
@@ -71,6 +76,13 @@
    (guile (or (r6rs-library-definition-form? expr)
               (r7rs-library-definition-form? expr)
               (guile-library-definition-form? expr)))))
+
+(define (library-definition-variant expr)
+  (cond ((r7rs-library-definition-form? expr) 'r7rs)
+        ((r6rs-library-definition-form? expr) 'r6rs)
+        ((chicken-library-definition-form? expr) 'chicken)
+        ((guile-library-definition-form? expr) 'guile)
+        (else (error "invalid library definition"))))
 
 (define (import-form? expr)
   (or (tagged-expression? expr 'import)
@@ -232,6 +244,7 @@
                (imports '()))
       (cond ((null? expr)
              (make-source-meta-data mod-name
+                                    'guile
                                     (make-hash-table)
                                     (reverse imports)))
             ((keyword? (car expr))
@@ -282,7 +295,8 @@
                                                   (make-parse-context
                                                    (parse-context-directory
                                                     context)
-                                                   mod-name))))
+                                                   mod-name
+                                                   (library-definition-variant expr)))))
                            (if sub-meta-data
                                (cons sub-meta-data acc)
                                acc)))
@@ -290,6 +304,7 @@
                        (cddr expr))))
            (make-source-meta-data
             mod-name
+            (library-definition-variant expr)
             (fold (lambda (sub-ht acc)
                     (hash-table-join! acc sub-ht))
                   (make-hash-table)
@@ -309,6 +324,7 @@
                       (cdr expr))))
            (make-source-meta-data
             (parse-context-library-name context)
+            (library-definition-variant expr)
             (fold (lambda (sub-ht acc)
                     (hash-table-join! acc sub-ht))
                   (make-hash-table)
@@ -323,17 +339,20 @@
            (if subform-meta-data
                (make-source-meta-data
                 (parse-context-library-name context)
+                (parse-context-library-definition-variant expr)
                 (source-meta-data-procedure-info-table subform-meta-data)
                 (source-meta-data-imports subform-meta-data))
                #f)))
         ((import-form? expr)
          (make-source-meta-data
           (parse-context-library-name context)
+          (parse-context-library-definition-variant context)
           (make-hash-table)
           (map parse-r7rs-import-set (cdr expr))))
         ((procedure-definition-form? expr)
          (make-source-meta-data
           (parse-context-library-name context)
+          (parse-context-library-definition-variant context)
           (let ((proc-name (procedure-definition-name expr)))
             (alist->hash-table
              `((,proc-name .
@@ -361,21 +380,19 @@
                           (cdr expr)))))
 
 (define (merge-meta-data lst)
-  (define mod-name #f)
   (define merged
     (fold (lambda (m acc)
-            (let ((mod-name-found (source-meta-data-library-name m)))
-              (when mod-name-found
-                (set! mod-name mod-name-found)))
-            (make-source-meta-data #f
+            (make-source-meta-data (or (source-meta-data-library-name acc)
+                                       (source-meta-data-library-name m))
+                                   (or (source-meta-data-library-definition-variant acc)
+                                       (source-meta-data-library-definition-variant m))
                                    (hash-table-join!
                                     (source-meta-data-procedure-info-table m)
                                     (source-meta-data-procedure-info-table acc))
                                    (append (source-meta-data-imports m)
                                            (source-meta-data-imports acc))))
-          (make-source-meta-data #f (make-hash-table) '())
+          (make-source-meta-data #f #f (make-hash-table) '())
           lst))
-  (set-source-meta-data-library-name! merged mod-name)
   merged)
 
 (define (print-meta-data meta-data)
@@ -386,7 +403,7 @@
                      (lambda (pname pinfo)
                        (write-log 'debug (format "\t~s" pname))))))
 
-(define (print-source-meta-data-table)
+(define (print-identifier-source-meta-data-table)
   (hash-table-walk
    (identifier-to-source-meta-data-table)
    (lambda (identifier source-meta-data-table)
@@ -527,6 +544,7 @@
             #f))))))
 
 
+
 (define implementation-regex
   (irregex '(: (submatch (+ any))
                (or "-impl"
@@ -564,6 +582,7 @@
             (else
              (let ((sub-meta-data (parse-expression expr (make-parse-context
                                                           (pathname-directory filename)
+                                                          #f
                                                           #f))))
                (if sub-meta-data
                    (loop (read-protected)
@@ -597,6 +616,7 @@
            (and meta-data-without-location
                 (make-source-meta-data
                  (source-meta-data-library-name meta-data-without-location)
+                 (source-meta-data-library-definition-variant meta-data-without-location)
                  (collect-procedure-locations
                   (source-meta-data-procedure-info-table meta-data-without-location)
                   filename)
@@ -639,6 +659,9 @@
                #f))
      (let ((meta-data (parse-file abs-source-path)))
        (when meta-data
+         (hash-table-set! (file-meta-data-table)
+                          abs-source-path
+                          meta-data)
          (update-identifier-to-source-meta-data-table! abs-source-path meta-data)
          (write-log 'debug (format "parse-and-update-table! imports: ~a~%"
                                    (source-meta-data-imports meta-data)))
@@ -923,18 +946,6 @@
                        (alist-ref 'character alist)
                        (alist-ref 'docstring alist)))
 
-(define (source-meta-data->alist* meta-data)
-  `((procedure-info-table . ,(map procedure-info->alist
-                             (source-meta-data-procedure-info-table
-                              meta-data)))
-    (import . ,(source-meta-data-imports meta-data))))
-
-(define (alist->source-meta-data alist)
-  (make-source-meta-data (alist-ref 'library-name alist)
-                         (map alist->procedure-info
-                                 (alist-ref 'procedure-info-table alist))
-                         (alist-ref 'imports alist)))
-
 (define (procedure-info-table->alist* pinfo-table)
   (hash-table-fold pinfo-table
                    (lambda (k v acc)
@@ -949,22 +960,21 @@
                 (alist->procedure-info (cdr p))))
         alist)))
 
-;; (define (serialize-source-meta-data-table)
-;;   (hash-table-walk
-;;    (identifier-to-source-meta-data-table)
-;;    (lambda (k v)
-;;      )))
 
-(define (identifier-to-source-meta-data-table->alist* table)
-  (hash-table-fold table
-                   (lambda (k v acc)
-                     (cons (cons k (source-meta-data->alist* v))
-                           acc))
-                   '()))
+;; If FILE-PATH has a library info, return a pair (variant . name),
+;; where variant is one of the symbols 'r7rs, 'chicken, 'gambit, 'guile
+;; and name is a symbol defining the library name, e.g. '(scheme base).
+(define (file-library-info file-path)
+  (let ((md (hash-table-ref/default (file-meta-data-table)
+                                    (get-absolute-pathname file-path)
+                                    #f)))
+    (if md
+        (cons (source-meta-data-library-name md)
+              (source-meta-data-library-definition-variant md))
+        #f)))
 
-(define (alist->identifier-to-source-meta-data-table alist)
-  (alist->hash-table
-   (map (lambda (p)
-          (cons (car p)
-                (alist->source-meta-data (cdr p))))
-        alist)))
+(define (file-library-name file-path)
+  (let ((linfo (file-library-info file-path)))
+    (if linfo
+        (cdr linfo)
+        #f)))

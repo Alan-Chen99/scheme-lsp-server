@@ -71,7 +71,7 @@
   (let* ((editor-word (get-word-under-cursor params))
          (file-path (get-uri-path params))
          (mod-name (and file-path
-                        (parse-library-name-from-file file-path))))
+                        (file-library-name file-path))))
     (if editor-word
         (let* ((word-text (editor-word-text editor-word))
                (def-locs ($get-definition-locations mod-name
@@ -197,7 +197,7 @@
          (editor-word (get-word-under-cursor params))
          (file-path (get-uri-path params))
          (mod-name (and file-path
-                        (parse-library-name-from-file file-path))))
+                        (file-library-name file-path))))
     (if (or (not editor-word)
             (< (string-length (editor-word-text editor-word))
                1))
@@ -240,7 +240,7 @@
              (alist-ref* '(data identifier) params)))
         (file-path (get-uri-path params))
         (mod-name (and file-path
-                       (parse-library-name-from-file file-path)))
+                       (file-library-name file-path)))
         (mod (let ((m (alist-ref* '(data module) params)))
                (if m
                    (split-module-name m)
@@ -268,7 +268,7 @@
           (get-word-under-cursor params))
          (file-path (get-uri-path params))
          (mod-name (and file-path
-                        (parse-library-name-from-file file-path))))
+                        (file-library-name file-path))))
 
     (if (and editor-word (not (string=? (editor-word-text editor-word)
                                         "")))

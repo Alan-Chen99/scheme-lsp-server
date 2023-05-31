@@ -7,6 +7,8 @@
         file-already-parsed?
         list-completions
         parse-file
+        file-library-info
+        file-library-name
         find-library-definition-file
         parse-library-name-from-file
         source-meta-data-imports
@@ -49,6 +51,7 @@
                  (github.com/ashinn/irregex)
                  (lsp-server private gambit)))
  (guile (import (only (scheme base)
+                      define
                       define-record-type
                       error-object?
                       error-object-message
