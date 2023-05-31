@@ -14,11 +14,11 @@
   #:use-module (system repl command)
   #:use-module (system repl error-handling)
   #:use-module (system repl server)
-  #:use-module (geiser evaluation)
-  #:use-module ((geiser modules) #:renamer (symbol-prefix-proc 'ge:))
-  #:use-module ((geiser completion) #:renamer (symbol-prefix-proc 'ge:))
-  #:use-module ((geiser xref) #:renamer (symbol-prefix-proc 'ge:))
-  #:use-module ((geiser doc) #:renamer (symbol-prefix-proc 'ge:)))
+  #:use-module (lsp-server geiser evaluation)
+  #:use-module ((lsp-server geiser modules) #:renamer (symbol-prefix-proc 'ge:))
+  #:use-module ((lsp-server geiser completion) #:renamer (symbol-prefix-proc 'ge:))
+  #:use-module ((lsp-server geiser xref) #:renamer (symbol-prefix-proc 'ge:))
+  #:use-module ((lsp-server geiser doc) #:renamer (symbol-prefix-proc 'ge:)))
 
 (define this-module (resolve-module '(geiser emacs)))
 

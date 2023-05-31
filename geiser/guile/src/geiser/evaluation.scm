@@ -19,7 +19,7 @@
                ge:load-file
                ge:set-warnings
                ge:add-to-load-path)
-     #:use-module (geiser modules)
+     #:use-module (lsp-server geiser modules)
      #:use-module (srfi srfi-1)
      #:use-module (language tree-il)
      #:use-module (system base compile)
@@ -38,7 +38,7 @@
                ge:load-file
                ge:set-warnings
                ge:add-to-load-path)
-     #:use-module (geiser modules)
+     #:use-module (lsp-server geiser modules)
      #:use-module (srfi srfi-1)
      #:use-module (language tree-il)
      #:use-module (system base compile)

@@ -18,7 +18,7 @@
             all-modules
             submodules
             module-location)
-  #:use-module (geiser utils)
+  #:use-module (lsp-server geiser utils)
   #:use-module (system vm program)
   #:use-module (system vm debug)
   #:use-module (ice-9 regex)

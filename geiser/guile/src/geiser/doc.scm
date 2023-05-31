@@ -14,8 +14,8 @@
             symbol-documentation
             module-exports
             object-signature)
-  #:use-module (geiser utils)
-  #:use-module (geiser modules)
+  #:use-module (lsp-server geiser utils)
+  #:use-module (lsp-server geiser modules)
   #:use-module (system vm program)
   #:use-module (system vm debug)
   #:use-module (ice-9 session)

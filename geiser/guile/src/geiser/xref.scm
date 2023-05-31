@@ -15,9 +15,9 @@
             callers
             callees
             find-file)
-  #:use-module (geiser utils)
-  #:use-module (geiser modules)
-  #:use-module (geiser doc)
+  #:use-module (lsp-server geiser utils)
+  #:use-module (lsp-server geiser modules)
+  #:use-module (lsp-server geiser doc)
   #:use-module (oop goops)
   #:use-module (system xref)
   #:use-module (system vm program))

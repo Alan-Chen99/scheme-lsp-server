@@ -11,8 +11,8 @@
 
 (define-module (lsp-server geiser completion)
   #:export (completions module-completions)
-  #:use-module (geiser utils)
-  #:use-module (geiser modules)
+  #:use-module (lsp-server geiser utils)
+  #:use-module (lsp-server geiser modules)
   #:use-module (ice-9 session)
   #:use-module (ice-9 regex))
 
