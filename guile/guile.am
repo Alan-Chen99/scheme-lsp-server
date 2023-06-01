@@ -33,6 +33,8 @@ SUFFIXES = .scm .sld .go
 PREFIX=$(AM_V_GEN)GUILE_LOAD_COMPILED_PATH="@abs_top_builddir@/:$(GUILE_LOAD_COMPILED_PATH)"; \
       GUILE_LOAD_PATH="@abs_top_builddir@/:@abs_top_srcdir@/:$(GUILE_LOAD_PATH)"
 
+COMPILE_GO=$(PREFIX) $(GUILE_TOOLS) compile $(GUILE_WARNINGS) -x ".scm" --r7rs -o "$@" "$<"
+
 lsp-server.scm: lsp-server.sld lsp-server-impl.scm
 	cat $< > $@
 	echo "" >> $@
@@ -97,5 +99,52 @@ distclean-local:
 	       lsp-server/private/adapter.scm    \
 	       main.scm
 
-.scm.go:
-	$(PREFIX) $(GUILE_TOOLS) compile $(GUILE_WARNINGS) -x ".scm" --r7rs -o "$@" "$<"
+lsp-server/geiser/completion.go: lsp-server/geiser/completion.scm lsp-server/geiser/utils.go lsp-server/geiser/modules.go
+	$(COMPILE_GO)
+
+lsp-server/geiser/doc.go: lsp-server/geiser/doc.scm lsp-server/geiser/utils.go lsp-server/geiser/modules.go
+	$(COMPILE_GO)
+
+lsp-server/geiser/evaluation.go: lsp-server/geiser/evaluation.scm lsp-server/geiser/modules.go
+	$(COMPILE_GO)
+
+lsp-server/geiser/modules.go: lsp-server/geiser/modules.scm lsp-server/geiser/utils.go
+	$(COMPILE_GO)
+
+lsp-server/geiser/utils.go: lsp-server/geiser/utils.scm
+	$(COMPILE_GO)
+
+lsp-server/geiser/xref.go: lsp-server/geiser/xref.scm lsp-server/geiser/utils.go lsp-server/geiser/modules.go lsp-server/geiser/doc.go
+	$(COMPILE_GO)
+
+lsp-server/private/guile.go: lsp-server/private/guile.scm
+	$(COMPILE_GO)
+
+lsp-server/private/trie.go: lsp-server/private/trie.scm
+	$(COMPILE_GO)
+
+lsp-server/private/util.go: lsp-server/private/util.scm lsp-server/private/guile.go
+	$(COMPILE_GO)
+
+lsp-server/private/diagnostics.go: lsp-server/private/diagnostics.scm lsp-server/private/util.go lsp-server/private/file.go lsp-server/private/document.go
+	$(COMPILE_GO)
+
+lsp-server/private/adapter.go: lsp-server/private/adapter.scm lsp-server/private/guile.go
+	$(COMPILE_GO)
+
+lsp-server/private/parse.go: lsp-server/private/parse.scm lsp-server/private/util.go lsp-server/private/trie.go
+	$(COMPILE_GO)
+
+lsp-server/private/compat.go: lsp-server/private/compat.scm lsp-server/private/adapter.go lsp-server/private/guile.go lsp-server/private/diagnostics.go lsp-server/private/parse.go lsp-server/private/util.go
+	$(COMPILE_GO)
+
+lsp-server/private/document.go: lsp-server/private/document.scm lsp-server/private/util.go
+	$(COMPILE_GO)
+
+lsp-server/private/file.go: lsp-server/private/file.scm lsp-server/private/guile.go lsp-server/private/document.go lsp-server/private/parse.go
+	$(COMPILE_GO)
+
+lsp-server.go: lsp-server.scm lsp-server/private/util.go lsp-server/private/compat.go lsp-server/private/diagnostics.go lsp-server/private/file.go lsp-server/private/document.go lsp-server/private/parse.go
+	$(COMPILE_GO)
+
+
