@@ -5,6 +5,7 @@
 (let ((lst '(test-group
              test
              guard
+             lambda*
              call-with-input-string
              with-db-connection
              with-input-from-file

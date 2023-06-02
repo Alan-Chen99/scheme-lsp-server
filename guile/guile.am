@@ -26,7 +26,7 @@ uninstall-hook:
 	rm -f $(DESTDIR)$(godir)/$(GOBJECTS)
 	rm -f $(DESTDIR)$(bindir)/$(EXECUTABLE)
 
-CLEANFILES = $(GOBJECTS) $(EXECUTABLE) $(SOURCES)
+CLEANFILES = $(GOBJECTS) $(EXECUTABLE)
 GUILE_WARNINGS = -Wunbound-variable -Warity-mismatch -Wformat
 SUFFIXES = .scm .sld .go
 

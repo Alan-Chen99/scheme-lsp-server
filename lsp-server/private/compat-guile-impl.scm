@@ -207,7 +207,7 @@
   #f)
 
 (define ($save-file! file-path text)
-  (define mod-name (parse-library-name-from-file file-path))
+  (define mod-name (parse-library-name-from-file file-path text))
   (guard
       (condition
        (else

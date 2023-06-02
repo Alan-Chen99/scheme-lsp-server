@@ -505,45 +505,48 @@
   (call/cc
    (lambda (k)
      (with-exception-handler
-      (lambda (condition)
-        (write-log 'error (format "Read error: ~a~%"
-                                  (condition->string condition)))
-        (k #f))
-      (lambda ()
-        (read))))))
+         (lambda (condition)
+           (write-log 'error (format "Read error: ~a~%"
+                                     (condition->string condition)))
+           (k #f))
+       (lambda ()
+         (read))))))
 
-(define (parse-library-name-from-file filename)
+(define (parse-library-name-from-file filename . args)
   (cond-expand
    (gambit (define (namespace-form? expr)
              (gambit-namespace-form? expr)))
    (else (define (namespace-form? expr)
            #f)))
-  (call/cc
-   (lambda (k)
-     (with-exception-handler
-      (lambda (condition)
-        (write-log 'warning
-                   (format "Cannot parse library name from file ~a: ~a"
-                           filename
-                           condition))
-        (k #f))
-      (lambda ()
-        (if (file-exists? filename)
-            (with-input-from-file filename
-              (lambda ()
-                (let loop ((expr (read-protected)))
-                  (cond ((not expr)
-                         (loop (read-protected)))
-                        ((eof-object? expr) #f)
-                        ((library-definition-form? expr)
-                         (cadr expr))
-                        ((namespace-form? expr)
-                         (parse-gambit-namespace expr))
-                        (else
-                         (loop (read-protected)))))))
-            #f))))))
-
-
+  (letrec ((text (if (null? args)
+                     #f
+                     (car args)))
+           (parse-contents
+            (lambda ()
+              (let loop ((expr (read-protected)))
+                (cond ((not expr)
+                       (loop (read-protected)))
+                      ((eof-object? expr) #f)
+                      ((library-definition-form? expr)
+                       (cadr expr))
+                      ((namespace-form? expr)
+                       (parse-gambit-namespace expr))
+                      (else
+                       (loop (read-protected))))))))
+    (call/cc
+     (lambda (k)
+       (with-exception-handler
+           (lambda (condition)
+             (write-log 'warning
+                        (format "Cannot parse library name from file ~a: ~a"
+                                filename
+                                condition))
+             (k #f))
+         (lambda ()
+           (cond (text (with-input-from-string text parse-contents))
+                 ((file-exists? filename)
+                  (with-input-from-file filename parse-contents))
+                 (else #f))))))))
 
 (define implementation-regex
   (irregex '(: (submatch (+ any))

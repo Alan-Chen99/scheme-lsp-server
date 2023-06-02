@@ -333,7 +333,7 @@ bin_SCRIPTS = $(EXECUTABLE)
 # <http://lists.gnu.org/archive/html/guile-devel/2010-07/msg00125.html>
 # for details.
 guile_install_go_files = install-nobase_goDATA
-CLEANFILES = $(GOBJECTS) $(EXECUTABLE) $(SOURCES)
+CLEANFILES = $(GOBJECTS) $(EXECUTABLE)
 GUILE_WARNINGS = -Wunbound-variable -Warity-mismatch -Wformat
 SUFFIXES = .scm .sld .go
 PREFIX = $(AM_V_GEN)GUILE_LOAD_COMPILED_PATH=".../@abs_top_builddir@/:$(GUILE_LOAD_COMPILED_PATH)"; \
