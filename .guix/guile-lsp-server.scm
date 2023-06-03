@@ -91,7 +91,11 @@ when needed.")
             texinfo
             guile-3.0))
      (propagated-inputs
-      (list guile-3.0 guile-json-rpc guile-srfi-145 guile-srfi-180))
+      (list guile-3.0
+            guile-json-rpc
+            guile-srfi-145
+            guile-srfi-180
+            guile-irregex))
      (synopsis "LSP (Language Server Protocol) server for Guile.")
      (description "Provides a library (lsp-server) and an executable
 @code{guile-lsp-server} that can be used by LSP clients in order to

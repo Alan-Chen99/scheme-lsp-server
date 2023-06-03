@@ -16,15 +16,14 @@
           hash-table-join!
           intersperse
 
-          irregex
-          irregex-match
-          irregex-match-start-index
-          irregex-match-substring
-          irregex-search
-
           vector-fold)
 
-#:re-export (uri-decode)
+#:re-export (uri-decode
+             irregex
+             irregex-match
+             irregex-match-start-index
+             irregex-match-substring
+             irregex-search)
 
 #:use-module (guile)
 #:use-module ((scheme base) #:select (guard))
@@ -33,5 +32,6 @@
 #:use-module (srfi srfi-69)
 #:use-module ((lsp-server private util) #:select (write-log))
 #:use-module (web uri)
+#:use-module (rx irregex)
 #:declarative? #f
 )

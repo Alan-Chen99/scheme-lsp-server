@@ -31,4 +31,5 @@
         (srfi 69)
 
         (only (lsp-server private) write-log)
-        (web uri)))
+        (web uri)
+        (rx irregex)))
