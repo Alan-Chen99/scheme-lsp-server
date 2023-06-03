@@ -59,7 +59,7 @@ when needed.")
 (define-public guile-lsp-server
   (let ((version "0.4.0")
         (revision "0")
-        (commit "ced69f6c9c52b741e0a479feaa3dc1cdd699310e"))
+        (commit "48050c76f3cc43dd4603ffb7570907b78e4d65d8"))
     (package
      (name "guile-lsp-server")
      (version (git-version version revision commit))
@@ -101,5 +101,3 @@ provide IDE functionality for Guile Scheme.")
      (license license:expat))))
 
 guile-lsp-server
-
-
