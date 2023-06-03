@@ -57,12 +57,9 @@ when needed.")
      (license license:expat))))
 
 (define-public guile-lsp-server
-  (let ((version
-         (read-line
-          (open-input-pipe "git describe --tags --abbrev=0")))
+  (let ((version "0.4.0")
         (revision "0")
-        (commit (read-line
-                 (open-input-pipe "git show HEAD | head -1 | cut -d ' ' -f 2"))))
+        (commit "ced69f6c9c52b741e0a479feaa3dc1cdd699310e"))
     (package
      (name "guile-lsp-server")
      (version (git-version version revision commit))
