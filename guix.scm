@@ -1,0 +1,1 @@
+.guix/guile-lsp-server.scm
