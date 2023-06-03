@@ -57,43 +57,47 @@ when needed.")
      (license license:expat))))
 
 (define-public guile-lsp-server
-  (let ((version "0.4.0")
+  (let ((version
+         (read-line
+          (open-input-pipe "git describe --tags --abbrev=0")))
         (revision "0")
-        (commit "76cbdf6877f55fd6c0d5fbafbcd469f7fff7b007")) (package
-           (name "guile-lsp-server")
-           (version (git-version version revision commit))
-           (source
-            (origin
-             (method git-fetch)
-             (uri (git-reference
-                   (url "https://codeberg.org/rgherdt/scheme-lsp-server")
-                   (commit commit)))
-             (sha256
-              (base32
-               "0n846rkwkdrmlq4cnpcs924vylhxbwi80rary3mphr2nh9llvaz2"))))
-           (build-system gnu-build-system)
-           (arguments
-            (list
-             #:phases
-             #~(modify-phases %standard-phases
-                              (add-after 'unpack 'move-to-guile-directory
-                                         (lambda _
-                                           (chdir "./guile"))))))
+        (commit (read-line
+                 (open-input-pipe "git show HEAD | head -1 | cut -d ' ' -f 2"))))
+    (package
+     (name "guile-lsp-server")
+     (version (git-version version revision commit))
+     (source
+      (origin
+       (method git-fetch)
+       (uri (git-reference
+             (url "https://codeberg.org/rgherdt/scheme-lsp-server")
+             (commit commit)))
+       (sha256
+        (base32
+         "0n846rkwkdrmlq4cnpcs924vylhxbwi80rary3mphr2nh9llvaz2"))))
+     (build-system gnu-build-system)
+     (arguments
+      (list
+       #:phases
+       #~(modify-phases %standard-phases
+                        (add-after 'unpack 'move-to-guile-directory
+                                   (lambda _
+                                     (chdir "./guile"))))))
 
-           (native-inputs
-            (list autoconf
-                  automake
-                  pkg-config
-                  texinfo
-                  guile-3.0))
-           (propagated-inputs
-            (list guile-3.0 guile-json-rpc guile-srfi-145 guile-srfi-180))
-           (synopsis "LSP (Language Server Protocol) server for Guile.")
-           (description "Provides a library (lsp-server) and an executable
+     (native-inputs
+      (list autoconf
+            automake
+            pkg-config
+            texinfo
+            guile-3.0))
+     (propagated-inputs
+      (list guile-3.0 guile-json-rpc guile-srfi-145 guile-srfi-180))
+     (synopsis "LSP (Language Server Protocol) server for Guile.")
+     (description "Provides a library (lsp-server) and an executable
 @code{guile-lsp-server} that can be used by LSP clients in order to
 provide IDE functionality for Guile Scheme.")
-           (home-page "https://codeberg.org/rgherdt/scheme-lsp-server")
-           (license license:expat))))
+     (home-page "https://codeberg.org/rgherdt/scheme-lsp-server")
+     (license license:expat))))
 
 guile-lsp-server
 
