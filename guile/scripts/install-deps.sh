@@ -65,13 +65,14 @@ cd ${download_dir}
 
 tar xzvf irregex.tar.gz
 mkdir -p ${site_dir}/rx/source
-mkdir -p ${lib_dir}/rx
+mkdir -p ${lib_dir}/rx/source
 
 cd irregex-0.9.10
 cp irregex-guile.scm ${site_dir}/rx/irregex.scm
 cp irregex.scm ${site_dir}/rx/source/irregex.scm
 cp irregex-utils.scm ${site_dir}/rx/source/irregex-utils.scm
-env guild compile --r7rs ${site_dir}/rx/irregex.scm -o ${site_dir}/rx/irregex.go
+env guild compile --r7rs ${site_dir}/rx/irregex.scm -o ${lib_dir}/rx/irregex.go
+env guild compile --r7rs ${site_dir}/rx/source/irregex.scm -o ${lib_dir}/rx/source/irregex.go
 
 ## install srfi-180
 cd $download_dir/srfi/
@@ -92,8 +93,8 @@ echo $GUILE_LOAD_PATH
 echo $GUILE_LOAD_COMPILED_PATH
 echo `pwd`
 ./configure --prefix=${target_dir}
-GUILE_LOAD_PATH=.:...:$GUILE_LOAD_PATH make
-GUILE_LOAD_PATH=.:...:$GUILE_LOAD_PATH make install
+make
+make install
 
 echo "cleaning up"
 rm -R $download_dir
