@@ -10,12 +10,24 @@ if ! [ -x $curl_path ]; then
     exit 1
 fi
 
+print_usage() {
+    echo "usage: $0 [--prefix=PREFIX]";
+}
+
 if [ $# -gt 0 ]; then
     case "$1" in
         -p|--prefix) if [ $# -gt 1 ] && [ "$2" != -* ]; then
                          target_dir=$2;
+                     else
+                         print_usage;
+                         exit 1
                      fi ;;
-        *) echo "usage: $0 [--prefix=PREFIX]"; exit 1 ;;
+        --prefix=*) target_dir=`echo $1 | sed 's/.*=//'`;
+                    if ! [ -n $target_dir ]; then
+                        print_usage
+                        exit 1;
+                    fi;;
+        *) print_usage; exit 1 ;;
     esac
 fi;
 
@@ -37,8 +49,6 @@ irregex_url="http://synthcode.com/scheme/irregex/irregex-0.9.10.tar.gz"
 json_rpc_url="https://codeberg.org/rgherdt/scheme-json-rpc/archive/master.tar.gz"
 
 ## download tarballs
-echo "download_dir: $download_dir"
-echo "site_dir: $site_dir"
 echo "downloading srfi tarball."
 curl $srfi_url -o $download_dir/srfi.tar.gz
 
