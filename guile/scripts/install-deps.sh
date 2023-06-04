@@ -50,7 +50,7 @@ curl $json_rpc_url -o $download_dir/json-rpc.tar.gz
 
 cd $download_dir
 tar xzvf srfi.tar.gz
-cd srfi/
+cd $download_dir/srfi/
 
 export GUILE_LOAD_PATH=.:$site_dir:...:$GUILE_LOAD_PATH
 export GUILE_LOAD_COMPILED_PATH=.:$lib_dir:...:$GUILE_LOAD_COMPILED_PATH
@@ -59,14 +59,6 @@ export GUILE_LOAD_COMPILED_PATH=.:$lib_dir:...:$GUILE_LOAD_COMPILED_PATH
 ## install srfi-145
 mkdir -p ${site_dir}/srfi
 cp srfi/srfi-145.scm ${site_dir}/srfi
-
-## install srfi-180
-mkdir -p ${lib_dir}/srfi
-cp srfi/srfi-180.scm ${site_dir}/srfi
-cp -R srfi/srfi-180/ ${site_dir}/srfi
-cp -R srfi/180/ ${site_dir}/srfi
-env guild compile -x "sld" --r7rs ${site_dir}/srfi/srfi-180/helpers.sld -o ${lib_dir}/srfi/srfi-180/helpers.go
-env guild compile --r7rs ${site_dir}/srfi/srfi-180.scm -o ${lib_dir}/srfi/srfi-180.go
 
 ## install irregex
 cd ${download_dir}
@@ -80,6 +72,16 @@ cp irregex-guile.scm ${site_dir}/rx/irregex.scm
 cp irregex.scm ${site_dir}/rx/source/irregex.scm
 cp irregex-utils.scm ${site_dir}/rx/source/irregex-utils.scm
 env guild compile --r7rs ${site_dir}/rx/irregex.scm -o ${site_dir}/rx/irregex.go
+
+## install srfi-180
+cd $download_dir/srfi/
+mkdir -p ${lib_dir}/srfi
+cp srfi/srfi-180.scm ${site_dir}/srfi
+cp -R srfi/srfi-180/ ${site_dir}/srfi
+cp -R srfi/180/ ${site_dir}/srfi
+env guild compile -x "sld" --r7rs ${site_dir}/srfi/srfi-180/helpers.sld -o ${lib_dir}/srfi/srfi-180/helpers.go
+env guild compile --r7rs ${site_dir}/srfi/srfi-180.scm -o ${lib_dir}/srfi/srfi-180.go
+
 
 ## install json-rpc
 cd $download_dir
