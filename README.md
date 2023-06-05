@@ -99,6 +99,30 @@ $ ./compile.sh
 ```
 
 ### Guile
+
+#### Installation with Guix
+
+The recommended way is to install this library using Guix. Unfortunately it
+is still not available at the official Guix channels, but you can use the
+provided channel `guix.scm`. Either call
+
+```
+guix package -f guix.scm
+```
+
+or add it to your channel config file (typically `~/.config/guix/channels.scm`):
+
+```
+(append (list (channel
+               (name 'guile-lsp-server)
+               (url "https://codeberg.org/rgherdt/scheme-lsp-server")))
+        %default-channels)
+```
+
+Then run `guix package -i guile-lsp-server`.
+
+#### Manual installation
+
 Guile's version of the LSP server is packaged using automake. Make
 sure Guile 3 **AND** its development libraries are installed. On Debian
 you can install it using:
@@ -106,21 +130,37 @@ you can install it using:
 # apt install guile-3.0 guile-3.0-dev
 ```
 
-Now switch to the `./guile` folder and run:
+`guile-lsp-server` has following dependencies:
+
+- srfi-145
+- srfi-180
+- guile-irregex
+
+You may use following script to install them automatically.
+
+```
+./guile/scripts/install-deps.sh --prefix=<PREFIX>
+```
+
+Finally, switch to the `./guile` folder and run:
 
 ```
 ./configure && make && sudo make install
 ```
 
-*Note: Make sure the install dir is in your %load-path and %load-compiled-path`.
- For example, under Linux, add the following to your `./bashrc` file*
+*Note: Make sure the PREFIX (installation directory) is in your %load-path
+ and %load-compiled-path. For example, under Linux, add the following to your
+ `./bashrc` file*
 
 ```
 export GUILE_LOAD_COMPILED_PATH=...:/usr/local/lib/guile/3.0/site-ccache
 export GUILE_LOAD_PATH=...:/usr/local/share/guile/site/3.0
 
 ```
+#### Let your LSP client install it
 
+Currently both `emacs-lsp` and `vscode-scheme-lsp` will try to install the
+LSP server in a local directory if none is found.
 
 ## <a name="user-content-api"></a>API
 
@@ -239,32 +279,16 @@ packaging and automatic installation from LSP clients).
 
 ## <a name="user-content-known-issues"></a>Known issues
 
-### [Gambit and Guile] Incomplete (or none at all) LSP information when library definition is missing
+### Diagnostics show too many errors/warnings
 
-Currently the LSP server only compiles (and imports) files that contain a
-library definition. In Scheme it's common though to separate the library
-definition and its implementation in different files (as this same library
-does). This means that if you open an implementation file (i.e. a scheme file
-without library definition) first, the LSP server won't provide much
-information. By opening the corresponding library definition (doesn't matter if
-before of after opening the first file) it should work properly.
-
-I experimented with a couple of workarounds for this, but was not 100% satisfied
-by the result. One idea is to simply compile/import every single file found
-in a project that contains a library definition. But this would bloat the
-run-time, and in my experiments lead to weird behavior on some large projects.
-
-Another workaround is to scan files and parse them statically, but this has
-some problems (see below).
-
-### [CHICKEN] Slow startup on large projects
-
-For CHICKEN we scan the project and parse files in order to fetch LSP-related
-information. On large projects, you may experience a delay until
-information starts to be received. LSP provides ways of giving feedback
-to the user when an operation takes a long time, we can add support to it
-in the future. I may investigate caching strategies for better performance
-in the future.
+Currently diagnostics are computed by calling the implementation compiler.
+When code is split in a library definition and an implementation file, we
+have a problem that the LSP server is not able to provide correct information
+when opening only the implementation file. I still didn't find an elegant way
+to solve this. An workaround is that while opening a file, the LSP server
+tries to find different files with the same base name but different extension
+(.sld, .ss, .scm). If one of them contains a library definition, that file is
+compiled instead, providing the correct information.
 
 ## <a name="user-content-existing-clients"></a>Existing clients
 
