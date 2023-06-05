@@ -59,7 +59,7 @@ when needed.")
 (define-public guile-lsp-server
   (let ((version "0.4.0")
         (revision "0")
-        (commit "eafc1afc39da95c795211f83abf67a7b760f8109"))
+        (commit "aa9f1884544abd88b4f369b4547bc27d329e3e43"))
     (package
      (name "guile-lsp-server")
      (version (git-version version revision commit))
