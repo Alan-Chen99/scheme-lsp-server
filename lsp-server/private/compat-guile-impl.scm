@@ -84,7 +84,7 @@
                                (add-modules-to-symbols (lsp-geiser-completions prefix))))
                             '())
                         '()))
-  (lset-union equal? lst extra-lst))
+  (lset-union equal? lst extra-lst (list-completions prefix)))
 
 ;;; Return the documentation (a string) found for IDENTIFIER (a symbol) in
 ;;; MODULE (a symbol). Return #f if nothing found.
@@ -106,7 +106,8 @@
 
   (or (lsp-geiser-signature identifier)
       (execute-in-module mod-name (lambda ()
-                                    (lsp-geiser-signature identifier)))))
+                                    (lsp-geiser-signature identifier)))
+      (fetch-signature mod-name identifier)))
 
 ;;; Return a list of locations found for IDENTIFIER (a symbol).
 ;;; Each location is represented by an alist
@@ -198,15 +199,18 @@
              #f)))))
 
 (define ($open-file! file-path text)
+  (generate-meta-data! file-path)
   (let* ((ldef (find-library-definition-file file-path))
          (file-to-compile (or ldef file-path)))
     (when (and ldef (not (string=? ldef file-path)))
+      (generate-meta-data! ldef)
       (compile-and-import-if-needed ldef))
     (compile-and-import-if-needed file-path))
 
   #f)
 
 (define ($save-file! file-path text)
+  (generate-meta-data! file-path)
   (define mod-name (parse-library-name-from-file file-path text))
   (guard
       (condition

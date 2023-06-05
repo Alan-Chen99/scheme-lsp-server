@@ -336,8 +336,8 @@ guile_install_go_files = install-nobase_goDATA
 CLEANFILES = $(GOBJECTS) $(EXECUTABLE)
 GUILE_WARNINGS = -Wunbound-variable -Warity-mismatch -Wformat
 SUFFIXES = .scm .sld .go
-PREFIX = $(AM_V_GEN)GUILE_LOAD_COMPILED_PATH=".../@abs_top_builddir@/:$(GUILE_LOAD_COMPILED_PATH)"; \
-      GUILE_LOAD_PATH=".../@abs_top_builddir@/:@abs_top_srcdir@/:$(GUILE_LOAD_PATH)"
+PREFIX = $(AM_V_GEN)GUILE_LOAD_COMPILED_PATH="...:@abs_top_builddir@/:$(GUILE_LOAD_COMPILED_PATH)"; \
+      GUILE_LOAD_PATH="...:@abs_top_builddir@/:@abs_top_srcdir@/:$(GUILE_LOAD_PATH)"
 
 COMPILE_GO = $(PREFIX) $(GUILE_TOOLS) compile $(GUILE_WARNINGS) -x ".scm" --r7rs -o "$@" "$<"
 DEPENDENCIES = \
