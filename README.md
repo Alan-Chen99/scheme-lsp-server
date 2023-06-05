@@ -15,7 +15,7 @@
 
 ** EXPERIMENTAL **
 
-A LSP (Language Server Protocol) server for Scheme.
+An LSP (Language Server Protocol) server for Scheme.
 
 This software aims to support several Scheme implementations. To achieve this,
 the code is designed to contain as much logic as possible in R7RS Scheme,
