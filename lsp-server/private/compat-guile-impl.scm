@@ -77,7 +77,7 @@
 (define ($apropos-list module prefix)
   (write-log 'debug (format "$apropos-list ~a ~a" module prefix))
   (define lst (add-modules-to-symbols (lsp-geiser-completions prefix)))
-  (define extra-lst (if module
+  (define extra-lst (if (and module (pair? module))
                         (or (execute-in-module
                              module
                              (lambda ()
@@ -256,7 +256,7 @@
       #f))
 
 (define (execute-in-module module thunk)
-  (if module
+  (if (and module (pair? module))
       (save-module-excursion
        (lambda ()
          (let ((mod (resolve-module module #f #:ensure #f)))
