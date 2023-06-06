@@ -324,7 +324,7 @@
                       (cdr expr))))
            (make-source-meta-data
             (parse-context-library-name context)
-            (library-definition-variant expr)
+            #f
             (fold (lambda (sub-ht acc)
                     (hash-table-join! acc sub-ht))
                   (make-hash-table)
