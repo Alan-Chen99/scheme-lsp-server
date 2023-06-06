@@ -14,6 +14,8 @@
   #:use-module (ice-9 popen)
   #:use-module (gnu packages guile-xyz))
 
+(define %source-dir (getcwd))
+
 (define-public guile-json-rpc
   (let ((version "0.4.0")
         (revision "0")
@@ -57,21 +59,17 @@ when needed.")
      (license license:expat))))
 
 (define-public guile-lsp-server
-  (let ((version "0.4.0")
+  (let ((version (read-line
+                  (open-input-pipe "git describe --tags --abbrev=0")))
         (revision "0")
-        (commit "aa9f1884544abd88b4f369b4547bc27d329e3e43"))
+        (commit (read-line
+                 (open-input-pipe "git show HEAD | head -1 | cut -d ' ' -f 2"))))
     (package
      (name "guile-lsp-server")
      (version (git-version version revision commit))
-     (source
-      (origin
-       (method git-fetch)
-       (uri (git-reference
-             (url "https://codeberg.org/rgherdt/scheme-lsp-server")
-             (commit commit)))
-       (sha256
-        (base32
-         "0dc3b93v1a7ma4362402wzqvjm8zfxb6pgm5z4hdd37val5s928y"))))
+     (source (local-file %source-dir
+                         #:recursive? #t
+                         #:select? (git-predicate %source-dir)))
      (build-system gnu-build-system)
      (arguments
       (list
