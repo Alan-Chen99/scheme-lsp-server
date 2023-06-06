@@ -21,7 +21,7 @@
 (cond-expand (chicken (import (lsp-server private chicken)
                               (only (srfi 1) any)
                               (srfi 18)))
-             (gambit (import (lsp-server private gambit)
+             (gambit (import (codeberg.org/rgherdt/scheme-lsp-server lsp-server private gambit)
                              (only (srfi 1) any)))
              (guile (import (only (srfi srfi-1) any)))
              (else (import (only (srfi 1) any))))
