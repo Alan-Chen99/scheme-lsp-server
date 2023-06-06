@@ -139,3 +139,5 @@
     (if tcp-port-num
         (lsp-server-start/tcp tcp-port-num)
         (lsp-server-start/stdio))))
+
+(main (cdr (command-line)))
