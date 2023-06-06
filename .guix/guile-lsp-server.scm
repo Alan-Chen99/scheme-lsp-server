@@ -59,7 +59,7 @@ when needed.")
 (define-public guile-lsp-server
   (let ((version "0.4.0")
         (revision "0")
-        (commit "b479a51a8713f7e342ba006704ec5750c517e3c1"))
+        (commit "362fc7288c72bd932c1563c784a67e19f4810db2"))
     (package
      (name "guile-lsp-server")
      (version (git-version version revision commit))
@@ -71,7 +71,7 @@ when needed.")
              (commit commit)))
        (sha256
         (base32
-         "1rivf6dar0wfpsiqvqg5m9b99akfv3ykh3ky2dnrwhxng8414012"))))
+         "1ymlsbgd67g0w633z0q5nm455kmvcvjwyy29i2688yng0gir6k6i"))))
      (build-system gnu-build-system)
      (arguments
       (list
