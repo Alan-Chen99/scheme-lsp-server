@@ -31,6 +31,7 @@
 #:use-module (ice-9 ftw)
 #:use-module (ice-9 optargs)
 #:use-module (ice-9 session)
+#:use-module (system base compile)
 #:use-module (system vm program)
 #:use-module (system repl server)
 #:use-module (json-rpc)

@@ -296,7 +296,13 @@
   (guard
       (condition
        (else #f))
-    (let ((fields (string-split str #\:)))
+    (let ((fields (string-split (string-trim str
+                                             (lambda (c)
+                                               (or (char=? c #\;)
+                                                   (char=? c #\space)
+                                                   (char=? c #\return)
+                                                   (char=? c #\newline))))
+                                #\:)))
       (if (> (length fields) 4)
           (let ((msg-type (string-trim (list-ref fields 3))))
             (and (or (string=? msg-type "warning")
@@ -308,27 +314,32 @@
                                   (string-join (drop fields 3) ": "))))
           #f))))
 
-(define (externally-compile-file file-path proc)
+(define (compile-and-process-warnings file-path proc)
   ;; TODO: check return code
   (let* ((ldef-path (find-library-definition-file file-path))
          (path-to-compile (or ldef-path file-path))
-         (p (open-input-pipe
-             (format "/usr/bin/env guild compile --r7rs -L . ~a 2>&1" path-to-compile))))
-    (write-log 'debug (format "externally-compile-file: compiled ~a"
-                              path-to-compile))
-    (let loop ((line (read-line p))
-               (diags '()))
-      (write-log 'debug (format "compile command line: ~a" line))
-      (cond ((eof-object? line)
-             (reverse diags))
-            ((proc line) => (lambda (diag)
-                              (loop (read-line p)
-                                    (cons diag diags))))
-            (else (loop (read-line p)
-                        diags))))))
+         (warn-msgs (with-output-to-string
+                      (lambda ()
+                        (parameterize ((current-warning-port (current-output-port)))
+                          (guard
+                              (exc (else #t))
+                            (compile-file path-to-compile)))))))
+    (call-with-input-string
+        warn-msgs
+        (lambda (p)
+          (let loop ((line (read-line p))
+                     (diags '()))
+            (write-log 'debug (format "compile command line: ~a" line))
+            (cond ((eof-object? line)
+                   (reverse diags))
+                  ((proc line) => (lambda (diag)
+                                    (loop (read-line p)
+                                          (cons diag diags))))
+                  (else (loop (read-line p)
+                              diags))))))))
 
 (define ($compute-diagnostics file-path)
-  (cond ((externally-compile-file file-path parse-compiler-output)
+  (cond ((compile-and-process-warnings file-path parse-compiler-output)
            => (lambda (diags)
                 (write-log 'debug
                            (format "diagnotics found: ~a"

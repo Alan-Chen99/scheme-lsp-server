@@ -37,7 +37,6 @@
 
           delete-lines
           string-lines
-          compose
           server-out-port)
 
 #:use-module ((scheme base)

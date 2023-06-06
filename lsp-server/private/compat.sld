@@ -102,6 +102,7 @@
           (ice-9 session)
           (srfi 1)
           (only (srfi 13) string-join string-concatenate)
+          (system base compile)
           (system vm program)
           (system repl server))
   (include "compat-guile-impl.scm"))
