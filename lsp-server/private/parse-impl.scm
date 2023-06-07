@@ -339,7 +339,7 @@
            (if subform-meta-data
                (make-source-meta-data
                 (parse-context-library-name context)
-                (parse-context-library-definition-variant expr)
+                (parse-context-library-definition-variant context)
                 (source-meta-data-procedure-info-table subform-meta-data)
                 (source-meta-data-imports subform-meta-data))
                #f)))
