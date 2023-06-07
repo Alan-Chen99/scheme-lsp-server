@@ -110,17 +110,6 @@ provided channel `guix.scm`. Either call
 guix package -f guix.scm
 ```
 
-or add it to your channel config file (typically `~/.config/guix/channels.scm`):
-
-```
-(append (list (channel
-               (name 'guile-lsp-server)
-               (url "https://codeberg.org/rgherdt/scheme-lsp-server")))
-        %default-channels)
-```
-
-Then run `guix package -i guile-lsp-server`.
-
 #### Manual installation
 
 Guile's version of the LSP server is packaged using automake. Make
