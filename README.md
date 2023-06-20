@@ -104,11 +104,13 @@ $ ./compile.sh
 
 The recommended way is to install this library using Guix. Unfortunately it
 is still not available at the official Guix channels, but you can use the
-provided channel `guix.scm`. Either call
+provided channel `guix.scm`:
 
 ```
 guix package -f guix.scm
 ```
+
+The executable should now be available at `${HOME}/.guix-profile/bin/guile-lsp-server`.
 
 #### Manual installation
 
