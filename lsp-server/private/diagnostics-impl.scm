@@ -61,7 +61,8 @@
     (when (not (null? diags-as-lists))
       (json-rpc-send-notification
        "textDocument/publishDiagnostics"
-       `((uri . ,file-path)
+       ;; TODO use original uri scheme?
+       `((uri . ,(string-append "file://" file-path))
          (diagnostics . ,(list->vector diags-as-lists)))
        (server-out-port))))
   #f)

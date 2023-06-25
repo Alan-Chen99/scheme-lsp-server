@@ -161,7 +161,8 @@
 
 (define-handler (text-document/did-open params)
   (let ((file-path (apply-file-operation params $open-file!)))
-    (cond (file-path
+    (cond ((and file-path
+                (file-exists? file-path))
            (write-log 'info (format "File opened: ~a~%" file-path))
            (thread-start!
             (make-thread (lambda ()
@@ -176,7 +177,8 @@
 
 (define-handler (text-document/did-save params)
   (let ((file-path (apply-file-operation params $save-file!)))
-    (cond (file-path
+    (cond ((and file-path
+                (file-exists? file-path))
            (write-log 'info (format "File saved: ~a~%" file-path))
            (thread-start!
             (make-thread
