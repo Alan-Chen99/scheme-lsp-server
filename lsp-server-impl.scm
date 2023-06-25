@@ -160,7 +160,8 @@
     file-path))
 
 (define-handler (text-document/did-open params)
-  (let ((file-path (apply-file-operation params $open-file!)))
+  (let ((file-path (apply-file-operation params $open-file!))
+        (file-uri (alist-ref* '(textDocument uri) params)))
     (cond ((and file-path
                 (file-exists? file-path))
            (write-log 'info (format "File opened: ~a~%" file-path))
@@ -168,15 +169,16 @@
             (make-thread (lambda ()
                            (let ((diags ($compute-diagnostics file-path)))
                              (if (not (null? diags))
-                                 (send-diagnostics file-path diags)
-                                 (clear-diagnostics file-path)))))))
+                                 (send-diagnostics file-uri diags)
+                                 (clear-diagnostics file-uri)))))))
           (else
            (write-log 'warning (format "Invalid file-path. Params: ~a~%"
                                        params))))
     #f))
 
 (define-handler (text-document/did-save params)
-  (let ((file-path (apply-file-operation params $save-file!)))
+  (let ((file-path (apply-file-operation params $save-file!))
+        (file-uri (alist-ref* '(textDocument uri) params)))
     (cond ((and file-path
                 (file-exists? file-path))
            (write-log 'info (format "File saved: ~a~%" file-path))
@@ -185,8 +187,8 @@
              (lambda ()
                (let ((diags ($compute-diagnostics file-path)))
                  (if (not (null? diags))
-                     (send-diagnostics file-path diags)
-                     (clear-diagnostics file-path)))))))
+                     (send-diagnostics file-uri diags)
+                     (clear-diagnostics file-uri)))))))
           (else
            (write-log 'warning (format "Invalid file-path. Params ~a~%"
                                        params))))

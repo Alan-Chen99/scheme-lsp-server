@@ -62,7 +62,7 @@
       (json-rpc-send-notification
        "textDocument/publishDiagnostics"
        ;; TODO use original uri scheme?
-       `((uri . ,(string-append "file://" file-path))
+       `((uri . ,file-path)
          (diagnostics . ,(list->vector diags-as-lists)))
        (server-out-port))))
   #f)
