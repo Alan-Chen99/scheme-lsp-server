@@ -146,15 +146,17 @@
 (define (line/char->pos doc line char)
   (define newlines (document-newline-positions doc))
   (define num-newlines (vector-length newlines))
-  (cond ((or (= line 0) (= num-newlines 0))
-         char)
-        ((> line num-newlines)
-         (write-log 'error
-          (format "line/char->pos: line (~a) exceeds number of newlines (~a)"
-                  line
-                  num-newlines))
-         (- (document-length doc) 1))
-        (else
-         (+ char
-            (+ (vector-ref newlines (- line 1)) 1)))))
+  (define doc-len (document-length doc))
+  (min (cond ((or (= line 0) (= num-newlines 0))
+              char)
+             ((> line num-newlines)
+              (write-log 'error
+                         (format "line/char->pos: line (~a) exceeds number of newlines (~a)"
+                                 line
+                                 num-newlines))
+              (- doc-len 1))
+             (else
+              (+ char
+                 (+ (vector-ref newlines (- line 1)) 1))))
+       (- doc-len 1)))
 
