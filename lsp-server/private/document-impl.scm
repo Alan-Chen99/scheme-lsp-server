@@ -158,5 +158,6 @@
              (else
               (+ char
                  (+ (vector-ref newlines (- line 1)) 1))))
-       (- doc-len 1)))
+       (max (- doc-len 1)
+            0)))
 
