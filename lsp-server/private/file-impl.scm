@@ -148,7 +148,9 @@
                   (let ((word (substring
                                contents
                                (line/char->pos doc line-number word-start)
-                               (line/char->pos doc line-number word-end))))
+                               (max (min (line/char->pos doc line-number word-end)
+                                         contents-length)
+                                    0))))
                     (write-log 'debug
                                (format "word-start: ~a (~a), word-end: ~a (~a)~%"
                                        word-start
