@@ -53,7 +53,7 @@
 
 (define-handler (initialized-handler params)
   (write-log 'info "LSP server running")
-  'null)
+  #f)
 
 (define-handler (shutdown-handler params)
   'null)
