@@ -215,7 +215,7 @@ Run `guile-lsp-server --help` for more information.
 <tr>
 <td class="org-left">Find documentation</td>
 <td class="org-left">X</td>
-<td class="org-left">X</td>
+<td class="org-left"></td>
 <td class="org-left">X</td>
 </tr>
 </tbody>
