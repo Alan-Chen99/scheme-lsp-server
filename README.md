@@ -50,7 +50,7 @@ $ curl http://3e8.org/pub/chicken-doc/chicken-doc-repo.tgz | sudo tar zx
 Then install the LSP server with
 
 ```
-chicken-install -s lsp-server
+chicken-install lsp-server
 ```
 
 ### Gambit
