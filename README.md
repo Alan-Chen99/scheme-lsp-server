@@ -43,7 +43,7 @@ First install some dependencies, including chicken-doc's documentation:
 
 ```
 $ chicken-install -s apropos chicken-doc srfi-18
-$ cd `csi -p '(chicken-home)'`
+$ cd `csi -R chicken.platform -p '(chicken-home)'`
 $ curl http://3e8.org/pub/chicken-doc/chicken-doc-repo.tgz | sudo tar zx
 ```
 
