@@ -2,7 +2,7 @@
 
 set -e
 
-target_dir=.
+target_dir=`pwd`
 curl_path=`which curl`
 
 if ! [ -x $curl_path ]; then
