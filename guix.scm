@@ -63,7 +63,7 @@ when needed.")
                   (open-input-pipe "git describe --tags --abbrev=0")))
         (revision "0")
         (commit (read-line
-                 (open-input-pipe "git show HEAD | head -1 | cut -d ' ' -f 2"))))
+                 (open-input-pipe "git show --pretty=oneline HEAD | head -1 | cut -d ' ' -f 1"))))
     (package
      (name "guile-lsp-server")
      (version (git-version version revision commit))
