@@ -112,6 +112,13 @@ guix package -f guix.scm
 
 The executable should now be available at `${HOME}/.guix-profile/bin/guile-lsp-server`.
 
+If you get an error that some module couldn't be opened, check if Guix-installed modules are on your Guile's load path. This can be achieved by setting the corresponding environment variables, for example:
+
+```
+export GUILE_LOAD_PATH=...:${HOME}/.guix-profile/share/guile/site/3.0:$GUILE_LOAD_PATH
+export GUILE_LOAD_COMPILED_PATH=...:${HOME}/.guix-profile/lib/guile/3.0/site-ccache:$GUILE_LOAD_COMPILED_PATH
+```
+
 #### Manual installation
 
 Guile's version of the LSP server is packaged using automake. Make
