@@ -247,29 +247,41 @@
                #\')))
 
 (define on-line-regex
-  (irregex '(: (* whitespace)
-               "On line "
-               (submatch (+ num)))))
+  (irregex '(or (: (* whitespace)
+                   "On line "
+                   (submatch (+ num)))
+                (: (* any)
+                   "on line "
+                   (submatch (+ num))))))
 
 (define (compile-and-collect-output file-path)
-  (with-input-from-pipe (format "~a -R r7rs -to-stdout ~a 2>&1 > /dev/null"
-                                (or (chicken-program-path)
-                                    "csc")
-                                file-path)
-                        (lambda ()
-                          (let loop ((line (read-line))
-                                     (res '()))
-                            (if (eof-object? line)
-                                (reverse res)
-                                (loop (read-line)
-                                      (cons line res)))))))
+  ;; Wrap module to get more information, if needed
+  (let* ((module-arg (if (find-library-definition-file file-path)
+                         ""
+                         "-m some-module"))
+         (cmd (format "~a -R r7rs ~a -to-stdout ~a 2>&1 > /dev/null"
+                      (or (chicken-program-path)
+                          "csc")
+                      module-arg
+                      file-path)))
+    (write-log 'debug
+               (format "compile-and-collect-output with command: ~s"
+                       cmd))
+    (with-input-from-pipe cmd
+                          (lambda ()
+                            (let loop ((line (read-line))
+                                       (res '()))
+                              (if (eof-object? line)
+                                  (reverse res)
+                                  (loop (read-line)
+                                        (cons line res))))))))
 
 (define (externally-compile-file file-path)
   ;; TODO: check return code
   (define ldef-path (find-library-definition-file file-path))
   (define path-to-compile (or ldef-path file-path))
   (define lines (compile-and-collect-output path-to-compile))
-  (write-log 'debug (format "externally-compile-file: compiled ~a"
+  (write-log 'debug (format "externally-compile-file: compiled ~s."
                             path-to-compile))
   
   (let loop ((rem lines)
@@ -282,32 +294,49 @@
           (cond
            ((irregex-search error-line-regex line)
             => (lambda (m)
+                 (write-log 'debug
+                            (format "Error line: ~s" line))
                  (loop (cdr rem)
                        (irregex-match-substring m 1)
-                       filename
+                       #f
                        diags)))
            ((irregex-search in-file-regex line)
             => (lambda (m)
+                 (write-log 'debug
+                            (format "In-file line: ~s" line))
                  (loop (cdr rem)
                        msg
                        (irregex-match-substring m 1)
                        diags)))
            ((irregex-search on-line-regex line)
             => (lambda (m)
+                 (write-log 'debug
+                            (format "On-line line: ~s" line))
                  (let ((line-num
                         (max (- (string->number
-                                 (irregex-match-substring m 1))
+                                 (or (irregex-match-substring m 1)
+                                     (irregex-match-substring m 2)))
                                 1)
                              0)))
-                   (loop (cdr rem)
-                         ""
-                         #f
-                         (cons (make-diagnostic "csc"
-                                                filename
-                                                line-num
-                                                0
-                                                msg)
-                               diags)))))
+                   (cond ((and filename
+                               line-num)
+                          (loop (cdr rem)
+                                ""
+                                filename
+                                (cons (make-diagnostic "csc"
+                                                       filename
+                                                       line-num
+                                                       0
+                                                       msg)
+                                      diags)))
+                         (else
+                          (write-log 'info
+                                     (format "Diagnostics: could not find location for message ~s. Ignoring it."
+                                             msg))
+                          (loop (cdr rem)
+                                ""
+                                #f
+                                diags))))))
            ((string=? line "")
             (loop (cdr rem)
                   msg
@@ -320,18 +349,23 @@
                   diags)))))))
 
 (define ($compute-diagnostics file-path)
-  (define abs-file-path (get-absolute-pathname file-path))
+  (define abs-file-path
+    (get-absolute-pathname file-path))
   (let ((diags (externally-compile-file file-path)))
-    (write-log 'debug (format "$compute-diagnostics ~a"
+    (write-log 'debug (format "$compute-diagnostics ~s got: ~s"
+                              file-path
                               diags))
     (filter (lambda (d)
-              (write-log 'debug
-                         (format "comparing ~s with ~s~%"
-                                 (get-absolute-pathname
-                                  (diagnostic-file-path d))
-                                 abs-file-path))
-              (string=? (get-absolute-pathname
-                         (diagnostic-file-path d))
-                        abs-file-path))
+              (let ((res (string=? (get-absolute-pathname
+                                    (diagnostic-file-path d))
+                                   abs-file-path)))
+
+                (write-log 'debug
+                           (format "comparing ~s with ~s: ~s~%"
+                                   (get-absolute-pathname
+                                    (diagnostic-file-path d))
+                                   abs-file-path
+                                   res))
+                res))
             diags)))
 
