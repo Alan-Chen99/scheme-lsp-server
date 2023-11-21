@@ -48,26 +48,33 @@
 ;;; implementations (e.g. guile) use it.
 ;;; A suggestion is a pair of strings (identifier . library)
 (define ($apropos-list module prefix)
-  (list-completions prefix)
-  ;; (define suggestions
-  ;;   (apropos-information-list prefix #:macros? #t #:imported? #f))
-  ;; (fold (lambda (s acc)
-  ;;         (let* ((mod-id-pair (car s))
-  ;;                (mod (let ((fst (car mod-id-pair)))
-  ;;                       (if (eqv? fst '||)
-  ;;                           #f
-  ;;                           (map string->symbol
-  ;;                                (string-split (symbol->string fst) ".")))))
-  ;;                (id (cdr mod-id-pair))
-  ;;                (type (cdr s)))
-  ;;           (if (string-prefix? prefix (symbol->string id))
-  ;;               (cons (cons (symbol->string id)
-  ;;                           (module-name->chicken-string mod))
-  ;;                     acc)
-  ;;               acc)))
-  ;;       '()
-  ;;       suggestions)
-  )
+  (let ((tracked-completions (list-completions prefix)))
+    (append
+     tracked-completions
+     (let ((suggestions
+            (apropos-information-list prefix #:macros? #t #:imported? #f)))
+
+       (write-log 'debug
+                  (format "apropos suggestions for ~a: ~a"
+                          prefix
+                          suggestions))
+       (append
+        (fold (lambda (s acc)
+                (let* ((mod-id-pair (car s))
+                       (mod (let ((fst (car mod-id-pair)))
+                              (if (eqv? fst '||)
+                                  #f
+                                  (map string->symbol
+                                       (string-split (symbol->string fst) ".")))))
+                       (id (cdr mod-id-pair))
+                       (type (cdr s)))
+                  (if (string-prefix? prefix (symbol->string id))
+                      (cons (cons (symbol->string id)
+                                  (module-name->chicken-string mod))
+                            acc)
+                      acc)))
+              '()
+              suggestions))))))
 
 ;;; Return the documentation (a string) found for IDENTIFIER (a symbol) in
 ;;; MODULE (a symbol). Return #f if nothing found.
@@ -103,34 +110,15 @@
              (describe (lookup-node doc-path))))))
       #f))
 
-
-(define (find-identifier-module identifier)
-  (let* ((id-str (symbol->string identifier))
-         (suggestions ($apropos-list #f id-str)))
-    (alist-ref id-str suggestions equal?)))
-
 ; Return the signature (a string) for IDENTIFIER (a symbol) in MODULE (a
 ; symbol). Return #f if nothing found.
 ; Example call: $fetch-documentation '(srfi 1) 'map
 (define ($fetch-signature module identifier)
-  (define egg (find-identifier-module identifier))
-  (write-log 'debug
-             (format "$fetch-signature egg: ~a identifier: ~a"
-                     egg
-                     identifier))
-  (or (if (or (not egg)
-              (null? egg))
-          #f
-          (guard (condition
-                  (else (write-log 'debug
-                                   (format "#fetch-signature: signature not found: (~a ~a)"
-                                           egg
-                                           identifier))
-                        #f))
-            (node-signature
-             (lookup-node (list egg identifier)))))
-      ;;(lsp-geiser-signature identifier)
-      (fetch-signature module identifier)))
+  ;; first check chicken-doc info, if not available use custom fetch-signature
+  (let ((cdoc-nodes (match-nodes identifier)))
+    (if (not (null? cdoc-nodes))
+        (node-signature (car cdoc-nodes))
+        (fetch-signature module identifier))))
 
 (define (file-is-egg-definition? file-path)
   (string=? (pathname-extension file-path)

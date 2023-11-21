@@ -39,7 +39,7 @@
         (uri-generic))
 
 (begin
-  ;;; A hash table mapping modules (extensions) to eggs. This is needed
+  ;;; A hash table mapping module (symbol) to egg (symbol). This is needed
   ;;; to fetch the correct documentation with chicken-doc
   (define module-egg-table (make-hash-table))
 
@@ -110,8 +110,6 @@
             (else (loop (read-line in)
                         table
                         cur-egg)))))
-
-
 
   (define (get-module-path mod)
     (let ((egg (or (hash-table-ref/default module-egg-table mod #f)
