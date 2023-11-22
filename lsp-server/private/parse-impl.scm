@@ -25,12 +25,16 @@
 
 ;;;; Parameters
 
+;; A table of identifier (symbol) to a source-path (string) -> procedure-info (record) table.
+;; This is modelled so since an identifier can be defined in many source files
 (define identifier-to-source-meta-data-table
   (make-parameter (make-hash-table)))
 
+;; A table of file name (string) to source-meta-data records.
 (define file-meta-data-table
   (make-parameter (make-hash-table)))
 
+;; A table of file name (string) to timestamps in seconds (fixnum)
 (define source-path-timestamps
   (make-parameter (make-hash-table)))
 
