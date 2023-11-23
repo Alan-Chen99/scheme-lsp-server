@@ -1,0 +1,8 @@
+*.o
+*.import.*
+*.so
+*.sh
+*.link
+chicken-lsp-server
+gambit-lsp-server
+guile-lsp-server
