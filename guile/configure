@@ -2940,6 +2940,51 @@ printf "%s\n" "$ac_guile_module_required" >&6; }
               as_fn_error $? "required guile module not found: (json-rpc)" "$LINENO" 5
           fi
 
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking if ((srfi srfi-145)) is available" >&5
+printf %s "checking if ((srfi srfi-145)) is available... " >&6; }
+
+  $GUILE -c "(use-modules ((srfi srfi-145))) (exit ((lambda () 0)))" > /dev/null 2>&1
+  ac_guile_module_required=$?
+
+	  if test "$ac_guile_module_required" = "0" ; then ac_guile_module_required=yes ; else ac_guile_module_required=no ; fi
+          { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $ac_guile_module_required" >&5
+printf "%s\n" "$ac_guile_module_required" >&6; }
+
+
+          if test "$ac_guile_module_required" = "no" ; then
+              as_fn_error $? "required guile module not found: ((srfi srfi-145))" "$LINENO" 5
+          fi
+
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking if ((srfi srfi-180)) is available" >&5
+printf %s "checking if ((srfi srfi-180)) is available... " >&6; }
+
+  $GUILE -c "(use-modules ((srfi srfi-180))) (exit ((lambda () 0)))" > /dev/null 2>&1
+  ac_guile_module_required=$?
+
+	  if test "$ac_guile_module_required" = "0" ; then ac_guile_module_required=yes ; else ac_guile_module_required=no ; fi
+          { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $ac_guile_module_required" >&5
+printf "%s\n" "$ac_guile_module_required" >&6; }
+
+
+          if test "$ac_guile_module_required" = "no" ; then
+              as_fn_error $? "required guile module not found: ((srfi srfi-180))" "$LINENO" 5
+          fi
+
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking if ((rx irregex)) is available" >&5
+printf %s "checking if ((rx irregex)) is available... " >&6; }
+
+  $GUILE -c "(use-modules ((rx irregex))) (exit ((lambda () 0)))" > /dev/null 2>&1
+  ac_guile_module_required=$?
+
+	  if test "$ac_guile_module_required" = "0" ; then ac_guile_module_required=yes ; else ac_guile_module_required=no ; fi
+          { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $ac_guile_module_required" >&5
+printf "%s\n" "$ac_guile_module_required" >&6; }
+
+
+          if test "$ac_guile_module_required" = "no" ; then
+              as_fn_error $? "required guile module not found: ((rx irregex))" "$LINENO" 5
+          fi
+
 
 cat >confcache <<\_ACEOF
 # This file is a shell script that caches the results of configure

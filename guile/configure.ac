@@ -45,6 +45,9 @@ AC_CONFIG_LINKS([lsp-server/private/util-impl.scm:../lsp-server/private/util-imp
                  README.md:../README.md])
 
 GUILE_MODULE_REQUIRED(json-rpc)
+GUILE_MODULE_REQUIRED((srfi srfi-145))
+GUILE_MODULE_REQUIRED((srfi srfi-180))
+GUILE_MODULE_REQUIRED((rx irregex))
 
 AC_OUTPUT
 
