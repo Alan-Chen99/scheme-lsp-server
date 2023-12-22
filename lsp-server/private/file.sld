@@ -15,7 +15,7 @@
         normalize-range)
 
 (cond-expand
- (chicken (import (except (scheme base)
+ (chicken (import (except (r7rs)
                           string-length string-ref string-set!
                           make-string string substring string->list
                           list->string string-fill! write-char

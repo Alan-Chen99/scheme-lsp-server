@@ -7,7 +7,7 @@
         lsp-server-version)
 
 (cond-expand
- (chicken (import (except (scheme base)
+ (chicken (import (except (r7rs)
                           string-length string-ref string-set! make-string string substring
                           string->list list->string string-fill! write-char read-char)
                   (chicken format)
@@ -27,19 +27,22 @@
                         string-take
                         string-tokenize
                         string-upcase)
+                  (only (utf8-srfi-14) char-set)
                   (srfi 18)
                   (srfi 180)
-                  (only utf8 string-length make-string string-set!)
+                  (only utf8 display string-length make-string string-set!)
 ))
  (gambit (import (only (scheme base)
                       define-record-type
                       let-values)
+                 (scheme write)
                  (rename (except (gambit) guard)
                          (r7rs-guard guard))
                  (lsp-server private gambit)
                  (only (srfi 13)
                        string-fold
-                       string-take))
+                       string-take)
+                 (only (srfi 14) char-set))
          (include "~~lib/_gambit#.scm"))
  (guile (import (only (scheme base)
                       define-record-type
@@ -53,6 +56,7 @@
                       string-take
                       string-tokenize
                       string-upcase)
+                (only (srfi 14) char-set)
                 (srfi 18)
                 (srfi 43)
                 (ice-9 documentation)
@@ -66,8 +70,6 @@
         (only (scheme process-context)
               exit
               command-line)
-        (scheme write)
-        (only (srfi 14) char-set)
         (srfi 28)
         (srfi 69)
         (json-rpc)

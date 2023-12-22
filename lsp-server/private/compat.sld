@@ -52,7 +52,7 @@
           nrepl
           chicken-doc
           (only (scheme) eval)
-          (except (scheme base)
+          (except (r7rs)
                   string-length string-ref string-set! make-string string substring
                   string->list list->string string-fill! write-char read-char)
           (srfi 1)

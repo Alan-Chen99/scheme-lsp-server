@@ -175,8 +175,7 @@
 
 (define (case-lambda-arguments expr)
   (reverse (fold (lambda (clause acc)
-                   (if (and (pair? clause)
-                            (not (null? clause)))
+                   (if (pair? clause)
                        (cons (car clause)
                              acc)
                        acc))

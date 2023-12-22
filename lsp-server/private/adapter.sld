@@ -13,9 +13,10 @@
         (only (srfi 13) string-join))
 
 (cond-expand
- (chicken (import (scheme base)
+ (chicken (import (except (r7rs)
+                          string-length string-ref string-set! make-string string substring
+                          string->list list->string string-fill! write-char read-char)
                   (geiser)
-                  (scheme)
                   (lsp-server private chicken)))
  (gambit (import (except (scheme base) with-exception-handler)
                  (rename (only (gambit) r7rs-guard)

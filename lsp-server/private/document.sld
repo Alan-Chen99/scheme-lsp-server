@@ -17,10 +17,10 @@
         (lsp-server private util))
 
 (cond-expand
- (chicken (import (except (scheme base)
+ (chicken (import (except (r7rs)
                           string-length string-ref string-set! make-string string substring
                           string->list list->string string-fill! write-char read-char)
-                  (only (utf8-srfi-13) string-replace)
+                  (only (utf8-srfi-13) string-copy string-replace)
                   (only (chicken port) with-input-from-string)
                   (only utf8 display read-char string string-length)))
  (gambit (import (gambit)

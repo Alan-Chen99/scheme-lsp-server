@@ -2,6 +2,12 @@
         (lsp-server private util))
 
 (cond-expand
+ (chicken (import (except scheme
+                          string-length string-ref string-set! make-string string substring
+                          string->list list->string string-fill! write-char read-char display)
+                  (scheme char) ;; string-downcase
+                  (scheme process-context)
+                  (srfi 28)))
  (guile (import (except (scheme base)
                         assoc
                         cond-expand
@@ -9,7 +15,7 @@
                 (srfi srfi-18)
                 (srfi srfi-28)
                 (lsp-server private guile)))
- ((or chicken gambit)
+ (gambit
   (import (scheme base)
           (scheme char) ;; string-downcase
           (scheme process-context)

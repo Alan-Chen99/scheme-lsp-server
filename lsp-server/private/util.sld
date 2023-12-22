@@ -40,12 +40,12 @@
 
         server-out-port)
 
-(import (scheme char)
-        (json-rpc))
+(import (json-rpc))
 
 (cond-expand
  (chicken (import (only (chicken base) intersperse)
-                  (except (scheme base)
+                  (scheme char)
+                  (except r7rs
                           string-length string-ref string-set! make-string string substring
                           string->list list->string string-fill! write-char read-char)
                   (only (srfi 1)
@@ -64,6 +64,7 @@
                         string->list)
                   (lsp-server private chicken)))
  (gambit (import (scheme base)
+                 (scheme char)
                  (only (srfi 1)
                        take
                        take-right
@@ -78,6 +79,7 @@
  (guile
   (import
    (scheme base)
+   (scheme char)
    (srfi 1)
    (srfi 28)
    (srfi 69)

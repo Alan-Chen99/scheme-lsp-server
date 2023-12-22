@@ -20,11 +20,11 @@
         uri-decode
         with-input-from-string)
 
-(import (except (scheme base)
+(import (only (chicken base)
+              alist-ref)
+        (except (r7rs)
                 string-length string-ref string-set! make-string string substring
                 string->list list->string string-fill! write-char read-char)
-        (only (chicken base)
-              alist-ref)
         (chicken condition)
         (chicken file)
         (chicken foreign)
