@@ -16,27 +16,34 @@
         source-meta-data-procedure-info-table)
 
 (import (only (srfi 1) any every filter find fold append-map)
-        (only (srfi 14) char-set)
-        (only (srfi 13) string-contains string-trim-right string-prefix?)
         (srfi 28)
         (srfi 69)
         (only (scheme file) with-input-from-file)
         (scheme read)
-        (scheme write)
         (lsp-server private util)
         (lsp-server private trie))
 
 (cond-expand
- (chicken (import (scheme base)
-                  (scheme)
+ (chicken (import (except (scheme base)
+                          string-length string-ref string-set! make-string string substring
+                          string->list list->string string-fill! write-char read-char)
+                  (only (scheme) caddr)
+                  (only (utf8-srfi-14) char-set)
+                  (only (utf8-srfi-13) string-contains string-trim-right string-prefix?)
                   (chicken condition)
                   (chicken irregex)
                   (chicken file)
                   (chicken port)
                   (chicken file posix)
                   (only (chicken keyword) keyword?)
+                  (only utf8 list->string read-char)
+
                   (lsp-server private chicken)))
  (gambit (import (except (scheme base) guard with-exception-handler)
+                 (scheme write)
+                 (only (srfi 14) char-set)
+                 (only (srfi 13) string-contains string-trim-right string-prefix?)
+
                  (rename (only (gambit)
                                caddr
                                file-exists?
@@ -59,6 +66,10 @@
                       guard
                       read-line)
                 (only (scheme file) with-input-from-file)
+                (scheme write)
+                (only (srfi 14) char-set)
+                (only (srfi 13) string-contains string-trim-right string-prefix?)
+
                 (scheme read)
                 (system vm program)
                 (ice-9 ftw)

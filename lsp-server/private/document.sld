@@ -12,21 +12,24 @@
 
 (import (scheme case-lambda)
         (scheme file)
-        (scheme write)
         (srfi 28)
         (srfi 69)
-        (only (srfi 13) string-replace)
         (lsp-server private util))
 
 (cond-expand
- (chicken (import (r7rs)
-                  (scheme base)
+ (chicken (import (except (scheme base)
+                          string-length string-ref string-set! make-string string substring
+                          string->list list->string string-fill! write-char read-char)
+                  (only (utf8-srfi-13) string-replace)
                   (only (chicken port) with-input-from-string)
-                  (utf8)))
+                  (only utf8 display read-char string string-length)))
  (gambit (import (gambit)
-                 (lsp-server private gambit))
+                 (lsp-server private gambit)
+                 (only (srfi 13) string-replace))
          (include "~~lib/_gambit#.scm"))
  (guile (import (only (scheme base)
+                      (scheme write)
+                      (only (srfi 13) string-replace)
                       define-record-type
                       vector-append
                       vector-copy

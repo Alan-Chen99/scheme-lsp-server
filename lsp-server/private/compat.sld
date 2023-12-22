@@ -25,46 +25,53 @@
         (json-rpc lolevel)
         (json-rpc))
 
-(import (scheme write)
-        (srfi 28)
+(import (srfi 28)
         (srfi 69))
 
 (cond-expand
  (chicken
   (import (apropos)
-          (chicken base)
+          (except (chicken base)
+                  print print*)
           (chicken condition)
           (chicken file)
           (chicken format)
-          (chicken io)
+          (except (chicken io)
+                  read-string write-string read-token)
           (chicken irregex)
           (chicken pathname)
           (chicken port)
           (chicken process)
           (chicken process-context)
           (chicken random)
-          (only (chicken string) string-intersperse)
+          (except (chicken string)
+                  reverse-list->string ->string conc string-chop string-split
+                  string-translate substring=? substring-ci=? substring-index
+                  substring-index-ci)
           (chicken tcp)
           nrepl
           chicken-doc
-          r7rs
-          scheme
+          (only (scheme) eval)
+          (except (scheme base)
+                  string-length string-ref string-set! make-string string substring
+                  string->list list->string string-fill! write-char read-char)
           (srfi 1)
-          (only (srfi 13) string-join string-concatenate)
+          (only (utf8-srfi-13) string-join string-concatenate string-prefix?)
+          (only utf8 string-split)
           (srfi 18)
           (srfi 28)
           (srfi 69)
-          (srfi 130)
           (srfi 180)
           (uri-generic)
 
-          (geiser)
+          (only (geiser) geiser-autodoc)
           (lsp-server private chicken))
   (include "compat-chicken-impl.scm"))
  (gambit
   (import (rename (only (gambit)
                         apropos
                         continuation-capture
+                        display
                         display-exception
                         display-continuation-backtrace
                         eval
@@ -94,6 +101,7 @@
                 let-values
                 read-line
                 guard)
+          (scheme write)
           (lsp-server geiser modules)
           (ice-9 documentation)
           (ice-9 ftw)

@@ -20,8 +20,11 @@
         uri-decode
         with-input-from-string)
 
-(import (scheme base)
-        (chicken base)
+(import (except (scheme base)
+                string-length string-ref string-set! make-string string substring
+                string->list list->string string-fill! write-char read-char)
+        (only (chicken base)
+              alist-ref)
         (chicken condition)
         (chicken file)
         (chicken foreign)
@@ -32,11 +35,11 @@
         (chicken process)
         (chicken process-context)
         (chicken tcp)
-        (chicken string)
-        (only (srfi 13) string-join string-concatenate)
+        (only (utf8-srfi-13) string-join string-concatenate)
         (srfi 28)
         (srfi 69)
-        (uri-generic))
+        (uri-generic)
+        (only utf8 string-split))
 
 (begin
   ;;; A hash table mapping module (symbol) to egg (symbol). This is needed

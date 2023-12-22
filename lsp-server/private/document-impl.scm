@@ -22,18 +22,18 @@
     (cond ((eof-object? c)
            (make-document res (list->vector (reverse lines))))
           ((char=? c #\newline)
-            (loop (read-char port)
-                  (+ char-number 1)
-                  (+ line-number 1)
-                  (cons char-number
-                        lines)
-                  (string-append res (string c))))
+           (loop (read-char port)
+                 (+ char-number 1)
+                 (+ line-number 1)
+                 (cons char-number
+                       lines)
+                 (string-append res (string c))))
           (else
            (loop (read-char port)
-                  (+ char-number 1)
-                  line-number
-                  lines
-                  (string-append res (string c)))))))
+                 (+ char-number 1)
+                 line-number
+                 lines
+                 (string-append res (string c)))))))
 
 (define (string->document str)
   (with-input-from-string str

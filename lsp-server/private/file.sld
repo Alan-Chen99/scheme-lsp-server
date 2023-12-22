@@ -15,16 +15,14 @@
         normalize-range)
 
 (cond-expand
- (chicken (import (except scheme
+ (chicken (import (except (scheme base)
                           string-length string-ref string-set!
                           make-string string substring string->list
                           list->string string-fill! write-char
-                          read-char display)
+                          read-char)
                   (chicken format)
-                  (lsp-server private chicken)
                   (only (chicken base) case-lambda)
                   (only (chicken condition) print-error-message)
-                  r7rs
 
                   (except (chicken io)
                           read-string
@@ -40,7 +38,9 @@
                         mutex-lock!
                         mutex-unlock!)
                   (srfi 180)
-                  utf8))
+                  (only utf8 string-ref string-length substring)
+
+                  (lsp-server private chicken)))
  (gambit (import (gambit)
                  (scheme write)
                  (lsp-server private gambit)))

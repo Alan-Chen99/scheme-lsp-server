@@ -40,42 +40,52 @@
 
         server-out-port)
 
-(import (scheme base)
-        (scheme char)
-        (scheme write)
+(import (scheme char)
         (json-rpc))
 
 (cond-expand
- (chicken (import (scheme)))
- (else))
-
-(cond-expand
- (guile (import
-         (srfi 1)
-         (srfi 28)
-         (srfi 69)
-         (srfi 13)
-         (only (scheme base)
-               define-record-type
-               flush-output-port)
-         (scheme write)))
- (else (import
-        (only (srfi 1)
-              take
-              take-right
-              fold)
-        (srfi 28)
-        (srfi 69)
-        (only (srfi 13)
-              string-join
-              string-tokenize))))
-
-(cond-expand
  (chicken (import (only (chicken base) intersperse)
-                  (lsp-server private chicken)
-                  r7rs))
- (gambit (import (chibi uri)
+                  (except (scheme base)
+                          string-length string-ref string-set! make-string string substring
+                          string->list list->string string-fill! write-char read-char)
+                  (only (srfi 1)
+                        take
+                        take-right
+                        fold)
+                  (srfi 28)
+                  (srfi 69)
+                  (only (utf8-srfi-13)
+                        string-join
+                        string-tokenize)
+                  (only utf8
+                        list->string
+                        substring
+                        string-length
+                        string->list)
+                  (lsp-server private chicken)))
+ (gambit (import (scheme base)
+                 (only (srfi 1)
+                       take
+                       take-right
+                       fold)
+                 (srfi 28)
+                 (srfi 69)
+                 (only (srfi 13)
+                       string-join
+                       string-tokenize)
+                 (chibi uri)
                  (lsp-server private gambit)))
- (guile (import (lsp-server private guile))))
+ (guile
+  (import
+   (scheme base)
+   (srfi 1)
+   (srfi 28)
+   (srfi 69)
+   (srfi 13)
+   (only (scheme base)
+         define-record-type
+         flush-output-port)
+   (scheme write)
+   (lsp-server private guile))))
 
 (include "util-impl.scm"))

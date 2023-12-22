@@ -7,27 +7,30 @@
         lsp-server-version)
 
 (cond-expand
- (chicken (import scheme
+ (chicken (import (except (scheme base)
+                          string-length string-ref string-set! make-string string substring
+                          string->list list->string string-fill! write-char read-char)
                   (chicken format)
                   (lsp-server private chicken)
                   (only (chicken base) case-lambda)
                   (only (chicken condition) print-error-message)
-                  r7rs
 
-                  (except (chicken io) read-string)
+                  (except (chicken io)
+                          read-string write-string read-token)
                   (only (chicken base) alist-ref)
                   (only (srfi 133) vector-fold)
                   (only (chicken file) file-exists?)
                   (chicken tcp)
                   apropos
-                  (only (srfi 13)
-                      string-fold
-                      string-take
-                      string-tokenize
-                      string-upcase)
+                  (only (utf8-srfi-13)
+                        string-fold
+                        string-take
+                        string-tokenize
+                        string-upcase)
                   (srfi 18)
                   (srfi 180)
-                  utf8))
+                  (only utf8 string-length make-string string-set!)
+))
  (gambit (import (only (scheme base)
                       define-record-type
                       let-values)
