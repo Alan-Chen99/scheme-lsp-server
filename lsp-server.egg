@@ -9,10 +9,11 @@
                nrepl
                r7rs
                srfi-1
-               srfi-130
-               srfi-133 ;;vector
                srfi-18
                srfi-69
+               srfi-130
+               srfi-133 ;;vector
+               srfi-180 ;;vector
                uri-generic
                utf8)
  (test-dependencies srfi-1
