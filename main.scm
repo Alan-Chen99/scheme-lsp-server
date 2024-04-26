@@ -143,4 +143,21 @@
         (lsp-server-start/tcp tcp-port-num)
         (lsp-server-start/stdio))))
 
-(main (cdr (command-line)))
+;; (simple-format (current-error-port) "GUILE_CCACHE_DIR: ~A\n" (getenv "GUILE_CCACHE_DIR"))
+;; (simple-format (current-error-port) "GUILE_AUTO_COMPILE: ~A\n" (getenv "GUILE_AUTO_COMPILE"))
+
+;; (simple-format (current-error-port) "%load-path: ~A\n" %load-path)
+;; (simple-format (current-error-port) "%load-path: ~A\n" %load-compiled-path)
+;; (simple-format (current-error-port) "%load-path: ~A\n" %compile-fallback-path)
+
+;; (simple-format (current-error-port) "%load-path: ~A\n" %compile-fallback-path)
+
+(set! %compile-fallback-path (string-append (getenv "HOME") "/.cache/guile/ccache/lilypond-guile-lsp/"))
+;; (simple-format (current-error-port) "%compile-fallback-path: ~A\n" %compile-fallback-path)
+
+(use-modules (lily))
+
+(ly:set-option 'warning-as-error #t)
+(ly:set-option 'compile-scheme-code #t)
+
+(main (cddddr (command-line)))

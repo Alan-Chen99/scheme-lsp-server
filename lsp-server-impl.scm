@@ -75,7 +75,7 @@
         (let* ((word-text (editor-word-text editor-word))
                (def-locs ($get-definition-locations mod-name
                                                     (string->symbol word-text))))
-          (cond ((not (null? def-locs))
+          (cond ((and (list? def-locs) (not (null? def-locs)))
                  (let ((v (list->vector def-locs)))
                    (write-log 'debug
                               (format "$get-definition-locations resulted in ~a"
